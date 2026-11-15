@@ -1,0 +1,17 @@
+{
+    "targets": [
+        "swap"
+    ],
+    "passes": [
+        {
+            "name": "adjust_monkey_blur",
+            "intarget": "minecraft:main",
+            "outtarget": "swap"
+        },
+        {
+            "name": "blit",
+            "intarget": "swap",
+            "outtarget": "minecraft:main"
+        }
+    ]
+}

@@ -1,0 +1,40 @@
+package com.adjustclient.util;
+
+import com.adjustclient.Adjust;
+import com.adjustclient.hypixel.HypixelGame;
+import com.adjustclient.hypixel.HypixelGameState;
+import com.adjustclient.hypixel.game.hideandseek.HideAndSeekGameState;
+import com.adjustclient.module.impl.movement.scaffold.ScaffoldModule;
+import net.minecraft.init.Blocks;
+import net.minecraft.item.ItemBlock;
+import net.minecraft.item.ItemStack;
+import net.minecraft.world.WorldSettings;
+import com.adjustclient.hypixel.game.hideandseek.HideAndSeekRole;
+import com.adjustclient.game.player.InventoryStateTracker;
+
+public final class GameStateUtil implements MinecraftInstance {
+    public static boolean isActiveUnlessPlacing() {
+        if (ScaffoldModule.INSTANCE.isEnabled() && Boolean.TRUE.equals(ScaffoldModule.INSTANCE.placeReady)) return false;
+        return isActive();
+    }
+    public static boolean isActiveUnlessScaffolding() {
+        if (ScaffoldModule.INSTANCE.isEnabled() && Boolean.TRUE.equals(ScaffoldModule.INSTANCE.placeReady)) return false;
+        return isActive();
+    }
+    public static boolean isActive() {
+        HypixelGameState state = Adjust.gameStateTracker.state;
+        if (Boolean.TRUE.equals(state.lobby)) {
+            if (state.game != HypixelGame.DUELS || mc.thePlayer == null) return false;
+            ItemStack slot = mc.thePlayer.inventory.mainInventory[8];
+            if (slot == null || !(slot.getItem() instanceof ItemBlock)
+                    || ((ItemBlock) slot.getItem()).getBlock() != Blocks.barrier) return false;
+        }
+        if (state instanceof HideAndSeekGameState
+                && ((HideAndSeekGameState) state).role == HideAndSeekRole.HIDER) return false;
+        if (state.isSpecialState() != 0 || state.isSpectator()) return false;
+        if (Boolean.FALSE.equals(state.lobby) && state.startTimer == null && state.game != HypixelGame.UHC_CHAMPIONS) return false;
+        return mc.thePlayer != null && mc.thePlayer.getHealth() > 0
+                && mc.playerController.getCurrentGameType() != WorldSettings.GameType.SPECTATOR
+                && !InventoryStateTracker.inServerGui && !InventoryStateTracker.inServerInventory;
+    }
+}

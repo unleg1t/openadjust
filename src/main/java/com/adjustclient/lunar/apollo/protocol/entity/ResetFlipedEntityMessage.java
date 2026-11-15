@@ -1,0 +1,25 @@
+package com.adjustclient.lunar.apollo.protocol.entity;
+
+import com.adjustclient.lunar.apollo.protocol.ProtoMessage;
+import com.adjustclient.lunar.apollo.protocol.common.ApolloEntityId;
+import com.adjustclient.util.proto.ProtoReader;
+import java.util.ArrayList;
+import java.util.List;
+
+public final class ResetFlipedEntityMessage implements ProtoMessage {
+    public List<ApolloEntityId> entityIds;
+    public Object field8;
+
+    public static ResetFlipedEntityMessage parse(ProtoReader reader) {
+        List<ApolloEntityId> entityIds = new ArrayList<>();
+        for (int tag; (tag = reader.readTag()) != 0;) {
+            switch (tag) {
+                case 10 -> entityIds.add(ApolloEntityId.parse(reader.readMessage()));
+                default -> reader.skipField(tag);
+            }
+        }
+        ResetFlipedEntityMessage message = new ResetFlipedEntityMessage();
+        message.entityIds = entityIds;
+        return message;
+    }
+}

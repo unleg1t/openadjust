@@ -1,0 +1,71 @@
+{
+  "bedwars.bedbreak": {
+    "category": "master",
+    "sounds": [
+      "bedwars/nuker1",
+      "bedwars/nuker2"
+    ]
+  },
+  "bedwars.kill": {
+    "category": "master",
+    "sounds": [
+      "bedwars/kill"
+    ]
+  },
+  "bedwars.hacker": {
+    "category": "master",
+    "sounds": [
+      "bedwars/hacker"
+    ]
+  },
+  "bedwars.hacked": {
+    "category": "master",
+    "sounds": [
+      "bedwars/hacked"
+    ]
+  },
+  "bedwars.death": {
+    "category": "master",
+    "sounds": [
+      "bedwars/death1",
+      "bedwars/death2"
+    ]
+  },
+  "bedwars.finaldeath": {
+    "category": "master",
+    "sounds": [
+      "bedwars/finaldeath",
+      "bedwars/death2"
+    ]
+  },
+  "bedwars.highstats": {
+    "category": "master",
+    "sounds": [
+      "bedwars/highstats"
+    ]
+  },
+  "party.message": {
+    "category": "master",
+    "sounds": [
+      "party/message"
+    ]
+  },
+  "party.ping": {
+    "category": "master",
+    "sounds": [
+      "party/ping"
+    ]
+  },
+  "notification.error": {
+    "category": "master",
+    "sounds": [
+      "notification/error"
+    ]
+  },
+  "notification.winstreakend": {
+    "category": "master",
+    "sounds": [
+      "notification/winstreakend"
+    ]
+  }
+}

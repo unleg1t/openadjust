@@ -1,0 +1,180 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group = 'com.adjustclient'
+version = '1.8.9'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+application {
+    mainClass = 'net.minecraft.client.main.Main'
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src/mc/java', 'src/main/java']
+        }
+        resources {
+            srcDirs = ['src/main/resources', 'src/mc/resources']
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven { url = uri('https://libraries.minecraft.net') }
+    maven { url = uri('https://maven.maxhenkel.de/repository/public') }
+}
+
+ext {
+    lwjglVersion = '3.3.3'
+    lwjglNatives = 'natives-windows'
+}
+
+configurations.configureEach {
+    // Keep MC 1.8.9 authlib 1.5.21 and prevent transitive LWJGL2/3 version drift or sealed LWJGL2/OpenAL clashes
+    exclude group: 'org.lwjgl.lwjgl', module: 'lwjgl'
+    exclude group: 'org.lwjgl.lwjgl', module: 'lwjgl-platform'
+    exclude group: 'com.paulscode', module: 'librarylwjglopenal'
+    exclude group: 'tv.twitch', module: 'twitch-platform'
+    exclude group: 'tv.twitch', module: 'twitch-external-platform'
+    exclude group: 'net.java.jinput', module: 'jinput-platform'
+}
+
+dependencies {
+    // 1. LWJGL 3.3.3 + JOML FIRST so GLFW, NanoVG, STB, Opus, and modern GL11..GL45 win on classpath
+    def lwjglModules = [
+        'lwjgl',
+        'lwjgl-glfw',
+        'lwjgl-nanovg',
+        'lwjgl-opengl',
+        'lwjgl-openal',
+        'lwjgl-stb',
+        'lwjgl-freetype',
+        'lwjgl-jemalloc',
+        'lwjgl-tinyfd'
+    ]
+    lwjglModules.each { mod ->
+        implementation "org.lwjgl:${mod}:${lwjglVersion}"
+        runtimeOnly "org.lwjgl:${mod}:${lwjglVersion}:${lwjglNatives}"
+    }
+    // Java bindings only; Windows opus.dll lives in src/main/resources/assets/adjust/natives/opus.dll
+    implementation "org.lwjgl:lwjgl-opus:${lwjglVersion}"
+    implementation 'org.joml:joml:1.10.8'
+
+    // 2. Client third-party libraries (Voronoi JTS, VoiceChat RNNoise, FastUtil, Gson)
+    implementation 'org.locationtech.jts:jts-core:1.19.0'
+    implementation 'de.maxhenkel.rnnoise4j:rnnoise4j:2.0.2'
+    implementation 'it.unimi.dsi:fastutil:8.5.15'
+    implementation 'com.google.code.gson:gson:2.11.0'
+
+    // 3. Minecraft 1.8.9 libraries (Authlib 1.5.21 before any modern Mojang lib)
+    implementation('com.mojang:authlib:1.5.21') { transitive = false }
+    implementation('com.mojang:realms:1.7.59') { transitive = false }
+    implementation('com.mojang:netty:1.8.8') { transitive = false }
+    implementation 'io.netty:netty-all:4.0.23.Final'
+    implementation 'com.google.guava:guava:17.0'
+    implementation 'commons-io:commons-io:2.4'
+    implementation 'commons-codec:commons-codec:1.9'
+    implementation 'commons-logging:commons-logging:1.2'
+    implementation 'org.apache.commons:commons-lang3:3.3.2'
+    implementation 'org.apache.commons:commons-compress:1.8.1'
+    implementation 'org.apache.httpcomponents:httpclient:4.3.3'
+    implementation 'org.apache.httpcomponents:httpcore:4.3.2'
+    implementation 'org.apache.logging.log4j:log4j-api:2.0-beta9'
+    implementation 'org.apache.logging.log4j:log4j-core:2.0-beta9'
+    implementation 'net.sf.jopt-simple:jopt-simple:4.6'
+    implementation 'com.ibm.icu:icu4j-core-mojang:51.2'
+    implementation('com.github.oshi:oshi-core:6.6.5') { transitive = false }
+    implementation('net.java.dev.jna:jna:5.15.0') { transitive = false }
+    implementation('net.java.dev.jna:jna-platform:5.15.0') { transitive = false }
+    implementation('org.slf4j:slf4j-api:2.0.16') { transitive = false }
+    implementation('net.java.jinput:jinput:2.0.5') { transitive = false }
+    implementation('com.paulscode:codecjorbis:20101023') { transitive = false }
+    implementation('com.paulscode:codecwav:20101023') { transitive = false }
+    implementation('com.paulscode:libraryjavasound:20101123') { transitive = false }
+    implementation('com.paulscode:soundsystem:20120107') { transitive = false }
+    implementation('tv.twitch:twitch:6.5') { transitive = false }
+
+    // 4. Legacy LWJGL 2 utilities (unsealed vector/math helpers only) LAST behind LWJGL 3 + src/mc/java GLFW & OpenAL bridges
+    implementation('org.lwjgl.lwjgl:lwjgl_util:2.9.4-nightly-20150209') { transitive = false }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.compilerArgs.addAll(['-Xmaxerrs', '5000', '-nowarn'])
+}
+
+tasks.named('processResources', ProcessResources) {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.named('jar', Jar) {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    manifest {
+        attributes(
+            'Main-Class': 'net.minecraft.client.main.Main'
+        )
+    }
+}
+
+def nativesDir = layout.buildDirectory.dir("natives/windows")
+
+tasks.register('extractNatives', Sync) {
+    group = 'build'
+    description = 'Stage LWJGL 3 Windows DLLs and bundled opus.dll into build/natives/windows'
+    from({
+        configurations.runtimeClasspath.files
+            .findAll { it.name.endsWith("-${lwjglNatives}.jar") }
+            .collect { zipTree(it) }
+    }) {
+        include '**/*.dll'
+    }
+    from('src/main/resources/assets/adjust/natives/opus.dll')
+    eachFile { path = name }
+    includeEmptyDirs = false
+    into nativesDir
+}
+
+tasks.register('runClient', JavaExec) {
+    group = 'application'
+    description = 'Launch Adjust 1.8.9 client in offline/dev mode'
+    dependsOn tasks.named('extractNatives')
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'net.minecraft.client.main.Main'
+    workingDir = file('run')
+
+    def appData = System.getenv('APPDATA') ?: "${System.getProperty('user.home')}/AppData/Roaming"
+    def localAssets = file('run/assets')
+    def defaultAssets = new File(appData, '.minecraft/assets')
+    def resolvedAssetsDir = localAssets.isDirectory() ? localAssets : defaultAssets
+
+    doFirst {
+        mkdir('run')
+    }
+
+    jvmArgs = [
+        '-Xms512M',
+        '-Xmx2G',
+        '-Dfile.encoding=UTF-8',
+        '--add-opens=java.base/java.nio=ALL-UNNAMED',
+        "-Djava.library.path=${nativesDir.get().asFile.absolutePath}",
+        "-Dorg.lwjgl.librarypath=${nativesDir.get().asFile.absolutePath}",
+        "-Dorg.lwjgl.opus.libname=${new File(nativesDir.get().asFile, 'opus.dll').absolutePath}"
+    ]
+
+    args = [
+        '--version', '1.8.9',
+        '--accessToken', '0',
+        '--assetsDir', resolvedAssetsDir.absolutePath,
+        '--assetIndex', '1.8',
+        '--userProperties', '{}'
+    ]
+}

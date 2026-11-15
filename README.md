@@ -1,0 +1,41 @@
+# OpenAdjust
+
+A complete Java source restoration of the **Adjust Client** for **Minecraft 1.8.9** — based on **Adjust (`October 16th` build, changelog version `96`)**, with all `100` modules and `29` commands running standalone offline on Java 21 + LWJGL 3.3.3.
+
+> **Backup / Mirror:** https://git.yxz.st/yxzero/openadjust  
+> Please bookmark and use this mirror if you can — the main git repo might get hit with a DMCA at any time!
+
+## Credits
+
+**Source completely restored by AI! Zero human work.**
+
+- **Claude Opus 5.5** — initial planning and ~20% of the job
+- **GPT 6.1 Sol** — large parts of restoration
+- **Gemini 4 Carbon** — large parts of restoration and final bug fixes
+
+Native Image cannot stop open source! :)
+
+## Requirements
+
+- **JDK 21** (automatically resolved via Gradle's Java toolchain)
+- Windows x64 (for bundled LWJGL 3.3.3 Windows natives and `opus.dll`; adjust `lwjglNatives` in `build.gradle` for other platforms)
+
+## Building & Running
+
+Launch directly in offline dev mode:
+
+```bat
+.\gradlew.bat runClient
+```
+
+Or use the included helper script on Windows:
+
+```bat
+launch_client.bat
+```
+
+Build the client JAR (`build/libs/adjust-client-1.8.9.jar`):
+
+```bat
+.\gradlew.bat build
+```
