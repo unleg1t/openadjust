@@ -2,6 +2,9 @@
 
 A complete Java source restoration of the **Adjust Client** for **Minecraft 1.8.9** — based on **Adjust (`October 16th` build, changelog version `96`)**, with all `100` modules and `29` commands running standalone offline on Java 21 + LWJGL 3.3.3.
 
+- **Website:** https://adjust.wtf/
+- **Discord:** https://discord.adjust.wtf/ — come join the community for updates, support, and discussion!
+
 > **Backup / Mirror:** https://git.yxz.st/yxzero/openadjust  
 > Please bookmark and use this mirror if you can — the main git repo might get hit with a DMCA at any time!
 
