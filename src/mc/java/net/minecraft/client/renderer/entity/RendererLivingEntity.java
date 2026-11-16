@@ -42,9 +42,12 @@ import net.minecraft.util.ChatColor;
 import net.minecraft.util.MathHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import optifine.Config;
+import optifine.Reflector;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
+import shadersmod.client.Shaders;
 
 @SideOnly(Side.CLIENT)
 public abstract class RendererLivingEntity<T extends EntityLivingBase> extends Render<T>
@@ -58,6 +61,8 @@ public abstract class RendererLivingEntity<T extends EntityLivingBase> extends R
     protected FloatBuffer brightnessBuffer = GLAllocation.createDirectFloatBuffer(4);
     protected List<LayerRenderer<T>> layerRenderers = Lists.<LayerRenderer<T>>newArrayList();
     protected boolean renderOutlines = false;
+    public static float NAME_TAG_RANGE = 64.0F;
+    public static float NAME_TAG_RANGE_SNEAK = 32.0F;
     public static Float previewOpacityOverride;
     public com.adjustclient.event.EntityOpacityEvent currentOpacityEvent;
 
@@ -106,13 +111,28 @@ public abstract class RendererLivingEntity<T extends EntityLivingBase> extends R
 
     public void doRender(T entity, double x, double y, double z, float entityYaw, float partialTicks)
     {
+        if (Reflector.RenderLivingEvent_Pre_Constructor.exists() && Reflector.postForgeBusEvent(Reflector.RenderLivingEvent_Pre_Constructor, new Object[] {entity, this, Double.valueOf(x), Double.valueOf(y), Double.valueOf(z)}))
+        {
+            return;
+        }
+
         GlStateManager.pushMatrix();
         GlStateManager.disableCull();
         this.mainModel.swingProgress = this.getSwingProgress(entity, partialTicks);
         this.mainModel.isRiding = entity.isRiding();
+
+        if (Reflector.ForgeEntity_shouldRiderSit.exists())
+        {
+            this.mainModel.isRiding = entity.isRiding() && entity.ridingEntity != null && Reflector.callBoolean(entity.ridingEntity, Reflector.ForgeEntity_shouldRiderSit, new Object[0]);
+        }
+
         this.mainModel.isChild = entity.isChild();
 
         EntityOpacityEvent opacityEvent = new EntityOpacityEvent(entity, partialTicks);
+        if (entity.forceInvisible)
+        {
+            opacityEvent.invisible = true;
+        }
         if (Adjust.frozenPlayerRenderListener != null)
         {
             com.adjustclient.game.render.FrozenPlayerRenderer frozen = Adjust.frozenPlayerRenderListener.find(entity);
@@ -151,7 +171,7 @@ public abstract class RendererLivingEntity<T extends EntityLivingBase> extends R
             float f1 = this.interpolateRotation(entityPrevRotationYawHead, entityRotationYawHead, partialTicks);
             float f2 = f1 - f;
 
-            if (entity.isRiding() && entity.ridingEntity instanceof EntityLivingBase)
+            if (this.mainModel.isRiding && entity.ridingEntity instanceof EntityLivingBase)
             {
                 EntityLivingBase entitylivingbase = (EntityLivingBase)entity.ridingEntity;
                 f = this.interpolateRotation(entitylivingbase.prevRenderYawOffset, entitylivingbase.renderYawOffset, partialTicks);
@@ -336,6 +356,11 @@ public abstract class RendererLivingEntity<T extends EntityLivingBase> extends R
         {
             super.doRender(entity, x, y, z, entityYaw, partialTicks);
         }
+
+        if (Reflector.RenderLivingEvent_Post_Constructor.exists())
+        {
+            Reflector.postForgeBusEvent(Reflector.RenderLivingEvent_Post_Constructor, new Object[] {entity, this, Double.valueOf(x), Double.valueOf(y), Double.valueOf(z)});
+        }
     }
 
     private static boolean isLegitAntiVoidGhost(EntityLivingBase entity)
@@ -422,7 +447,8 @@ public abstract class RendererLivingEntity<T extends EntityLivingBase> extends R
     protected void renderModel(T entitylivingbaseIn, float p_77036_2_, float p_77036_3_, float p_77036_4_, float p_77036_5_, float p_77036_6_, float scaleFactor)
     {
         EntityOpacityEvent opacity = this.currentOpacityEvent;
-        boolean flag = opacity != null ? !opacity.invisible : !entitylivingbaseIn.isInvisible();
+        boolean invisible = opacity != null ? opacity.invisible : (entitylivingbaseIn.forceInvisible || entitylivingbaseIn.isInvisible());
+        boolean flag = !invisible;
         boolean flag1 = !flag && !entitylivingbaseIn.isInvisibleToPlayer(Minecraft.getMinecraft().thePlayer);
 
         if (flag || flag1)
@@ -432,27 +458,36 @@ public abstract class RendererLivingEntity<T extends EntityLivingBase> extends R
                 return;
             }
 
-            Float overrideAlpha = previewOpacityOverride;
-            boolean hasBodyAlpha = opacity != null && opacity.bodyAlpha < 1.0F;
-            boolean hasOverride = overrideAlpha != null || hasBodyAlpha;
-            float alpha = overrideAlpha != null
-                    ? Math.max(0.0F, Math.min(1.0F, overrideAlpha.floatValue()))
-                    : (hasBodyAlpha ? Math.max(0.0F, Math.min(1.0F, opacity.bodyAlpha)) : 0.15F);
+            float alpha = opacity != null ? opacity.bodyAlpha : 1.0F;
+            if (invisible && flag1 && alpha == 1.0F && previewOpacityOverride == null)
+            {
+                alpha = 0.15F;
+            }
+            if (previewOpacityOverride != null)
+            {
+                alpha = previewOpacityOverride.floatValue();
+            }
+            alpha = Math.max(0.0F, Math.min(1.0F, alpha));
+            boolean translucent = flag1 || alpha < 1.0F;
 
-            if (flag1 || hasOverride)
+            if (translucent)
             {
                 GlStateManager.pushMatrix();
+                GlStateManager.enableColorMaterial();
+                GlStateManager.colorMaterial(1032, 5634);
+                GlStateManager.resetColor();
                 GlStateManager.color(1.0F, 1.0F, 1.0F, alpha);
                 GlStateManager.depthMask(false);
                 GlStateManager.enableBlend();
-                GlStateManager.blendFunc(770, 771);
+                GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
                 GlStateManager.alphaFunc(516, 0.003921569F);
             }
 
             this.mainModel.render(entitylivingbaseIn, p_77036_2_, p_77036_3_, p_77036_4_, p_77036_5_, p_77036_6_, scaleFactor);
 
-            if (flag1 || hasOverride)
+            if (translucent)
             {
+                GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
                 GlStateManager.disableBlend();
                 GlStateManager.alphaFunc(516, 0.1F);
                 GlStateManager.popMatrix();
@@ -546,16 +581,29 @@ public abstract class RendererLivingEntity<T extends EntityLivingBase> extends R
                 this.brightnessBuffer.put(g);
                 this.brightnessBuffer.put(b);
                 this.brightnessBuffer.put(a);
+
+                if (Config.isShaders())
+                {
+                    Shaders.setEntityColor(r, g, b, a);
+                }
             }
             else if (flag1)
             {
                 if (HurtcamModule.INSTANCE != null && HurtcamModule.INSTANCE.isEnabled() && HurtcamModule.INSTANCE.modelColorEnabled.isEnabled())
                 {
                     Color hurtColor = HurtcamModule.INSTANCE.modelColorColor.getColor();
-                    this.brightnessBuffer.put((float)hurtColor.getRed() / 255.0F);
-                    this.brightnessBuffer.put((float)hurtColor.getGreen() / 255.0F);
-                    this.brightnessBuffer.put((float)hurtColor.getBlue() / 255.0F);
+                    float hurtR = (float)hurtColor.getRed() / 255.0F;
+                    float hurtG = (float)hurtColor.getGreen() / 255.0F;
+                    float hurtB = (float)hurtColor.getBlue() / 255.0F;
+                    this.brightnessBuffer.put(hurtR);
+                    this.brightnessBuffer.put(hurtG);
+                    this.brightnessBuffer.put(hurtB);
                     this.brightnessBuffer.put(0.3F);
+
+                    if (Config.isShaders())
+                    {
+                        Shaders.setEntityColor(hurtR, hurtG, hurtB, 0.3F);
+                    }
                 }
                 else
                 {
@@ -563,6 +611,11 @@ public abstract class RendererLivingEntity<T extends EntityLivingBase> extends R
                     this.brightnessBuffer.put(0.0F);
                     this.brightnessBuffer.put(0.0F);
                     this.brightnessBuffer.put(0.3F);
+
+                    if (Config.isShaders())
+                    {
+                        Shaders.setEntityColor(1.0F, 0.0F, 0.0F, 0.3F);
+                    }
                 }
             }
             else
@@ -575,6 +628,11 @@ public abstract class RendererLivingEntity<T extends EntityLivingBase> extends R
                 this.brightnessBuffer.put(f3);
                 this.brightnessBuffer.put(f4);
                 this.brightnessBuffer.put(1.0F - f1);
+
+                if (Config.isShaders())
+                {
+                    Shaders.setEntityColor(f2, f3, f4, 1.0F - f1);
+                }
             }
 
             this.brightnessBuffer.flip();
@@ -647,6 +705,11 @@ public abstract class RendererLivingEntity<T extends EntityLivingBase> extends R
         GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_OPERAND0_ALPHA, GL11.GL_SRC_ALPHA);
         GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_SOURCE0_ALPHA, GL11.GL_TEXTURE);
         GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
+
+        if (Config.isShaders())
+        {
+            Shaders.setEntityColor(0.0F, 0.0F, 0.0F, 0.0F);
+        }
     }
 
     protected void renderLivingAt(T entityLivingBaseIn, double x, double y, double z)
@@ -722,74 +785,81 @@ public abstract class RendererLivingEntity<T extends EntityLivingBase> extends R
 
     public void renderName(T entity, double x, double y, double z)
     {
-        if (this.canRenderName(entity))
+        if (!Reflector.RenderLivingEvent_Specials_Pre_Constructor.exists() || !Reflector.postForgeBusEvent(Reflector.RenderLivingEvent_Specials_Pre_Constructor, new Object[] {entity, this, Double.valueOf(x), Double.valueOf(y), Double.valueOf(z)}))
         {
-            Entity view = Minecraft.getMinecraft().cameraOverride;
-            Entity refEntity = view != null ? view : this.renderManager.livingPlayer;
-            if (refEntity == null)
+            if (this.canRenderName(entity))
             {
-                return;
-            }
-            double d0 = entity.getDistanceSqToEntity(refEntity);
-            float f = entity.isSneaking() ? 32.0F : 64.0F;
-
-            if (d0 < (double)(f * f))
-            {
-                String s = entity.getDisplayName().getFormattedText();
-                if (StreamerModule.nameMap != null)
+                Entity view = Minecraft.getMinecraft().cameraOverride;
+                Entity refEntity = view != null ? view : this.renderManager.livingPlayer;
+                if (refEntity != null)
                 {
-                    if (entity instanceof EntityPlayer)
+                    double d0 = entity.getDistanceSqToEntity(refEntity);
+                    float f = entity.isSneaking() ? NAME_TAG_RANGE_SNEAK : NAME_TAG_RANGE;
+
+                    if (d0 < (double)(f * f))
                     {
-                        GameProfile profile = ((EntityPlayer)entity).getGameProfile();
-                        if (profile != null)
+                        String s = entity.getDisplayName().getFormattedText();
+                        if (StreamerModule.nameMap != null)
                         {
-                            s = StreamerModule.replaceName(s, profile.getName());
+                            if (entity instanceof EntityPlayer)
+                            {
+                                GameProfile profile = ((EntityPlayer)entity).getGameProfile();
+                                if (profile != null)
+                                {
+                                    s = StreamerModule.replaceName(s, profile.getName());
+                                }
+                            }
+                            else if (entity instanceof EntityArmorStand)
+                            {
+                                s = StreamerModule.replaceKnownNames(s);
+                            }
+                        }
+                        float f1 = 0.02666667F;
+                        GlStateManager.alphaFunc(516, 0.1F);
+
+                        if (entity.isSneaking())
+                        {
+                            FontRenderer fontrenderer = this.getFontRendererFromRenderManager();
+                            GlStateManager.pushMatrix();
+                            GlStateManager.translate((float)x, (float)y + entity.height + 0.5F - (entity.isChild() ? entity.height / 2.0F : 0.0F), (float)z);
+                            GL11.glNormal3f(0.0F, 1.0F, 0.0F);
+                            GlStateManager.rotate(-this.renderManager.playerViewY, 0.0F, 1.0F, 0.0F);
+                            GlStateManager.rotate(this.renderManager.playerViewX, 1.0F, 0.0F, 0.0F);
+                            GlStateManager.scale(-0.02666667F, -0.02666667F, 0.02666667F);
+                            GlStateManager.translate(0.0F, 9.374999F, 0.0F);
+                            GlStateManager.disableLighting();
+                            GlStateManager.depthMask(false);
+                            GlStateManager.enableBlend();
+                            GlStateManager.disableTexture2D();
+                            GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+                            int i = (int)fontrenderer.getStringWidth(s) / 2;
+                            Tessellator tessellator = Tessellator.getInstance();
+                            WorldRenderer worldrenderer = tessellator.getWorldRenderer();
+                            worldrenderer.begin(7, DefaultVertexFormats.POSITION_COLOR);
+                            worldrenderer.pos((double)(-i - 1), -1.0D, 0.0D).color(0.0F, 0.0F, 0.0F, 0.25F).endVertex();
+                            worldrenderer.pos((double)(-i - 1), 8.0D, 0.0D).color(0.0F, 0.0F, 0.0F, 0.25F).endVertex();
+                            worldrenderer.pos((double)(i + 1), 8.0D, 0.0D).color(0.0F, 0.0F, 0.0F, 0.25F).endVertex();
+                            worldrenderer.pos((double)(i + 1), -1.0D, 0.0D).color(0.0F, 0.0F, 0.0F, 0.25F).endVertex();
+                            tessellator.draw();
+                            GlStateManager.enableTexture2D();
+                            GlStateManager.depthMask(true);
+                            fontrenderer.drawString(s, -(int)fontrenderer.getStringWidth(s) / 2, 0, 553648127);
+                            GlStateManager.enableLighting();
+                            GlStateManager.disableBlend();
+                            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+                            GlStateManager.popMatrix();
+                        }
+                        else
+                        {
+                            this.renderOffsetLivingLabel(entity, x, y - (entity.isChild() ? (double)(entity.height / 2.0F) : 0.0D), z, s, 0.02666667F, d0);
                         }
                     }
-                    else if (entity instanceof EntityArmorStand)
-                    {
-                        s = StreamerModule.replaceKnownNames(s);
-                    }
                 }
-                float f1 = 0.02666667F;
-                GlStateManager.alphaFunc(516, 0.1F);
+            }
 
-                if (entity.isSneaking())
-                {
-                    FontRenderer fontrenderer = this.getFontRendererFromRenderManager();
-                    GlStateManager.pushMatrix();
-                    GlStateManager.translate((float)x, (float)y + entity.height + 0.5F - (entity.isChild() ? entity.height / 2.0F : 0.0F), (float)z);
-                    GL11.glNormal3f(0.0F, 1.0F, 0.0F);
-                    GlStateManager.rotate(-this.renderManager.playerViewY, 0.0F, 1.0F, 0.0F);
-                    GlStateManager.rotate(this.renderManager.playerViewX, 1.0F, 0.0F, 0.0F);
-                    GlStateManager.scale(-0.02666667F, -0.02666667F, 0.02666667F);
-                    GlStateManager.translate(0.0F, 9.374999F, 0.0F);
-                    GlStateManager.disableLighting();
-                    GlStateManager.depthMask(false);
-                    GlStateManager.enableBlend();
-                    GlStateManager.disableTexture2D();
-                    GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
-                    int i = (int)fontrenderer.getStringWidth(s) / 2;
-                    Tessellator tessellator = Tessellator.getInstance();
-                    WorldRenderer worldrenderer = tessellator.getWorldRenderer();
-                    worldrenderer.begin(7, DefaultVertexFormats.POSITION_COLOR);
-                    worldrenderer.pos((double)(-i - 1), -1.0D, 0.0D).color(0.0F, 0.0F, 0.0F, 0.25F).endVertex();
-                    worldrenderer.pos((double)(-i - 1), 8.0D, 0.0D).color(0.0F, 0.0F, 0.0F, 0.25F).endVertex();
-                    worldrenderer.pos((double)(i + 1), 8.0D, 0.0D).color(0.0F, 0.0F, 0.0F, 0.25F).endVertex();
-                    worldrenderer.pos((double)(i + 1), -1.0D, 0.0D).color(0.0F, 0.0F, 0.0F, 0.25F).endVertex();
-                    tessellator.draw();
-                    GlStateManager.enableTexture2D();
-                    GlStateManager.depthMask(true);
-                    fontrenderer.drawString(s, -(int)fontrenderer.getStringWidth(s) / 2, 0, 553648127);
-                    GlStateManager.enableLighting();
-                    GlStateManager.disableBlend();
-                    GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-                    GlStateManager.popMatrix();
-                }
-                else
-                {
-                    this.renderOffsetLivingLabel(entity, x, y - (entity.isChild() ? (double)(entity.height / 2.0F) : 0.0D), z, s, 0.02666667F, d0);
-                }
+            if (Reflector.RenderLivingEvent_Specials_Post_Constructor.exists())
+            {
+                Reflector.postForgeBusEvent(Reflector.RenderLivingEvent_Specials_Post_Constructor, new Object[] {entity, this, Double.valueOf(x), Double.valueOf(y), Double.valueOf(z)});
             }
         }
     }

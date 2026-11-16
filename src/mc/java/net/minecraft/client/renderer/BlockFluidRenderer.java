@@ -12,6 +12,8 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import optifine.CustomColors;
+import optifine.RenderEnv;
 
 @SideOnly(Side.CLIENT)
 public class BlockFluidRenderer
@@ -38,13 +40,18 @@ public class BlockFluidRenderer
         BlockLiquid blockliquid = (BlockLiquid)blockStateIn.getBlock();
         blockliquid.setBlockBoundsBasedOnState(blockAccess, blockPosIn);
         TextureAtlasSprite[] atextureatlassprite = blockliquid.getMaterial() == Material.lava ? this.atlasSpritesLava : this.atlasSpritesWater;
-        int i = blockliquid.colorMultiplier(blockAccess, blockPosIn);
+        RenderEnv renderenv = RenderEnv.getInstance(blockAccess, blockStateIn, blockPosIn);
+        int i = CustomColors.getFluidColor(blockAccess, blockStateIn, blockPosIn, renderenv);
         float f = (float)(i >> 16 & 255) / 255.0F;
         float f1 = (float)(i >> 8 & 255) / 255.0F;
         float f2 = (float)(i & 255) / 255.0F;
         boolean flag = blockliquid.shouldSideBeRendered(blockAccess, blockPosIn.up(), EnumFacing.UP);
         boolean flag1 = blockliquid.shouldSideBeRendered(blockAccess, blockPosIn.down(), EnumFacing.DOWN);
-        boolean[] aboolean = new boolean[] {blockliquid.shouldSideBeRendered(blockAccess, blockPosIn.north(), EnumFacing.NORTH), blockliquid.shouldSideBeRendered(blockAccess, blockPosIn.south(), EnumFacing.SOUTH), blockliquid.shouldSideBeRendered(blockAccess, blockPosIn.west(), EnumFacing.WEST), blockliquid.shouldSideBeRendered(blockAccess, blockPosIn.east(), EnumFacing.EAST)};
+        boolean[] aboolean = renderenv.getBorderFlags();
+        aboolean[0] = blockliquid.shouldSideBeRendered(blockAccess, blockPosIn.north(), EnumFacing.NORTH);
+        aboolean[1] = blockliquid.shouldSideBeRendered(blockAccess, blockPosIn.south(), EnumFacing.SOUTH);
+        aboolean[2] = blockliquid.shouldSideBeRendered(blockAccess, blockPosIn.west(), EnumFacing.WEST);
+        aboolean[3] = blockliquid.shouldSideBeRendered(blockAccess, blockPosIn.east(), EnumFacing.EAST);
 
         if (!flag && !flag1 && !aboolean[0] && !aboolean[1] && !aboolean[2] && !aboolean[3])
         {
@@ -78,6 +85,7 @@ public class BlockFluidRenderer
                     textureatlassprite = atextureatlassprite[1];
                 }
 
+                worldRendererIn.setSprite(textureatlassprite);
                 f7 -= f11;
                 f8 -= f11;
                 f9 -= f11;
@@ -139,6 +147,7 @@ public class BlockFluidRenderer
 
             if (flag1)
             {
+                worldRendererIn.setSprite(atextureatlassprite[0]);
                 float f35 = atextureatlassprite[0].getMinU();
                 float f36 = atextureatlassprite[0].getMaxU();
                 float f37 = atextureatlassprite[0].getMinV();
@@ -180,6 +189,7 @@ public class BlockFluidRenderer
 
                 BlockPos blockpos = blockPosIn.add(j1, 0, k1);
                 TextureAtlasSprite textureatlassprite1 = atextureatlassprite[1];
+                worldRendererIn.setSprite(textureatlassprite1);
 
                 if (aboolean[i1])
                 {
@@ -251,6 +261,7 @@ public class BlockFluidRenderer
                 }
             }
 
+            worldRendererIn.setSprite((TextureAtlasSprite)null);
             return flag2;
         }
     }

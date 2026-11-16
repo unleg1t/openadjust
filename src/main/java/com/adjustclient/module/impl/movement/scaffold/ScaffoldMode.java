@@ -20,7 +20,7 @@ public abstract class ScaffoldMode implements Listener, MinecraftInstance, ModeO
      */
     public boolean isActive() {
         ScaffoldModule module = this.module;
-        if (!module.isEnabled()) {   // (module.flags & 2) != 0 -> enabled
+        if (!module.isEnabled()) {
             return false;
         }
         return module.settings.mode.getValue() == this;

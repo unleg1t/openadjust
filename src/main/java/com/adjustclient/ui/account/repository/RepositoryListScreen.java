@@ -76,9 +76,9 @@ public class RepositoryListScreen extends GuiScreen {
         } else {
             this.drawBackground(0);
         }
-        this.list.drawScreen(mouseX, mouseY, partialTicks);             // GuiSlot.a
+        this.list.drawScreen(mouseX, mouseY, partialTicks);
         String title;
-        if (this instanceof SelectRepositoryScreen) {                   // exact-class tests: q / r
+        if (this instanceof SelectRepositoryScreen) {
             title = "Select Repository";
         } else {
             title = "Switch Repository";

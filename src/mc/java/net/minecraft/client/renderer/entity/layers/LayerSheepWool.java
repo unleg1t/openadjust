@@ -8,6 +8,8 @@ import net.minecraft.item.EnumDyeColor;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import optifine.Config;
+import optifine.CustomColors;
 
 @SideOnly(Side.CLIENT)
 public class LayerSheepWool implements LayerRenderer<EntitySheep>
@@ -37,11 +39,24 @@ public class LayerSheepWool implements LayerRenderer<EntitySheep>
                 float f = ((float)(entitylivingbaseIn.ticksExisted % 25) + partialTicks) / 25.0F;
                 float[] afloat1 = EntitySheep.getDyeRgb(EnumDyeColor.byMetadata(k));
                 float[] afloat2 = EntitySheep.getDyeRgb(EnumDyeColor.byMetadata(l));
+
+                if (Config.isCustomColors())
+                {
+                    afloat1 = CustomColors.getSheepColors(EnumDyeColor.byMetadata(k), afloat1);
+                    afloat2 = CustomColors.getSheepColors(EnumDyeColor.byMetadata(l), afloat2);
+                }
+
                 GlStateManager.color(afloat1[0] * (1.0F - f) + afloat2[0] * f, afloat1[1] * (1.0F - f) + afloat2[1] * f, afloat1[2] * (1.0F - f) + afloat2[2] * f);
             }
             else
             {
                 float[] afloat = EntitySheep.getDyeRgb(entitylivingbaseIn.getFleeceColor());
+
+                if (Config.isCustomColors())
+                {
+                    afloat = CustomColors.getSheepColors(entitylivingbaseIn.getFleeceColor(), afloat);
+                }
+
                 GlStateManager.color(afloat[0], afloat[1], afloat[2]);
             }
 

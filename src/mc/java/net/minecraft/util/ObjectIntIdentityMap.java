@@ -39,4 +39,9 @@ public class ObjectIntIdentityMap<T> implements IObjectIntIterable<T>
     {
         return Iterators.filter(this.objectList.iterator(), Predicates.notNull());
     }
+
+    public List<T> getObjectList()
+    {
+        return this.objectList;
+    }
 }

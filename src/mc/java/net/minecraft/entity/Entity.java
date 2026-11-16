@@ -1960,7 +1960,7 @@ public abstract class Entity implements ICommandSender
 
     public boolean isInvisible()
     {
-        return this.getFlag(5);
+        return this.forceInvisible || this.getFlag(5);
     }
 
     @SideOnly(Side.CLIENT)

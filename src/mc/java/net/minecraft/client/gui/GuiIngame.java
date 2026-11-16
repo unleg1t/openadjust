@@ -56,6 +56,8 @@ import net.minecraft.util.StringUtils;
 import net.minecraft.world.border.WorldBorder;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import optifine.Config;
+import optifine.CustomColors;
 import org.lwjgl.input.Mouse;
 
 @SideOnly(Side.CLIENT)
@@ -119,12 +121,13 @@ public class GuiIngame extends Gui
         this.mc.entityRenderer.setupOverlayRendering();
         GlStateManager.enableBlend();
 
-        if (Minecraft.isFancyGraphicsEnabled())
+        if (Config.isVignetteEnabled())
         {
             this.renderVignette(this.mc.thePlayer.getBrightness(partialTicks), scaledresolution);
         }
         else
         {
+            GlStateManager.enableDepth();
             GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
         }
 
@@ -269,7 +272,6 @@ public class GuiIngame extends Gui
         {
             this.overlayDebug.renderDebugInfo(scaledresolution);
         }
-
         if (this.recordPlayingUpFor > 0)
         {
             this.mc.mcProfiler.startSection("overlayMessage");
@@ -503,6 +505,12 @@ public class GuiIngame extends Gui
         {
             this.mc.mcProfiler.startSection("expLevel");
             int k1 = 8453920;
+
+            if (Config.isCustomColors())
+            {
+                k1 = CustomColors.getExpBarTextColor(k1);
+            }
+
             String s = "" + this.mc.thePlayer.experienceLevel;
             int l1 = (scaledRes.getScaledWidth() - (int)this.getFontRenderer().getStringWidth(s)) / 2;
             int i1 = scaledRes.getScaledHeight() - 31 - 4;
@@ -666,6 +674,11 @@ public class GuiIngame extends Gui
         int k1 = 3;
         int l1 = scaledRes.getScaledWidth() - i - k1;
         int j = 0;
+
+        if (!collection.isEmpty() && com.adjustclient.service.credits.CreditsRenderer.INSTANCE != null)
+        {
+            com.adjustclient.service.credits.CreditsRenderer.INSTANCE.drawManager(l1 - 2, (float)(j1 - i1), scaledRes.getScaledWidth(), (float)j1);
+        }
 
         for (Score score1 : collection)
         {
@@ -1018,7 +1031,14 @@ public class GuiIngame extends Gui
             }
 
             String s = BossStatus.bossName;
-            this.getFontRenderer().drawStringWithShadow(s, (float)(i / 2 - this.getFontRenderer().getStringWidth(s) / 2), (float)(i1 - 10), 16777215);
+            int j1 = 16777215;
+
+            if (Config.isCustomColors())
+            {
+                j1 = CustomColors.getBossTextColor(j1);
+            }
+
+            this.getFontRenderer().drawStringWithShadow(s, (float)(i / 2 - (int)this.getFontRenderer().getStringWidth(s) / 2), (float)(i1 - 10), j1);
             GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
             this.mc.getTextureManager().bindTexture(icons);
         }
@@ -1048,49 +1068,57 @@ public class GuiIngame extends Gui
 
     protected void renderVignette(float lightLevel, ScaledResolution scaledRes)
     {
-        lightLevel = 1.0F - lightLevel;
-        lightLevel = MathHelper.clamp_float(lightLevel, 0.0F, 1.0F);
-        WorldBorder worldborder = this.mc.theWorld.getWorldBorder();
-        float f = (float)worldborder.getClosestDistance(this.mc.thePlayer);
-        double d0 = Math.min(worldborder.getResizeSpeed() * (double)worldborder.getWarningTime() * 1000.0D, Math.abs(worldborder.getTargetSize() - worldborder.getDiameter()));
-        double d1 = Math.max((double)worldborder.getWarningDistance(), d0);
-
-        if ((double)f < d1)
+        if (!Config.isVignetteEnabled())
         {
-            f = 1.0F - (float)((double)f / d1);
+            GlStateManager.enableDepth();
+            GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
         }
         else
         {
-            f = 0.0F;
-        }
+            lightLevel = 1.0F - lightLevel;
+            lightLevel = MathHelper.clamp_float(lightLevel, 0.0F, 1.0F);
+            WorldBorder worldborder = this.mc.theWorld.getWorldBorder();
+            float f = (float)worldborder.getClosestDistance(this.mc.thePlayer);
+            double d0 = Math.min(worldborder.getResizeSpeed() * (double)worldborder.getWarningTime() * 1000.0D, Math.abs(worldborder.getTargetSize() - worldborder.getDiameter()));
+            double d1 = Math.max((double)worldborder.getWarningDistance(), d0);
 
-        this.prevVignetteBrightness = (float)((double)this.prevVignetteBrightness + (double)(lightLevel - this.prevVignetteBrightness) * 0.01D);
-        GlStateManager.disableDepth();
-        GlStateManager.depthMask(false);
-        GlStateManager.tryBlendFuncSeparate(0, 769, 1, 0);
+            if ((double)f < d1)
+            {
+                f = 1.0F - (float)((double)f / d1);
+            }
+            else
+            {
+                f = 0.0F;
+            }
 
-        if (f > 0.0F)
-        {
-            GlStateManager.color(0.0F, f, f, 1.0F);
-        }
-        else
-        {
-            GlStateManager.color(this.prevVignetteBrightness, this.prevVignetteBrightness, this.prevVignetteBrightness, 1.0F);
-        }
+            this.prevVignetteBrightness = (float)((double)this.prevVignetteBrightness + (double)(lightLevel - this.prevVignetteBrightness) * 0.01D);
+            GlStateManager.disableDepth();
+            GlStateManager.depthMask(false);
+            GlStateManager.tryBlendFuncSeparate(0, 769, 1, 0);
 
-        this.mc.getTextureManager().bindTexture(vignetteTexPath);
-        Tessellator tessellator = Tessellator.getInstance();
-        WorldRenderer worldrenderer = tessellator.getWorldRenderer();
-        worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX);
-        worldrenderer.pos(0.0D, (double)scaledRes.getScaledHeight(), -90.0D).tex(0.0D, 1.0D).endVertex();
-        worldrenderer.pos((double)scaledRes.getScaledWidth(), (double)scaledRes.getScaledHeight(), -90.0D).tex(1.0D, 1.0D).endVertex();
-        worldrenderer.pos((double)scaledRes.getScaledWidth(), 0.0D, -90.0D).tex(1.0D, 0.0D).endVertex();
-        worldrenderer.pos(0.0D, 0.0D, -90.0D).tex(0.0D, 0.0D).endVertex();
-        tessellator.draw();
-        GlStateManager.depthMask(true);
-        GlStateManager.enableDepth();
-        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-        GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+            if (f > 0.0F)
+            {
+                GlStateManager.color(0.0F, f, f, 1.0F);
+            }
+            else
+            {
+                GlStateManager.color(this.prevVignetteBrightness, this.prevVignetteBrightness, this.prevVignetteBrightness, 1.0F);
+            }
+
+            this.mc.getTextureManager().bindTexture(vignetteTexPath);
+            Tessellator tessellator = Tessellator.getInstance();
+            WorldRenderer worldrenderer = tessellator.getWorldRenderer();
+            worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX);
+            worldrenderer.pos(0.0D, (double)scaledRes.getScaledHeight(), -90.0D).tex(0.0D, 1.0D).endVertex();
+            worldrenderer.pos((double)scaledRes.getScaledWidth(), (double)scaledRes.getScaledHeight(), -90.0D).tex(1.0D, 1.0D).endVertex();
+            worldrenderer.pos((double)scaledRes.getScaledWidth(), 0.0D, -90.0D).tex(1.0D, 0.0D).endVertex();
+            worldrenderer.pos(0.0D, 0.0D, -90.0D).tex(0.0D, 0.0D).endVertex();
+            tessellator.draw();
+            GlStateManager.depthMask(true);
+            GlStateManager.enableDepth();
+            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+            GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+        }
     }
 
     protected void renderPortal(float timeInPortal, ScaledResolution scaledRes)

@@ -13,15 +13,23 @@ public final class AlContext {
     private static final Object ALC_LOCK = new Object();
 
     public boolean makeCurrent() {
+        if (device == null || device.handle == 0L || handle == 0L) return false;
         boolean result = EXTThreadLocalContext.alcSetThreadContext(handle);
+        if (!result) {
+            result = org.lwjgl.openal.ALC10.alcMakeContextCurrent(handle);
+        }
         OpenAlErrors.checkAlcError(device.handle);
         if (result) bindCapabilities();
         return result;
     }
     public void clearCurrent() {
         AL.setCurrentThread(null);
-        EXTThreadLocalContext.alcSetThreadContext(0L);
-        OpenAlErrors.checkAlcError(device.handle);
+        if (!EXTThreadLocalContext.alcSetThreadContext(0L)) {
+            org.lwjgl.openal.ALC10.alcMakeContextCurrent(0L);
+        }
+        if (device != null && device.handle != 0L) {
+            OpenAlErrors.checkAlcError(device.handle);
+        }
     }
 
     private void bindCapabilities() {

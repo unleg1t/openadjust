@@ -12,11 +12,16 @@ public final class BedOverlaySettings extends RangedOverlaySettings {
     public final BooleanSetting showMissingBlocks;
 
     public BedOverlaySettings(BlockOverlayModule module, Color color) {
-        super("Bed", module, color, false, null);
+        super("Bed", module, color, false, () -> {
+            if (mc.theWorld != null && mc.renderGlobal != null && module.isEnabled()) {
+                if (mc.isCallingFromMinecraftThread()) mc.renderGlobal.loadRenderers();
+                else mc.addScheduledTask(RenderUtil.outlineRefresh(mc));
+            }
+        });
         showMissingBlocks = new BooleanSetting(group, "Show missing blocks", true);
         ExpandSetting hypixel = new ExpandSetting(group, "Hypixel");
         Runnable changed = () -> {
-            if (mc.theWorld != null && module.isEnabled()) {
+            if (mc.theWorld != null && mc.renderGlobal != null && module.isEnabled()) {
                 if (mc.isCallingFromMinecraftThread()) mc.renderGlobal.loadRenderers();
                 else mc.addScheduledTask(RenderUtil.outlineRefresh(mc));
             }

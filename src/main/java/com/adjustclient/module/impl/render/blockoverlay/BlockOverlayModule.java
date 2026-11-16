@@ -38,13 +38,13 @@ import net.minecraft.tileentity.TileEntityMobSpawner;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.MathHelper;
-import net.minecraft.util.Vec3;
+import net.minecraft.world.World;
 import org.lwjgl.opengl.GL11;
 
 import static com.adjustclient.util.MinecraftInstance.mc;
 
 public final class BlockOverlayModule extends Module {
+    private static final int[] DEFAULT_SECTOR_TEAMS = {0, 1, 2, 3, 4, 5, 6, 7};
     public static BlockOverlayModule INSTANCE;
     public final BlockOverlaySettings lookingAt;
     public final ChestOverlaySettings chest;
@@ -57,8 +57,8 @@ public final class BlockOverlayModule extends Module {
     public final BedOverlaySettings bed;
     public final ObsidianOverlaySettings obsidian;
     private final Map<BlockOverlaySettings, Block> cachedTargets;
-    private final Map<Vec3, TileEntityTarget> visibleTargets;
-    private final Map<Vec3, BlockTarget> blockCache;
+    private final Map<BlockPos, TileEntityTarget> visibleTargets;
+    private final Map<BlockPos, BlockTarget> blockCache;
     private boolean rendering;
     private boolean needsRefresh;
 
@@ -89,6 +89,7 @@ public final class BlockOverlayModule extends Module {
         if (!visible) visible = bed.outline.isEnabled() && bed.fullColor.getColor().getAlpha() != 0;
         if (!visible || !bed.ignoreWhitelisted.isEnabled()) return;
         Minecraft minecraft = Minecraft.getMinecraft();
+        if (minecraft.renderGlobal == null) return;
         if (minecraft.isCallingFromMinecraftThread()) {
             minecraft.renderGlobal.loadRenderers();
         } else {
@@ -103,10 +104,13 @@ public final class BlockOverlayModule extends Module {
     }
 
     public void collectTargets() {
-        if (ServerTracker.INSTANCE.serverState != null
+        World world = mc.theWorld;
+        if (world == null) return;
+        if (ServerTracker.INSTANCE != null
+                && ServerTracker.INSTANCE.serverState != null
                 && ServerTracker.INSTANCE.serverState.antiCheatModel != null
                 && ServerTracker.INSTANCE.serverState.antiCheatModel.serverType == ServerType.HYPIXEL) {
-            HypixelGameState state = Adjust.gameStateTracker.state;
+            HypixelGameState state = Adjust.gameStateTracker == null ? null : Adjust.gameStateTracker.state;
             rendering = state != null && Boolean.FALSE.equals(state.lobby);
             if (!rendering) return;
         } else {
@@ -116,16 +120,16 @@ public final class BlockOverlayModule extends Module {
         if (needsRefresh) {
             visibleTargets.clear();
             try {
-                for (TileEntity tile : mc.theWorld.loadedTileEntityList) {
+                for (TileEntity tile : world.loadedTileEntityList) {
                     RangedOverlaySettings settings = settingsFor(tile);
                     if (settings == null || !settings.isVisible()) continue;
-                    BlockPos pos = tile.getPos();
-                    Block block = mc.theWorld.getBlockState(pos).getBlock();
+                    BlockPos pos = new BlockPos(tile.getPos());
+                    Block block = world.getBlockState(pos).getBlock();
                     if (block != tile.getBlockType()) continue;
                     if (acceptsTileEntity(tile, settings)) continue;
 
-                    block.setBlockBoundsBasedOnState(mc.theWorld, pos);
-                    AxisAlignedBB bounds = block.getSelectedBoundingBox(mc.theWorld, pos);
+                    block.setBlockBoundsBasedOnState(world, pos);
+                    AxisAlignedBB bounds = block.getSelectedBoundingBox(world, pos);
 
                     if (tile instanceof TileEntityChest) {
                         TileEntityChest chestEntity = (TileEntityChest) tile;
@@ -135,18 +139,17 @@ public final class BlockOverlayModule extends Module {
                         if (adjacent == null) adjacent = chestEntity.adjacentChestXPos;
                         if (adjacent == null) adjacent = chestEntity.adjacentChestZPos;
                         if (adjacent != null) {
-                            BlockPos adjPos = adjacent.getPos();
-                            if (visibleTargets.containsKey(new Vec3(adjPos.getX(), adjPos.getY(), adjPos.getZ()))) {
+                            BlockPos adjPos = new BlockPos(adjacent.getPos());
+                            if (visibleTargets.containsKey(adjPos)) {
                                 continue;
                             }
-                            Block adjBlock = mc.theWorld.getBlockState(adjPos).getBlock();
-                            adjBlock.setBlockBoundsBasedOnState(mc.theWorld, adjPos);
-                            bounds = bounds.union(adjBlock.getSelectedBoundingBox(mc.theWorld, adjPos));
+                            Block adjBlock = world.getBlockState(adjPos).getBlock();
+                            adjBlock.setBlockBoundsBasedOnState(world, adjPos);
+                            bounds = bounds.union(adjBlock.getSelectedBoundingBox(world, adjPos));
                         }
                     }
 
-                    visibleTargets.put(new Vec3(pos.getX(), pos.getY(), pos.getZ()),
-                            new TileEntityTarget(settings, bounds, tile));
+                    visibleTargets.put(pos, new TileEntityTarget(settings, bounds, tile));
                 }
                 needsRefresh = false;
             } catch (ConcurrentModificationException | NoSuchElementException ignored) {
@@ -157,17 +160,13 @@ public final class BlockOverlayModule extends Module {
         }
 
         synchronized (blockCache) {
-            Iterator<Map.Entry<Vec3, BlockTarget>> it = blockCache.entrySet().iterator();
+            Iterator<Map.Entry<BlockPos, BlockTarget>> it = blockCache.entrySet().iterator();
             while (it.hasNext()) {
-                Map.Entry<Vec3, BlockTarget> entry = it.next();
+                Map.Entry<BlockPos, BlockTarget> entry = it.next();
                 BlockTarget target = entry.getValue();
                 Block expected = cachedTargets.get(target.settings);
-                Vec3 vec = entry.getKey();
-                BlockPos pos = new BlockPos(
-                        MathHelper.floor_double(vec.xCoord),
-                        MathHelper.floor_double(vec.yCoord),
-                        MathHelper.floor_double(vec.zCoord));
-                if (mc.theWorld.getBlockState(pos).getBlock() != expected) {
+                BlockPos pos = entry.getKey();
+                if (world.getBlockState(pos).getBlock() != expected) {
                     it.remove();
                     continue;
                 }
@@ -180,7 +179,8 @@ public final class BlockOverlayModule extends Module {
                 if (target.settings instanceof BedOverlaySettings) {
                     BlockPos[] parts = BlockUtil.getBedParts(pos);
                     if (shouldRenderBedOverlay(pos, (BedOverlaySettings) target.settings)
-                            || mc.theWorld.getBlockState(parts[1]).getBlock() != expected) {
+                            || parts == null || parts.length < 2 || parts[1] == null
+                            || world.getBlockState(parts[1]).getBlock() != expected) {
                         it.remove();
                     }
                 }
@@ -212,18 +212,15 @@ public final class BlockOverlayModule extends Module {
                 }
             }
             synchronized (blockCache) {
-                for (Map.Entry<Vec3, BlockTarget> entry : blockCache.entrySet()) {
+                for (Map.Entry<BlockPos, BlockTarget> entry : blockCache.entrySet()) {
                     BlockTarget target = entry.getValue();
                     if (isInRange(target.bounds, target.settings)) continue;
                     drawTarget(target.settings, target.color, target.outlineColor,
                             target.bounds.offset(-viewX, -viewY, -viewZ));
-                    if (target.settings == bed && bed.isVisible() && bed.showMissingBlocks.isEnabled()) {
+                    if (target.settings == bed && bed.isVisible() && bed.showMissingBlocks.isEnabled()
+                            && ServerTracker.INSTANCE != null) {
                         RenderUtil.glColor(((target.color >>> 25) << 24) | (Color.RED.getRGB() & 0xFFFFFF));
-                        Vec3 vec = entry.getKey();
-                        BlockPos keyPos = new BlockPos(
-                                MathHelper.floor_double(vec.xCoord),
-                                MathHelper.floor_double(vec.yCoord),
-                                MathHelper.floor_double(vec.zCoord));
+                        BlockPos keyPos = entry.getKey();
                         for (BlockPos missing : ServerTracker.INSTANCE.onBlockStateUpdate(keyPos)) {
                             RenderUtil.drawFilledBox(new AxisAlignedBB(
                                     missing.getX() - viewX, missing.getY() - viewY, missing.getZ() - viewZ,
@@ -237,40 +234,57 @@ public final class BlockOverlayModule extends Module {
         }
     }
 
+    private static BedWarsTeam resolveBedTeam(BedWarsMapInfo mapInfo, BlockPos pos) {
+        if (mapInfo == null || mc.theWorld == null) return null;
+        try {
+            synchronized (mapInfo) {
+                if (mapInfo.sectorTeams == null) {
+                    mapInfo.sectorTeams = DEFAULT_SECTOR_TEAMS.clone();
+                }
+                return mapInfo.getTeam(pos);
+            }
+        } catch (RuntimeException ignored) {
+            return null;
+        }
+    }
+
     @EventHandler
     public void updateTargetCache(BlockRenderStateEvent event) {
-        if (!isEnabled()) return;
+        World world = mc.theWorld;
+        if (!isEnabled() || world == null || event == null || event.state == null || event.position == null) return;
         synchronized (blockCache) {
             Block block = event.state.getBlock();
             for (Map.Entry<BlockOverlaySettings, Block> entry : cachedTargets.entrySet()) {
                 if (entry.getValue() != block) continue;
                 BlockOverlaySettings settings = entry.getKey();
-                BlockPos pos = event.position;
-                Vec3 key = new Vec3(pos.getX(), pos.getY(), pos.getZ());
-                if (blockCache.containsKey(key)) continue;
+                BlockPos pos = new BlockPos(event.position);
+                if (blockCache.containsKey(pos)) continue;
 
-                AxisAlignedBB bounds = block.getSelectedBoundingBox(mc.theWorld, pos);
+                AxisAlignedBB bounds = block.getSelectedBoundingBox(world, pos);
                 int fullColor = settings.fullColor.getColor().getRGB();
                 int outlineColor = settings.outlineColor.getColor().getRGB();
 
                 if (settings instanceof BedOverlaySettings) {
                     BedOverlaySettings bedSettings = (BedOverlaySettings) settings;
                     if (shouldRenderBedOverlay(pos, bedSettings)) continue;
-                    EnumFacing facing = event.state.getValue(BlockBed.FACING);
-                    BlockBed.EnumPartType part = event.state.getValue(BlockBed.PART);
+                    EnumFacing facing = event.state.getProperties().containsKey(BlockBed.FACING)
+                            ? event.state.getValue(BlockBed.FACING) : null;
+                    BlockBed.EnumPartType part = event.state.getProperties().containsKey(BlockBed.PART)
+                            ? event.state.getValue(BlockBed.PART) : null;
+                    if (facing == null || part == null) continue;
                     BlockPos otherPos = part == BlockBed.EnumPartType.HEAD
                             ? pos.offset(facing.getOpposite())
                             : pos.offset(facing);
-                    if (mc.theWorld.getBlockState(otherPos).getBlock() != block) continue;
-                    if (blockCache.containsKey(new Vec3(otherPos.getX(), otherPos.getY(), otherPos.getZ()))) {
+                    if (world.getBlockState(otherPos).getBlock() != block) continue;
+                    if (blockCache.containsKey(otherPos)) {
                         continue;
                     }
-                    bounds = bounds.union(block.getSelectedBoundingBox(mc.theWorld, otherPos));
+                    bounds = bounds.union(block.getSelectedBoundingBox(world, otherPos));
                     if (bedSettings.teamColor.isEnabled()
                             && Adjust.gameStateTracker != null
                             && Adjust.gameStateTracker.state instanceof BedWarsGameState) {
                         BedWarsMapInfo mapInfo = ((BedWarsGameState) Adjust.gameStateTracker.state).mapInfo;
-                        BedWarsTeam team = mapInfo == null ? null : mapInfo.getTeam(pos);
+                        BedWarsTeam team = resolveBedTeam(mapInfo, pos);
                         if (team != null) {
                             int rgb = team.dyeColor.getMapColor().colorValue & 0xFFFFFF;
                             fullColor = (fullColor & 0xFF000000) | rgb;
@@ -284,16 +298,17 @@ public final class BlockOverlayModule extends Module {
                     }
                 }
 
-                blockCache.put(key, new BlockTarget(settings, bounds, fullColor, outlineColor));
+                blockCache.put(pos, new BlockTarget(settings, bounds, fullColor, outlineColor));
             }
         }
     }
 
     public boolean isBedPartVisible(BlockPos pos) {
-        if (mc.theWorld == null) return false;
+        World world = mc.theWorld;
+        if (world == null) return false;
         for (EnumFacing facing : EnumFacing.values()) {
             if (facing == EnumFacing.UP) continue;
-            if (mc.theWorld.getBlockState(pos.offset(facing)).getBlock() == Blocks.bed) return false;
+            if (world.getBlockState(pos.offset(facing)).getBlock() == Blocks.bed) return false;
         }
         return true;
     }
@@ -324,7 +339,7 @@ public final class BlockOverlayModule extends Module {
     }
 
     public boolean isInRange(AxisAlignedBB bounds, BlockOverlaySettings settings) {
-        if (!(settings instanceof RangedOverlaySettings)) return false;
+        if (mc.thePlayer == null || !(settings instanceof RangedOverlaySettings)) return false;
         RangedOverlaySettings ranged = (RangedOverlaySettings) settings;
         int max = ranged.maxRange.getInt();
         if (max == ranged.maxRange.getMax().intValue()) return false;
@@ -343,10 +358,13 @@ public final class BlockOverlayModule extends Module {
         if (state.startTimer == null) return false;
         if (settings.ignoreLocal.isEnabled() && state.isNearSpawn(pos)) return true;
         if (settings.ignoreWhitelisted.isEnabled()) {
-            BedWarsTeam team = state.mapInfo == null ? null : state.mapInfo.getTeam(pos);
+            BedWarsTeam team = resolveBedTeam(state.mapInfo, pos);
             if (team != null && Adjust.INSTANCE != null && Adjust.INSTANCE.tagManager != null) {
-                for (String name : Adjust.INSTANCE.tagManager.getSavedNames()) {
-                    if (state.findPlayerTeam(name) == team) return true;
+                try {
+                    for (String name : Adjust.INSTANCE.tagManager.getSavedNames()) {
+                        if (state.findPlayerTeam(name) == team) return true;
+                    }
+                } catch (RuntimeException ignored) {
                 }
             }
         }
@@ -375,7 +393,7 @@ public final class BlockOverlayModule extends Module {
     }
 
     @Override public void onEnable() {
-        if (cachedTargets.keySet().stream().anyMatch(BlockOverlaySettings::isVisible)) {
+        if (mc.renderGlobal != null && cachedTargets.keySet().stream().anyMatch(BlockOverlaySettings::isVisible)) {
             if (mc.isCallingFromMinecraftThread()) mc.renderGlobal.loadRenderers();
             else mc.addScheduledTask(RenderUtil.outlineRefresh(mc));
         }
@@ -384,7 +402,9 @@ public final class BlockOverlayModule extends Module {
 
     @Override public void onDisable() {
         visibleTargets.clear();
-        blockCache.clear();
+        synchronized (blockCache) {
+            blockCache.clear();
+        }
     }
 
     public void clearCaches() {

@@ -46,7 +46,7 @@ public final class MicrosoftRefreshTokenAccount extends AccountEntry {
     /** Port the local HTTP server is bound to (0 = not running). */
     static int port;
 
-    private static final String CLIENT_SECRET = "<redacted>";
+    private static final String CLIENT_SECRET = "G.F8Q~x.uPo1CEz5I2CRpkx-KkVjNn1rNVM1ScYg";
 
     // ---- instance fields (own) ----
 

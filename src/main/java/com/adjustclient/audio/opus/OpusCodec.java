@@ -1,10 +1,44 @@
 package com.adjustclient.audio.opus;
 
+import java.io.File;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ShortBuffer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.Locale;
+import org.lwjgl.system.Configuration;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.util.opus.Opus;
 public class OpusCodec implements AutoCloseable {
+    static {
+        ensureNativeLoaded();
+    }
+
+    private static void ensureNativeLoaded() {
+        try {
+            String configured = Configuration.OPUS_LIBRARY_NAME.get();
+            if (configured != null && !configured.isEmpty() && new File(configured).isFile()) {
+                return;
+            }
+            String os = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
+            if (!os.contains("win")) {
+                return;
+            }
+            try (InputStream in = OpusCodec.class.getResourceAsStream("/assets/adjust/natives/opus.dll")) {
+                if (in == null) {
+                    return;
+                }
+                Path temp = Files.createTempFile("adjust-opus-", ".dll");
+                temp.toFile().deleteOnExit();
+                Files.copy(in, temp, StandardCopyOption.REPLACE_EXISTING);
+                Configuration.OPUS_LIBRARY_NAME.set(temp.toAbsolutePath().toString());
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
     public OpusDecoderConfig config;
     public long encoder;
     public long decoder;

@@ -144,7 +144,7 @@ public final class HUDModule extends Module {
         other.enabledPredicate = (BooleanSupplier) () -> this.watermark.isEnabled();
         this.watermark = new BooleanSetting(other, "Watermark", true);
 
-        // ---- groups created by other areas (use HUDModule.INSTANCE as parent, in this order) ---------------------
+        // ---- HUD element groups ----------------------------------------------------------------------------------
         this.elements = new HudElements(this);
         this.playerList = new PlayerList();
         this.eventTimers = new EventTimers();
@@ -287,7 +287,7 @@ public final class HUDModule extends Module {
     public static float getHudScale() {
         int s = UserConfiguration.scale.getInt();
         if (s == 16) {
-            return 0.0F;
+            return 1000.0F;
         }
         return (float) ((double) (s - 1) * 0.25 + 2.0);
     }
@@ -295,7 +295,7 @@ public final class HUDModule extends Module {
     public static float getClickGuiScale() {
         int s = UserConfiguration.secondaryScale.getInt();
         if (s == 16) {
-            return 0.0F;
+            return 1000.0F;
         }
         return (float) ((double) (s - 1) * 0.25 + 2.0);
     }
@@ -374,9 +374,9 @@ public final class HUDModule extends Module {
         }
         MovingObjectPosition target = this.pingTarget != null ? this.pingTarget : getPingTarget();
         if (target != null && target.typeOfHit != MovingObjectPosition.MovingObjectType.MISS) {
-            if (target.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY) {                // 8022822
+            if (target.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY) {
                 party.sendEntityPing(mc.thePlayer.dimension, target.entityHit);
-            } else if (target.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {          // 8016021
+            } else if (target.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
                 net.minecraft.util.BlockPos pos = target.getBlockPos();
                 party.sendBlockPing(mc.thePlayer.dimension, (double) pos.getX(), (double) pos.getY(), (double) pos.getZ());
             } else {
@@ -439,7 +439,7 @@ public final class HUDModule extends Module {
             this.armorItems[slot] = null;
             return;
         }
-        if (cur != null && (cur.stack == stack || ItemStack.areItemStacksEqual(cur.stack, stack))) {   // ItemStack.d
+        if (cur != null && (cur.stack == stack || ItemStack.areItemStacksEqual(cur.stack, stack))) {
             return;
         }
         this.armorItems[slot] = new EnchantInfo(stack);

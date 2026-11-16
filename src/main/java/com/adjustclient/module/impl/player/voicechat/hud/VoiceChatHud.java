@@ -2,6 +2,8 @@ package com.adjustclient.module.impl.player.voicechat.hud;
 
 import com.adjustclient.Adjust;
 import com.adjustclient.event.EventHandler;
+import com.adjustclient.event.Listener;
+import com.adjustclient.event.Render2DEvent;
 import com.adjustclient.game.movable.Movable;
 import com.adjustclient.module.impl.combat.antibot.AntiBotModule;
 import com.adjustclient.module.impl.player.voicechat.VoiceChatModule;
@@ -23,7 +25,7 @@ import org.lwjgl.nanovg.NVGColor;
 import static org.lwjgl.nanovg.NanoVG.*;
 import net.minecraft.util.ChatColor;
 
-public final class VoiceChatHud implements MinecraftInstance {
+public final class VoiceChatHud implements Listener, MinecraftInstance {
     public final VoiceChatModule module;
     public final Movable movable;
 
@@ -35,8 +37,13 @@ public final class VoiceChatHud implements MinecraftInstance {
 
     public boolean isVisible() { return module.isEnabled() && module.settings.hudEnabled.isEnabled(); }
 
+    @EventHandler
+    public void onRender2D(Render2DEvent event) {
+        render();
+    }
+
     public void render() {
-        if (!module.settings.hudEnabled.isEnabled()) return;
+        if (!module.isEnabled() || !module.settings.hudEnabled.isEnabled() || mc.thePlayer == null || mc.theWorld == null) return;
         AudioStreamManager streams = module.getAudioStreamManager();
         List<VoiceHudEntry> entries = new ArrayList<>();
         AudioStream local = streams.getLocalStream();
@@ -44,7 +51,7 @@ public final class VoiceChatHud implements MinecraftInstance {
         for (EntityPlayer player : mc.theWorld.playerEntities) {
             if (player == mc.thePlayer) continue;
             AudioStream stream = streams.get(player.getUniqueID());
-            if (module.getUserInfoCache().get(player.getUniqueID()) != null) entries.add(new VoiceHudEntry(player, stream));
+            if (player.getUniqueID() != null && module.getUserInfoCache().get(player.getUniqueID()) != null) entries.add(new VoiceHudEntry(player, stream));
             else if (module.settings.displayAllPlayers.isEnabled() && !AntiBotModule.isBot(player.getEntityId()))
                 entries.add(new VoiceHudEntry(player, null));
         }
@@ -76,7 +83,7 @@ public final class VoiceChatHud implements MinecraftInstance {
             EntityPlayer player = entry.player;
             AudioStream stream = entry.stream;
             float left = x + 2.0f;
-            if (module.watchedPlayers.contains(player.getUniqueID())) {
+            if (player.getUniqueID() != null && module.watchedPlayers.contains(player.getUniqueID())) {
                 int red = new Color(255, 85, 85, 222).getRGB();
                 Fonts.ICONS_11.drawString("m", left, y + 1.0f, red);
                 Fonts.TAHOMA_9.drawString("x", left + 1.0f, y + 1.5f, red);
@@ -88,16 +95,18 @@ public final class VoiceChatHud implements MinecraftInstance {
             float nameX = left + 7.0f;
             String name = player.getDisplayName().getFormattedText();
             Fonts.TAHOMA_9.drawString(name, nameX, y + 2.0f, player == mc.thePlayer ? HUDModule.getHudColor().getRGB() : textColor);
-            FriendServerTracker tracker = Adjust.INSTANCE.screenStack.serverTracker;
-            ClientUser user = tracker.findUser(player.getGameProfile().getName());
+            FriendServerTracker tracker = Adjust.INSTANCE != null && Adjust.INSTANCE.screenStack != null
+                    ? Adjust.INSTANCE.screenStack.serverTracker : null;
+            ClientUser user = tracker != null && player.getGameProfile() != null && player.getGameProfile().getName() != null
+                    ? tracker.findUser(player.getGameProfile().getName()) : null;
             if (user != null) Fonts.TAHOMA_9.drawString(" \u00a7l" + user.name, nameX, y + 2.0f, user.getColor());
             nvgBeginPath(vg);
             float[] levels = stream == null ? null : stream.levelMeter.levels;
-            if (levels != null && levels.length != 0) {
+            if (levels != null && levels.length >= 4) {
                 int length = levels.length;
-                int cursor = (int) (((System.currentTimeMillis() - stream.levelMeter.timer.lastMs) * (length / 1000L)) % length);
+                int cursor = (int) Math.floorMod((System.currentTimeMillis() - stream.levelMeter.timer.lastMs) * (length / 1000L), (long) length);
                 int count = length >> 2;
-                int step = count / 100;
+                int step = Math.max(1, count / 100);
                 for (int i = 0; i < count; i += step) {
                     int index = i + cursor;
                     if (index >= length - step) index -= length - step;

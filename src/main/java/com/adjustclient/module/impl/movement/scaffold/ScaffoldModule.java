@@ -467,9 +467,9 @@ public final class ScaffoldModule extends Module {
         }
         this.noAscendActive = this.isNoAscendActive(true);
         // ground scan below the player with the planned rotation
-        Integer ground = this.placementScanner.predict(player, new Vec2f(this.targetYaw, this.targetPitch));   // g.a
+        Integer ground = this.placementScanner.predict(player, new Vec2f(this.targetYaw, this.targetPitch));
         boolean nearGround = ground != null && ground.intValue() < 5;
-        boolean hasBlock = this.selectBlock(nearGround);                // i(boolean)
+        boolean hasBlock = this.selectBlock(nearGround);
         if (hasBlock) {
             this.validSlotTicks++;
             boolean ready;
@@ -521,7 +521,7 @@ public final class ScaffoldModule extends Module {
         boolean rotatedThisTick = false;
         if (this.isRotationWindowActive() && this.settings.isRotationsEnabled()) {
             ScaffoldMode mode = (ScaffoldMode) this.settings.mode.getValue();
-            boolean jumpPlanned = mode instanceof HypixelScaffoldMode && this.planHypixelJump(player);   // v128
+            boolean jumpPlanned = mode instanceof HypixelScaffoldMode && this.planHypixelJump(player);
             boolean airborne = player.onGround || this.willLandOnBlock(player.motionY) || jumpPlanned;
             if (player.onGround) {
                 this.rotated = false;
@@ -800,7 +800,7 @@ public final class ScaffoldModule extends Module {
                 return true;
             }
             GameType type = mc.playerController.getCurrentGameType();
-            return type != GameType.SPECTATOR && type != GameType.ADVENTURE;      // constants 7753143 / 7751883
+            return type != GameType.SPECTATOR && type != GameType.ADVENTURE;
         }
         this.autoEnableTimer = null;
         return false;
@@ -941,7 +941,7 @@ public final class ScaffoldModule extends Module {
         Vec3 hit = placement.hitVec;
         mc.rightClickDelayTimer = 0;
         mc.objectMouseOver = new MovingObjectPosition(new Vec3(hit.xCoord, hit.yCoord, hit.zCoord), placement.facing,
-                placement.pos);                                        // typeOfHit = BLOCK (8016021)
+                placement.pos);
         ServerTracker.INSTANCE.mouseOverOverridden = true;
         com.adjustclient.module.util.SwingMouseClick click = ((com.adjustclient.module.util.MouseClickHelper) Adjust.mouseClickHelper).right;
         click.clicks = Integer.valueOf(1); // right mouse button

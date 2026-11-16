@@ -30,7 +30,9 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import optifine.Config;
 import org.lwjgl.opengl.GL11;
+import shadersmod.client.Shaders;
 
 @SideOnly(Side.CLIENT)
 public abstract class Render<T extends Entity>
@@ -195,54 +197,57 @@ public abstract class Render<T extends Entity>
 
     private void renderShadow(Entity entityIn, double x, double y, double z, float shadowAlpha, float partialTicks)
     {
-        GlStateManager.enableBlend();
-        GlStateManager.blendFunc(770, 771);
-        this.renderManager.renderEngine.bindTexture(shadowTextures);
-        World world = this.getWorldFromRenderManager();
-        GlStateManager.depthMask(false);
-        float f = this.shadowSize;
-
-        if (entityIn instanceof EntityLiving)
+        if (!Config.isShaders() || !Shaders.shouldSkipDefaultShadow)
         {
-            EntityLiving entityliving = (EntityLiving)entityIn;
-            f *= entityliving.getRenderSizeModifier();
+            GlStateManager.enableBlend();
+            GlStateManager.blendFunc(770, 771);
+            this.renderManager.renderEngine.bindTexture(shadowTextures);
+            World world = this.getWorldFromRenderManager();
+            GlStateManager.depthMask(false);
+            float f = this.shadowSize;
 
-            if (entityliving.isChild())
+            if (entityIn instanceof EntityLiving)
             {
-                f *= 0.5F;
+                EntityLiving entityliving = (EntityLiving)entityIn;
+                f *= entityliving.getRenderSizeModifier();
+
+                if (entityliving.isChild())
+                {
+                    f *= 0.5F;
+                }
             }
-        }
 
-        double d5 = entityIn.lastTickPosX + (entityIn.posX - entityIn.lastTickPosX) * (double)partialTicks;
-        double d0 = entityIn.lastTickPosY + (entityIn.posY - entityIn.lastTickPosY) * (double)partialTicks;
-        double d1 = entityIn.lastTickPosZ + (entityIn.posZ - entityIn.lastTickPosZ) * (double)partialTicks;
-        int i = MathHelper.floor_double(d5 - (double)f);
-        int j = MathHelper.floor_double(d5 + (double)f);
-        int k = MathHelper.floor_double(d0 - (double)f);
-        int l = MathHelper.floor_double(d0);
-        int i1 = MathHelper.floor_double(d1 - (double)f);
-        int j1 = MathHelper.floor_double(d1 + (double)f);
-        double d2 = x - d5;
-        double d3 = y - d0;
-        double d4 = z - d1;
-        Tessellator tessellator = Tessellator.getInstance();
-        WorldRenderer worldrenderer = tessellator.getWorldRenderer();
-        worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
+            double d5 = entityIn.lastTickPosX + (entityIn.posX - entityIn.lastTickPosX) * (double)partialTicks;
+            double d0 = entityIn.lastTickPosY + (entityIn.posY - entityIn.lastTickPosY) * (double)partialTicks;
+            double d1 = entityIn.lastTickPosZ + (entityIn.posZ - entityIn.lastTickPosZ) * (double)partialTicks;
+            int i = MathHelper.floor_double(d5 - (double)f);
+            int j = MathHelper.floor_double(d5 + (double)f);
+            int k = MathHelper.floor_double(d0 - (double)f);
+            int l = MathHelper.floor_double(d0);
+            int i1 = MathHelper.floor_double(d1 - (double)f);
+            int j1 = MathHelper.floor_double(d1 + (double)f);
+            double d2 = x - d5;
+            double d3 = y - d0;
+            double d4 = z - d1;
+            Tessellator tessellator = Tessellator.getInstance();
+            WorldRenderer worldrenderer = tessellator.getWorldRenderer();
+            worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
 
-        for (BlockPos blockpos : BlockPos.getAllInBoxMutable(new BlockPos(i, k, i1), new BlockPos(j, l, j1)))
-        {
-            Block block = world.getBlockState(blockpos.down()).getBlock();
-
-            if (block.getRenderType() != -1 && world.getLightFromNeighbors(blockpos) > 3)
+            for (BlockPos blockpos : BlockPos.getAllInBoxMutable(new BlockPos(i, k, i1), new BlockPos(j, l, j1)))
             {
-                this.renderShadowBlock(block, x, y, z, blockpos, shadowAlpha, f, d2, d3, d4);
-            }
-        }
+                Block block = world.getBlockState(blockpos.down()).getBlock();
 
-        tessellator.draw();
-        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-        GlStateManager.disableBlend();
-        GlStateManager.depthMask(true);
+                if (block.getRenderType() != -1 && world.getLightFromNeighbors(blockpos) > 3)
+                {
+                    this.renderShadowBlock(block, x, y, z, blockpos, shadowAlpha, f, d2, d3, d4);
+                }
+            }
+
+            tessellator.draw();
+            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+            GlStateManager.disableBlend();
+            GlStateManager.depthMask(true);
+        }
     }
 
     private World getWorldFromRenderManager()

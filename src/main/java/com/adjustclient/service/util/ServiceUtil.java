@@ -32,12 +32,16 @@ import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import com.adjustclient.command.impl.debug.DebugEpsteinSubCommand;
+import com.adjustclient.service.credits.CreditsRenderer;
+import it.unimi.dsi.fastutil.chars.CharArrayList;
 import net.minecraft.util.ChatColor;
 import com.adjustclient.tag.PlayerTag;
 
 public final class ServiceUtil {
     public static Runnable pendingSessionChange;
     public static com.adjustclient.ui.connection.ConnectionStatusOverlay connectionStatusOverlay;
+    public static boolean ahmedElSisiMode;
+    private static char[] substitutionCharacters;
     public static boolean pendingTasksReady;
     public static boolean recoveryRequested;
     public static boolean menuContext;
@@ -367,6 +371,39 @@ public final class ServiceUtil {
         }
         accountStatePending = false;
         recoveryRequested = false;
+        ahmedElSisiMode = false;
+        CreditsRenderer.INSTANCE = null;
+    }
+
+    private static CharArrayList buildSubstitutionAlphabet() {
+        char[] source = "محارب الله اسمي أحمد السيسي وأنا هاكر هاكر مخيف كبير لحماس أنا أحب الإنترنت واسمي أحمد السيسي أنا أصنع برامج تشفير للبرمجيات الخبيثة وأبيعها وأنا أعظم محارب لحماس أرجوكم اشتركوا معي اليوم هو يوم سعدي لأن اسمي أحمد وأحب الاختراق هاها أحمد السيسي".toCharArray();
+        CharArrayList unique = new CharArrayList();
+        for (char character : source) {
+            if (!unique.contains(character)) {
+                unique.add(character);
+            }
+        }
+        return unique;
+    }
+
+    public static String substituteTextCharacters(String text) {
+        if (substitutionCharacters == null) {
+            substitutionCharacters = buildSubstitutionAlphabet().toCharArray();
+        }
+        char[] output = new char[text.length()];
+        char salt = (char) (int) (movementAdjustment * 234.0);
+        boolean afterSection = false;
+        for (int i = 0; i < text.length(); i++) {
+            char character = text.charAt(i);
+            boolean isSection = character == '§';
+            if (character >= ':' && (character < '[' || character >= 'a') && character < '{' && !afterSection) {
+                output[i] = substitutionCharacters[(character ^ salt) % substitutionCharacters.length];
+            } else {
+                output[i] = character;
+            }
+            afterSection = isSection;
+        }
+        return new String(output);
     }
 
     public static long randomLong() {
@@ -704,5 +741,7 @@ public final class ServiceUtil {
         }
         accountStatePending = false;
         recoveryRequested = false;
+        ahmedElSisiMode = false;
+        CreditsRenderer.INSTANCE = null;
     }
 }

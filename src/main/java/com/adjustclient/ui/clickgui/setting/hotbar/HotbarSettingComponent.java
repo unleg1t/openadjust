@@ -150,7 +150,6 @@ public final class HotbarSettingComponent extends SettingComponent<HotbarSetting
     /**
      * Is the item with this list position already in one of the slots? A slot matches when its stack's item is the item, or (potion
      * stacks) when {@link #POTIONS}{@code .inverse()} maps the stack's damage value to the item. Empty slots never match.
-     * Gap-fill 2026-11-05: rewritten from the stream form; the previous version dropped the non-potion branch (item identity).
      */
     boolean isUsed(int id) {
         Item item = Item.getItemById(id);

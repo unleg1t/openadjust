@@ -9,38 +9,50 @@ public final class BedPlatesModule extends Module implements Listener {
     public static BedPlatesModule INSTANCE;
     public final BedPlatesSettings settings;
     public final BedPlatesRenderer renderer = new BedPlatesRenderer(this);
-    public BedTracker tracker;
+    public volatile BedTracker tracker;
 
     @EventHandler public void onTick(com.adjustclient.event.CancellablePlayerUpdateEvent event) {
-        if (event.isCancelled() || !isEnabled()) return;
-        var server = com.adjustclient.util.anticheat.ServerTracker.INSTANCE.serverState;
+        if (event == null || event.isCancelled() || !isEnabled()) return;
+        BedTracker currentTracker = tracker;
+        if (currentTracker == null) return;
+        var server = com.adjustclient.util.anticheat.ServerTracker.INSTANCE == null
+                ? null : com.adjustclient.util.anticheat.ServerTracker.INSTANCE.serverState;
         if (server != null && server.antiCheatModel != null
                 && server.antiCheatModel.serverType == com.adjustclient.server.ServerType.HYPIXEL) {
-            var state = com.adjustclient.Adjust.gameStateTracker.state;
-            if (!Boolean.FALSE.equals(state.lobby)
+            var state = com.adjustclient.Adjust.gameStateTracker == null
+                    ? null : com.adjustclient.Adjust.gameStateTracker.state;
+            if (state == null || !Boolean.FALSE.equals(state.lobby)
                     || state.game != com.adjustclient.hypixel.HypixelGame.BED_WARS) {
-                tracker.clear();
+                currentTracker.clear();
                 return;
             }
         }
-        tracker.tick();
+        currentTracker.tick();
     }
 
     @EventHandler public void onBlockState(com.adjustclient.event.BlockRenderStateEvent event) {
-        if (!isEnabled()) return;
-        var server = com.adjustclient.util.anticheat.ServerTracker.INSTANCE.serverState;
+        if (event == null || !isEnabled()) return;
+        BedTracker currentTracker = tracker;
+        if (currentTracker == null) return;
+        var server = com.adjustclient.util.anticheat.ServerTracker.INSTANCE == null
+                ? null : com.adjustclient.util.anticheat.ServerTracker.INSTANCE.serverState;
         if (server != null && server.antiCheatModel != null
                 && server.antiCheatModel.serverType == com.adjustclient.server.ServerType.HYPIXEL) {
-            var state = com.adjustclient.Adjust.gameStateTracker.state;
-            if (!Boolean.FALSE.equals(state.lobby)
+            var state = com.adjustclient.Adjust.gameStateTracker == null
+                    ? null : com.adjustclient.Adjust.gameStateTracker.state;
+            if (state == null || !Boolean.FALSE.equals(state.lobby)
                     || state.game != com.adjustclient.hypixel.HypixelGame.BED_WARS) return;
         }
-        tracker.onBlockChange(event);
+        currentTracker.onBlockChange(event);
     }
 
     @Override public void onEnable() {
         tracker = new BedTracker(this);
-        net.minecraft.client.Minecraft.getMinecraft().renderGlobal.loadRenderers();
+        net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getMinecraft();
+        if (mc.renderGlobal != null) {
+            if (mc.isCallingFromMinecraftThread()) mc.renderGlobal.loadRenderers();
+            else mc.addScheduledTask(com.adjustclient.render.RenderUtil.outlineRefresh(mc));
+        }
     }
 
     @Override public void onDisable() {

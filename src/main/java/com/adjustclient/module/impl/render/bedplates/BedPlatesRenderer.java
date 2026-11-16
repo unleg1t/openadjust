@@ -20,7 +20,8 @@ public final class BedPlatesRenderer implements MinecraftInstance, com.adjustcli
 
     @com.adjustclient.event.EventHandler(priority = 50)
     public void renderAll(com.adjustclient.event.Render2DEvent event) {
-        if (!module.isEnabled() || module.tracker == null) return;
+        BedTracker tracker = module.tracker;
+        if (!module.isEnabled() || tracker == null) return;
         int configured = com.adjustclient.service.config.user.UserConfiguration.scale.getValue().intValue();
         double scale = configured == 16 ? 1000.0 : (double) (configured - 1) * 0.25 + 2.0;
         ScaledResolution resolution = event.scaledResolution;
@@ -29,7 +30,7 @@ public final class BedPlatesRenderer implements MinecraftInstance, com.adjustcli
             mc.entityRenderer.setupOverlayRendering(resolution);
             NvgContext.setScale((float) resolution.getScaleFactor_double());
         }
-        Map<net.minecraft.util.BlockPos, BedPlate> plates = module.tracker.beds;
+        Map<net.minecraft.util.BlockPos, BedPlate> plates = tracker.beds;
         GL11.glPushMatrix();
         synchronized (plates) {
             org.joml.Vector4d[] projected = new org.joml.Vector4d[plates.size()];

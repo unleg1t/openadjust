@@ -25,7 +25,7 @@ import com.adjustclient.ui.hud.notification.NotificationBuilder;
 
 public class BrowserLoginRequestHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
-    private static final String CLIENT_SECRET = "<redacted>";
+    private static final String CLIENT_SECRET = "G.F8Q~x.uPo1CEz5I2CRpkx-KkVjNn1rNVM1ScYg";
 
     /**
      * Writes a 200 response with the "close this page" HTML (Content-Type "text/html; charset=UTF-8") and closes the

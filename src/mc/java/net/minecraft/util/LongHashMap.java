@@ -16,7 +16,7 @@ public class LongHashMap<V>
 
     private static int getHashedKey(long originalKey)
     {
-        return hash((int)(originalKey ^ originalKey >>> 32));
+        return (int)(originalKey ^ originalKey >>> 27);
     }
 
     private static int hash(int integer)
@@ -187,6 +187,21 @@ public class LongHashMap<V>
         {
             this.resizeTable(2 * this.hashArray.length);
         }
+    }
+
+    public double getKeyDistribution()
+    {
+        int i = 0;
+
+        for (int j = 0; j < this.hashArray.length; ++j)
+        {
+            if (this.hashArray[j] != null)
+            {
+                ++i;
+            }
+        }
+
+        return 1.0D * (double)i / (double)this.numHashElements;
     }
 
     static class Entry<V>

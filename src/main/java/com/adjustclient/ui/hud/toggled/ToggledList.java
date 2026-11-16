@@ -18,6 +18,7 @@ import com.adjustclient.Adjust;
 import com.adjustclient.module.impl.render.hud.HUDModule;
 import com.adjustclient.render.ColorUtil;
 import com.adjustclient.script.engine.ScriptManager;
+import com.adjustclient.service.util.ServiceUtil;
 
 public final class ToggledList extends HudElement implements Listener {
     public static ToggledList INSTANCE;
@@ -121,7 +122,6 @@ public final class ToggledList extends HudElement implements Listener {
             this.moduleListVersion = version;
             this.entries.removeIf(entry -> false);
             // for each element of ScriptManager.getScripts() a new ToggledEntry(owner = this) is appended
-            // (heightAnim = new Animation(easing 7754495, 250 ms))
             for (Object element : moduleManager.getScripts()) {
                 this.entries.add(newEntryFor(element));
             }
@@ -147,7 +147,7 @@ public final class ToggledList extends HudElement implements Listener {
             if (!entry.active) {
                 continue;
             }
-            float rowHeight = this.settings.padding.getValue().rowHeight;
+            float rowHeight = ServiceUtil.ahmedElSisiMode ? entry.heightAnim.getValue() : this.settings.padding.getValue().rowHeight;
             entry.targetY = (float) row * rowHeight;
             if (entry.xAnim == null) {
                 entry.xAnim = new Animation(Easing.EASE_OUT_EXPO, 600L);

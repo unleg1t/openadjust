@@ -4,6 +4,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.util.MathHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import optifine.Config;
+import shadersmod.client.ShadersTex;
 
 @SideOnly(Side.CLIENT)
 public class TextureClock extends TextureAtlasSprite
@@ -59,7 +61,15 @@ public class TextureClock extends TextureAtlasSprite
             if (i != this.frameCounter)
             {
                 this.frameCounter = i;
-                TextureUtil.uploadTextureMipmap((int[][])this.framesTextureData.get(this.frameCounter), this.width, this.height, this.originX, this.originY, false, false);
+
+                if (Config.isShaders())
+                {
+                    ShadersTex.uploadTexSub((int[][])this.framesTextureData.get(this.frameCounter), this.width, this.height, this.originX, this.originY, false, false);
+                }
+                else
+                {
+                    TextureUtil.uploadTextureMipmap((int[][])this.framesTextureData.get(this.frameCounter), this.width, this.height, this.originX, this.originY, false, false);
+                }
             }
         }
     }

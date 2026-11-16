@@ -203,7 +203,7 @@ public final class PlayerList {
         } else if (wheel > 0.0F) {
             direction = -1.0F;
         } else {
-            return false;                                                         // v29 == 0: nothing to scroll
+            return false;
         }
         this.clampScroll(direction * 8.0F + this.scroll);
         return true;
@@ -365,8 +365,8 @@ public final class PlayerList {
     public void updateColumns() {
         this.apiColumnsActive = false;
         List<PlayerListColumn> columns = new ArrayList<>(8);
-        columns.add(PlayerListColumn.PLAYERS);                                   // c.a.o
-        columns.add(PlayerListColumn.DISTANCE);                                  // c.a.d
+        columns.add(PlayerListColumn.PLAYERS);
+        columns.add(PlayerListColumn.DISTANCE);
 
         HypixelGameState state;
         if (isOnHypixel() && Boolean.FALSE.equals((state = Adjust.gameStateTracker.state).lobby)) {
@@ -486,15 +486,15 @@ public final class PlayerList {
 
     public void layoutColumns(List<PlayerListColumn> columns) {
         float[] widths = new float[columns.size()];
-        float offset = -this.scroll;               // v8 / v191: rows scrolled out above the view have a negative y
+        float offset = -this.scroll;               // rows scrolled out above the view have a negative y
         if (widths.length == 0) {
             this.columnWidths = widths;
             this.width = 0.0F;
             this.height = offset;
             return;
         }
-        final float rowHeight = 8.0F;              // v194
-        final float padding = 5.0F;                // v193
+        final float rowHeight = 8.0F;
+        final float padding = 5.0F;
         NvgFontRenderer font = Fonts.TAHOMA_10;
         if (font == null) {
             this.columnWidths = widths;
@@ -502,7 +502,7 @@ public final class PlayerList {
             this.height = offset;
             return;
         }
-        float totalWidth = 0.0F;                   // v190
+        float totalWidth = 0.0F;
         float y = offset;
         int counted = 0;
         for (int i = 0; i < widths.length; i++) {

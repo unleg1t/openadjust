@@ -41,10 +41,10 @@ public final class SessionInformationWidget extends HudWidget {
         if (days >= 1L) {
             return String.format("%dd %dh %dm", days, hours % 24L, minutes % 60L);
         }
-        if (hours % 24L > 0L) {          // v9 > 24 * (v9 / 24)
+        if (hours % 24L > 0L) {
             return String.format("%dh %dm %ds", hours % 24L, minutes % 60L, seconds);
         }
-        if (minutes % 60L > 0L) {        // v6 > 60 * (v6 / 60)
+        if (minutes % 60L > 0L) {
             return String.format("%dm %ds", minutes % 60L, seconds);
         }
         return String.format("%ds", seconds);

@@ -14,7 +14,7 @@ import org.apache.commons.lang3.tuple.Pair;
 public final class BedWarsMapInfo implements MinecraftInstance {
     public final BedWarsGameState state;
     public final List<Pair<BlockPos, BedWarsTeam>> scannedTeams = new ArrayList<>();
-    public int[] sectorTeams;
+    public int[] sectorTeams = new int[] {0, 1, 2, 3, 4, 5, 6, 7};
     public boolean initialized;
     public Object field20;
     public static final Map<String, int[]> cachedMaps = new HashMap<>();
@@ -83,7 +83,7 @@ public final class BedWarsMapInfo implements MinecraftInstance {
 
     public BedWarsMapInfo(BedWarsGameState state) { this.state = state; }
 
-    public void initialize() {
+    public synchronized void initialize() {
         if (initialized || BedWarsGameState.bedLocations == null
                 || state.mode == null || state.mapName == null) return;
         initialized = true;
@@ -114,7 +114,7 @@ public final class BedWarsMapInfo implements MinecraftInstance {
         return true;
     }
 
-    public BedWarsTeam getTeam(BlockPos pos) {
+    public synchronized BedWarsTeam getTeam(BlockPos pos) {
         initialize();
         if (initialized) {
             return BedWarsTeam.VALUES[sectorTeams[sector(pos.getX(), pos.getZ())]];
@@ -122,8 +122,9 @@ public final class BedWarsMapInfo implements MinecraftInstance {
         for (Pair<BlockPos, BedWarsTeam> entry : scannedTeams) {
             if (entry.getLeft().distanceSq(pos) < 12.25) return entry.getRight();
         }
-        BedWarsTeam team = scanTeam(pos);
-        scannedTeams.add(Pair.of(pos, team));
+        BlockPos immutablePos = new BlockPos(pos);
+        BedWarsTeam team = scanTeam(immutablePos);
+        scannedTeams.add(Pair.of(immutablePos, team));
         return team;
     }
 
@@ -144,11 +145,13 @@ public final class BedWarsMapInfo implements MinecraftInstance {
     }
 
     public BedWarsTeam scanTeam(BlockPos origin) {
+        net.minecraft.world.World world = mc.theWorld;
+        if (world == null) return null;
         Map<EnumDyeColor, Integer> counts = new HashMap<>();
         for (int x = -16; x < 16; x++) {
             for (int y = -2; y < 10; y++) {
                 for (int z = -16; z < 16; z++) {
-                    IBlockState state = mc.theWorld.getBlockState(origin.add(x, y, z));
+                    IBlockState state = world.getBlockState(origin.add(x, y, z));
                     if (state.getBlock() != Blocks.wool) continue;
                     for (Map.Entry<IProperty, Comparable> property : state.getProperties().entrySet()) {
                         if (!"color".equals(property.getKey().getName())) continue;

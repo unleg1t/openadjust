@@ -8,6 +8,19 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public class MathHelper
 {
     public static final float SQRT_2 = sqrt_float(2.0F);
+    private static final int SIN_BITS = 12;
+    private static final int SIN_MASK = 4095;
+    private static final int SIN_COUNT = 4096;
+    public static final float PI = (float)Math.PI;
+    public static final float PI2 = ((float)Math.PI * 2F);
+    public static final float PId2 = ((float)Math.PI / 2F);
+    private static final float radFull = ((float)Math.PI * 2F);
+    private static final float degFull = 360.0F;
+    private static final float radToIndex = 651.8986F;
+    private static final float degToIndex = 11.377778F;
+    public static final float deg2Rad = 0.017453292F;
+    private static final float[] SIN_TABLE_FAST = new float[4096];
+    public static boolean fastMath = false;
     private static final float[] SIN_TABLE = new float[65536];
     private static final int[] multiplyDeBruijnBitPosition;
     private static final double field_181163_d;
@@ -16,12 +29,12 @@ public class MathHelper
 
     public static float sin(float p_76126_0_)
     {
-        return SIN_TABLE[(int)(p_76126_0_ * 10430.378F) & 65535];
+        return fastMath ? SIN_TABLE_FAST[(int)(p_76126_0_ * 651.8986F) & 4095] : SIN_TABLE[(int)(p_76126_0_ * 10430.378F) & 65535];
     }
 
     public static float cos(float value)
     {
-        return SIN_TABLE[(int)(value * 10430.378F + 16384.0F) & 65535];
+        return fastMath ? SIN_TABLE_FAST[(int)((value + ((float)Math.PI / 2F)) * 651.8986F) & 4095] : SIN_TABLE[(int)(value * 10430.378F + 16384.0F) & 65535];
     }
 
     public static float sqrt_float(float value)
@@ -477,6 +490,16 @@ public class MathHelper
         for (int i = 0; i < 65536; ++i)
         {
             SIN_TABLE[i] = (float)Math.sin((double)i * Math.PI * 2.0D / 65536.0D);
+        }
+
+        for (int k = 0; k < 4096; ++k)
+        {
+            SIN_TABLE_FAST[k] = (float)Math.sin((double)(((float)k + 0.5F) / 4096.0F * ((float)Math.PI * 2F)));
+        }
+
+        for (int l = 0; l < 360; l += 90)
+        {
+            SIN_TABLE_FAST[(int)((float)l * 11.377778F) & 4095] = (float)Math.sin((double)((float)l * 0.017453292F));
         }
 
         multiplyDeBruijnBitPosition = new int[] {0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8, 31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9};

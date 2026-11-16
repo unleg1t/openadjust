@@ -9,8 +9,10 @@ public final class OpenAlErrors {
         int error = AL10.alGetError();
         if (error == 0) return false;
         StackTraceElement[] stack = Thread.currentThread().getStackTrace();
-        StackTraceElement site = stack[2];
-        String file = site.getFileName() == null ? "Unknown" : site.getFileName().replace(".java", "");
+        StackTraceElement site = stack.length > 2 ? stack[2] : (stack.length > 0 ? stack[stack.length - 1] : null);
+        String file = site == null || site.getFileName() == null ? "Unknown" : site.getFileName().replace(".java", "");
+        String method = site == null ? "unknown" : site.getMethodName();
+        int line = stack.length > 3 ? stack[3].getLineNumber() : (site == null ? -1 : site.getLineNumber());
         String description = switch (error) {
             case 40961 -> "Invalid name";
             case 40962 -> "Invalid enum";
@@ -19,15 +21,17 @@ public final class OpenAlErrors {
             case 40965 -> "Out of memory";
             default -> "Unknown error";
         };
-        Logger.log(LogLevel.ERROR, true, "OpenAL error: " + description + " at " + file + "." + site.getMethodName() + "(" + file + ":" + stack[3].getLineNumber() + ")");
+        Logger.log(LogLevel.ERROR, true, "OpenAL error: " + description + " at " + file + "." + method + "(" + file + ":" + line + ")");
         return true;
     }
     public static boolean checkAlcError(long device) {
         int error = ALC10.alcGetError(device);
         if (error == 0) return false;
         StackTraceElement[] stack = Thread.currentThread().getStackTrace();
-        StackTraceElement site = stack[2];
-        String file = site.getFileName() == null ? "Unknown" : site.getFileName().replace(".java", "");
+        StackTraceElement site = stack.length > 2 ? stack[2] : (stack.length > 0 ? stack[stack.length - 1] : null);
+        String file = site == null || site.getFileName() == null ? "Unknown" : site.getFileName().replace(".java", "");
+        String method = site == null ? "unknown" : site.getMethodName();
+        int line = stack.length > 3 ? stack[3].getLineNumber() : (site == null ? -1 : site.getLineNumber());
         String description = switch (error) {
             case 40961 -> "Invalid device";
             case 40962 -> "Invalid context";
@@ -36,7 +40,7 @@ public final class OpenAlErrors {
             case 40965 -> "Out of memory";
             default -> "Unknown error";
         };
-        Logger.log(LogLevel.ERROR, true, "OpenALC error: " + description + " at " + file + "." + site.getMethodName() + "(" + file + ":" + stack[3].getLineNumber() + ")");
+        Logger.log(LogLevel.ERROR, true, "OpenALC error: " + description + " at " + file + "." + method + "(" + file + ":" + line + ")");
         return true;
     }
 }

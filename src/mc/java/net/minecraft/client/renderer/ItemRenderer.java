@@ -24,6 +24,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
 import net.minecraft.item.EnumAction;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemMap;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
 import net.minecraft.util.BlockPos;
@@ -33,7 +34,11 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.storage.MapData;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import optifine.Config;
+import optifine.DynamicLights;
+import optifine.Reflector;
 import org.lwjgl.opengl.GL11;
+import shadersmod.client.Shaders;
 
 @SideOnly(Side.CLIENT)
 public class ItemRenderer
@@ -67,7 +72,7 @@ public class ItemRenderer
             {
                 GlStateManager.scale(2.0F, 2.0F, 2.0F);
 
-                if (this.isBlockTranslucent(block))
+                if (this.isBlockTranslucent(block) && (!Config.isShaders() || !Shaders.renderItemKeepDepthMask))
                 {
                     GlStateManager.depthMask(false);
                 }
@@ -101,6 +106,12 @@ public class ItemRenderer
     private void setLightMapFromPlayer(AbstractClientPlayer clientPlayer)
     {
         int i = this.mc.theWorld.getCombinedLight(new BlockPos(clientPlayer.posX, clientPlayer.posY + (double)clientPlayer.getEyeHeight(), clientPlayer.posZ), 0);
+
+        if (Config.isDynamicLights())
+        {
+            i = DynamicLights.getCombinedLight(this.mc.getRenderViewEntity(), i);
+        }
+
         float f = (float)(i & 65535);
         float f1 = (float)(i >> 16);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, f, f1);
@@ -384,7 +395,7 @@ public class ItemRenderer
                 animations.applyPosition(this.itemToRender);
             }
 
-            if (this.itemToRender.getItem() == Items.filled_map)
+            if (this.itemToRender.getItem() instanceof ItemMap)
             {
                 this.renderItemMap(abstractclientplayer, f2, f, f1);
             }
@@ -557,6 +568,7 @@ public class ItemRenderer
         if (this.mc.thePlayer.isEntityInsideOpaqueBlock())
         {
             IBlockState iblockstate = this.mc.theWorld.getBlockState(new BlockPos(this.mc.thePlayer));
+            BlockPos blockpos = new BlockPos(this.mc.thePlayer);
             EntityPlayer entityplayer = this.mc.thePlayer;
 
             for (int i = 0; i < 8; ++i)
@@ -564,29 +576,35 @@ public class ItemRenderer
                 double d0 = entityplayer.posX + (double)(((float)((i >> 0) % 2) - 0.5F) * entityplayer.width * 0.8F);
                 double d1 = entityplayer.posY + (double)(((float)((i >> 1) % 2) - 0.5F) * 0.1F);
                 double d2 = entityplayer.posZ + (double)(((float)((i >> 2) % 2) - 0.5F) * entityplayer.width * 0.8F);
-                BlockPos blockpos = new BlockPos(d0, d1 + (double)entityplayer.getEyeHeight(), d2);
-                IBlockState iblockstate1 = this.mc.theWorld.getBlockState(blockpos);
+                BlockPos blockpos1 = new BlockPos(d0, d1 + (double)entityplayer.getEyeHeight(), d2);
+                IBlockState iblockstate1 = this.mc.theWorld.getBlockState(blockpos1);
 
                 if (iblockstate1.getBlock().isVisuallyOpaque())
                 {
                     iblockstate = iblockstate1;
+                    blockpos = blockpos1;
                 }
             }
 
             if (iblockstate.getBlock().getRenderType() != -1)
             {
-                this.renderBlockInHand(partialTicks, this.mc.getBlockRendererDispatcher().getBlockModelShapes().getTexture(iblockstate));
+                Object object = Reflector.getFieldValue(Reflector.RenderBlockOverlayEvent_OverlayType_BLOCK);
+
+                if (!Reflector.callBoolean(Reflector.ForgeEventFactory_renderBlockOverlay, new Object[] {this.mc.thePlayer, Float.valueOf(partialTicks), object, iblockstate, blockpos}))
+                {
+                    this.renderBlockInHand(partialTicks, this.mc.getBlockRendererDispatcher().getBlockModelShapes().getTexture(iblockstate));
+                }
             }
         }
 
         if (!this.mc.thePlayer.isSpectator())
         {
-            if (this.mc.thePlayer.isInsideOfMaterial(Material.water))
+            if (this.mc.thePlayer.isInsideOfMaterial(Material.water) && !Reflector.callBoolean(Reflector.ForgeEventFactory_renderWaterOverlay, new Object[] {this.mc.thePlayer, Float.valueOf(partialTicks)}))
             {
                 this.renderWaterOverlayTexture(partialTicks);
             }
 
-            if (this.mc.thePlayer.isBurning())
+            if (this.mc.thePlayer.isBurning() && !Reflector.callBoolean(Reflector.ForgeEventFactory_renderFireOverlay, new Object[] {this.mc.thePlayer, Float.valueOf(partialTicks)}))
             {
                 this.renderFireInFirstPerson(partialTicks);
             }
@@ -624,31 +642,34 @@ public class ItemRenderer
 
     private void renderWaterOverlayTexture(float partialTicks)
     {
-        this.mc.getTextureManager().bindTexture(RES_UNDERWATER_OVERLAY);
-        Tessellator tessellator = Tessellator.getInstance();
-        WorldRenderer worldrenderer = tessellator.getWorldRenderer();
-        float f = this.mc.thePlayer.getBrightness(partialTicks);
-        GlStateManager.color(f, f, f, 0.5F);
-        GlStateManager.enableBlend();
-        GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
-        GlStateManager.pushMatrix();
-        float f1 = 4.0F;
-        float f2 = -1.0F;
-        float f3 = 1.0F;
-        float f4 = -1.0F;
-        float f5 = 1.0F;
-        float f6 = -0.5F;
-        float f7 = -this.mc.thePlayer.rotationYaw / 64.0F;
-        float f8 = this.mc.thePlayer.rotationPitch / 64.0F;
-        worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX);
-        worldrenderer.pos(-1.0D, -1.0D, -0.5D).tex((double)(4.0F + f7), (double)(4.0F + f8)).endVertex();
-        worldrenderer.pos(1.0D, -1.0D, -0.5D).tex((double)(0.0F + f7), (double)(4.0F + f8)).endVertex();
-        worldrenderer.pos(1.0D, 1.0D, -0.5D).tex((double)(0.0F + f7), (double)(0.0F + f8)).endVertex();
-        worldrenderer.pos(-1.0D, 1.0D, -0.5D).tex((double)(4.0F + f7), (double)(0.0F + f8)).endVertex();
-        tessellator.draw();
-        GlStateManager.popMatrix();
-        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-        GlStateManager.disableBlend();
+        if (!Config.isShaders() || Shaders.isUnderwaterOverlay())
+        {
+            this.mc.getTextureManager().bindTexture(RES_UNDERWATER_OVERLAY);
+            Tessellator tessellator = Tessellator.getInstance();
+            WorldRenderer worldrenderer = tessellator.getWorldRenderer();
+            float f = this.mc.thePlayer.getBrightness(partialTicks);
+            GlStateManager.color(f, f, f, 0.5F);
+            GlStateManager.enableBlend();
+            GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+            GlStateManager.pushMatrix();
+            float f1 = 4.0F;
+            float f2 = -1.0F;
+            float f3 = 1.0F;
+            float f4 = -1.0F;
+            float f5 = 1.0F;
+            float f6 = -0.5F;
+            float f7 = -this.mc.thePlayer.rotationYaw / 64.0F;
+            float f8 = this.mc.thePlayer.rotationPitch / 64.0F;
+            worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX);
+            worldrenderer.pos(-1.0D, -1.0D, -0.5D).tex((double)(4.0F + f7), (double)(4.0F + f8)).endVertex();
+            worldrenderer.pos(1.0D, -1.0D, -0.5D).tex((double)(0.0F + f7), (double)(4.0F + f8)).endVertex();
+            worldrenderer.pos(1.0D, 1.0D, -0.5D).tex((double)(0.0F + f7), (double)(0.0F + f8)).endVertex();
+            worldrenderer.pos(-1.0D, 1.0D, -0.5D).tex((double)(4.0F + f7), (double)(0.0F + f8)).endVertex();
+            tessellator.draw();
+            GlStateManager.popMatrix();
+            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+            GlStateManager.disableBlend();
+        }
     }
 
     private void renderFireInFirstPerson(float partialTicks)
@@ -718,6 +739,23 @@ public class ItemRenderer
         {
             if (!this.itemToRender.getIsItemStackEqual(itemstack))
             {
+                if (Reflector.ForgeItem_shouldCauseReequipAnimation.exists())
+                {
+                    boolean flag1 = Reflector.callBoolean(this.itemToRender.getItem(), Reflector.ForgeItem_shouldCauseReequipAnimation, new Object[] {this.itemToRender, itemstack, Boolean.valueOf(this.equippedItemSlot != i)});
+
+                    if (!flag1)
+                    {
+                        if (Config.isShaders())
+                        {
+                            Shaders.setItemToRenderMain(itemstack);
+                        }
+
+                        this.itemToRender = itemstack;
+                        this.equippedItemSlot = i;
+                        return;
+                    }
+                }
+
                 flag = true;
             }
         }
@@ -737,6 +775,11 @@ public class ItemRenderer
 
         if (this.equippedProgress < 0.1F)
         {
+            if (Config.isShaders())
+            {
+                Shaders.setItemToRenderMain(itemstack);
+            }
+
             this.itemToRender = itemstack;
             this.equippedItemSlot = i;
         }

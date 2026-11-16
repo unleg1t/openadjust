@@ -60,6 +60,7 @@ public final class SpeakerWorker extends AudioWorker implements MinecraftInstanc
         boolean testing = VoiceChatModule.INSTANCE.settings.micTester.isEnabled();
         if (!testing && controller.isCurrentChannelProximity() && mc.thePlayer == null) return;
         beginFrame(output);
+        if (output.context.capabilities == null) return;
         try {
             output.referenceDistance = VoiceChatModule.INSTANCE.settings.c() / 2.0f;
             output.rolloff = 3.4f;

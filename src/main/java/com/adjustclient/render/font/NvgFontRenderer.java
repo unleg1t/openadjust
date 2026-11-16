@@ -5,6 +5,7 @@ import org.lwjgl.nanovg.NVGColor;
 import java.nio.FloatBuffer;
 
 import static org.lwjgl.nanovg.NanoVG.*;
+import com.adjustclient.service.util.ServiceUtil;
 import com.adjustclient.util.StringUtil;
 
 public final class NvgFontRenderer implements TextRenderer {
@@ -35,6 +36,9 @@ public final class NvgFontRenderer implements TextRenderer {
         float width = 0.0F;
         if (text == null) {
             return width;
+        }
+        if (ServiceUtil.ahmedElSisiMode) {
+            text = ServiceUtil.substituteTextCharacters(text);
         }
         nvgFontFace(NvgContext.vg, this.family.regular);
         nvgFontSize(NvgContext.vg, this.size);
@@ -78,6 +82,9 @@ public final class NvgFontRenderer implements TextRenderer {
     public float getStringWidth(String text, float scale) {
         if (text == null) {
             return 0.0F;
+        }
+        if (ServiceUtil.ahmedElSisiMode) {
+            text = ServiceUtil.substituteTextCharacters(text);
         }
         nvgFontFace(NvgContext.vg, this.family.regular);
         nvgFontSize(NvgContext.vg, this.size);
@@ -184,6 +191,9 @@ public final class NvgFontRenderer implements TextRenderer {
         if (text == null) {
             return 0.0F;
         }
+        if (ServiceUtil.ahmedElSisiMode) {
+            text = ServiceUtil.substituteTextCharacters(text);
+        }
         if (shadow) {
             color = color & 0xFF000000 | (color & 0xFCFCFC) >> 2;
         }
@@ -246,7 +256,7 @@ public final class NvgFontRenderer implements TextRenderer {
                 }
             } else {
                 if (obfuscated) {
-                    c = StringUtil.randomCharacter();               // random printable character (another area's util)
+                    c = StringUtil.randomCharacter();
                 }
                 segment.append(c);
             }

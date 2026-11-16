@@ -81,7 +81,7 @@ public final class ESPModule extends Module {
         double scale = configuredScale == 16 ? 1000.0 : (configuredScale - 1) * 0.25 + 2.0;
         net.minecraft.client.gui.ScaledResolution resolution = event.scaledResolution;
         if (scale != 2.0) {
-            resolution = new net.minecraft.client.gui.ScaledResolution(mc, scale);
+            resolution = new net.minecraft.client.gui.ScaledResolution(mc, 2);
             mc.entityRenderer.setupOverlayRendering(resolution);
             com.adjustclient.render.font.NvgContext.setScale((float) resolution.getScaleFactor_double());
         }
@@ -102,7 +102,13 @@ public final class ESPModule extends Module {
             mc.entityRenderer.setupOverlayRendering(event.scaledResolution);
             com.adjustclient.render.font.NvgContext.setScale((float) event.scaledResolution.getScaleFactor_double());
         }
-        renderEntities(new net.minecraft.client.gui.ScaledResolution(mc), event.partialTicks);
+        boolean renderedOutlines = outlineBuckets != null && !outlineBuckets.isEmpty();
+        renderEntities(event.scaledResolution, event.partialTicks);
+        if (renderedOutlines) {
+            mc.entityRenderer.setupOverlayRendering(event.scaledResolution);
+            net.minecraft.client.renderer.GlStateManager.enableAlpha();
+            net.minecraft.client.renderer.GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+        }
     }
     @com.adjustclient.event.EventHandler
     public void acceptsPlayer(com.adjustclient.event.EntityNameRenderEvent event) {
@@ -173,9 +179,11 @@ public final class ESPModule extends Module {
         }));
     }
     public void getItemBucket(int color, EntityLivingBase entity) {
-        outlineBuckets.computeIfAbsent(color, ignored -> {
-            return new ArrayList<>();
-        }).add(entity);
+        if (outlineBuckets != null) {
+            outlineBuckets.computeIfAbsent(color, ignored -> {
+                return new ArrayList<>();
+            }).add(entity);
+        }
     }
     public void renderEntities(net.minecraft.client.gui.ScaledResolution resolution, float partialTicks) {
         if (outlineBuckets == null) return;

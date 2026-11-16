@@ -1,6 +1,7 @@
 package net.minecraft.client.shader;
 
 import java.nio.ByteBuffer;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.Tessellator;
@@ -47,10 +48,31 @@ public class Framebuffer
         this.createBindFramebuffer(p_i45078_1_, p_i45078_2_);
     }
 
+    private boolean canUseFbo()
+    {
+        if (OpenGlHelper.isFramebufferEnabled())
+        {
+            return true;
+        }
+
+        if (!OpenGlHelper.framebufferSupported || !this.useDepth)
+        {
+            return false;
+        }
+
+        Minecraft mc = Minecraft.getMinecraft();
+        return mc != null && mc.getFramebuffer() != null && this != mc.getFramebuffer();
+    }
+
     public void createBindFramebuffer(int width, int height)
     {
-        if (!OpenGlHelper.isFramebufferEnabled())
+        if (!this.canUseFbo())
         {
+            if (this.framebufferObject >= 0)
+            {
+                this.deleteFramebuffer();
+            }
+
             this.framebufferWidth = width;
             this.framebufferHeight = height;
         }
@@ -71,7 +93,7 @@ public class Framebuffer
 
     public void deleteFramebuffer()
     {
-        if (OpenGlHelper.isFramebufferEnabled())
+        if (OpenGlHelper.framebufferSupported)
         {
             this.unbindFramebufferTexture();
             this.unbindFramebuffer();
@@ -106,7 +128,7 @@ public class Framebuffer
         this.framebufferTextureWidth = width;
         this.framebufferTextureHeight = height;
 
-        if (!OpenGlHelper.isFramebufferEnabled())
+        if (!this.canUseFbo())
         {
             this.framebufferClear();
         }
@@ -162,7 +184,7 @@ public class Framebuffer
 
     public void setFramebufferFilter(int p_147607_1_)
     {
-        if (OpenGlHelper.isFramebufferEnabled())
+        if (this.canUseFbo())
         {
             this.framebufferFilter = p_147607_1_;
             GlStateManager.bindTexture(this.framebufferTexture);
@@ -205,7 +227,7 @@ public class Framebuffer
 
     public void bindFramebufferTexture()
     {
-        if (OpenGlHelper.isFramebufferEnabled())
+        if (this.canUseFbo())
         {
             GlStateManager.bindTexture(this.framebufferTexture);
         }
@@ -213,7 +235,7 @@ public class Framebuffer
 
     public void unbindFramebufferTexture()
     {
-        if (OpenGlHelper.isFramebufferEnabled())
+        if (this.canUseFbo() || OpenGlHelper.framebufferSupported)
         {
             GlStateManager.bindTexture(0);
         }
@@ -221,9 +243,18 @@ public class Framebuffer
 
     public void bindFramebuffer(boolean p_147610_1_)
     {
-        if (OpenGlHelper.isFramebufferEnabled())
+        if (this.canUseFbo())
         {
             OpenGlHelper.glBindFramebuffer(OpenGlHelper.GL_FRAMEBUFFER, this.framebufferObject);
+
+            if (p_147610_1_)
+            {
+                GlStateManager.viewport(0, 0, this.framebufferWidth, this.framebufferHeight);
+            }
+        }
+        else if (OpenGlHelper.framebufferSupported)
+        {
+            OpenGlHelper.glBindFramebuffer(OpenGlHelper.GL_FRAMEBUFFER, 0);
 
             if (p_147610_1_)
             {
@@ -234,7 +265,7 @@ public class Framebuffer
 
     public void unbindFramebuffer()
     {
-        if (OpenGlHelper.isFramebufferEnabled())
+        if (this.canUseFbo() || OpenGlHelper.framebufferSupported)
         {
             OpenGlHelper.glBindFramebuffer(OpenGlHelper.GL_FRAMEBUFFER, 0);
         }
@@ -255,7 +286,7 @@ public class Framebuffer
 
     public void framebufferRenderExt(int p_178038_1_, int p_178038_2_, boolean p_178038_3_)
     {
-        if (OpenGlHelper.isFramebufferEnabled())
+        if (this.canUseFbo())
         {
             GlStateManager.colorMask(true, true, true, false);
             GlStateManager.disableDepth();

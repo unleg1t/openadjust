@@ -101,7 +101,7 @@ public class ItemPoolEspRenderer extends GroupedEspRenderer {
                     ((com.adjustclient.render.font.TextRenderer) font).drawString(line.text, left, top, color, scale);
                 });
             } else {
-                // non-pixel themes use an 11.0F line pitch (dword_14669D57C), not the pixel theme's 14.0F
+                // non-pixel themes use an 11.0F line pitch, not the pixel theme's 14.0F
                 float top = y + index * (scale * 11.0F);
                 ((com.adjustclient.render.font.TextRenderer) font).drawString(line.text, left, top, color, scale);
             }

@@ -69,8 +69,8 @@ public final class SearchBar {
             if (c.shown) {
                 String text = c.getSearchText();
                 if (text != null && pattern.matcher(text).find()) {
-                    c.expandAncestors();                     // ClickGuiComponent.x
-                    if (c instanceof ExpandSettingComponent) {      // class id 6238513 (ExpandSetting row)
+                    c.expandAncestors();
+                    if (c instanceof ExpandSettingComponent) {
                         for (ClickGuiComponent child : c.children) {
                             child.expandSelf();
                         }
@@ -105,7 +105,7 @@ public final class SearchBar {
         textInput.input.focused = true;
         if (textInput.keyTyped((char) typedChar, keyCode)) {
             screen.layoutDirty = true;
-            screen.collapseTemporaryRows();                 // ClickGuiScreen.p
+            screen.collapseTemporaryRows();
             compilePattern();
             return true;
         }

@@ -13,12 +13,13 @@ public final class BedPlatesSettings {
     public BedPlatesSettings(BedPlatesModule module) {
         mode = new ModeSetting<>(module, "Mode", BedPlatesMode.BLOCKS, BedPlatesMode.values());
         mode.addListener((oldValue, newValue) -> {
-            if (module.tracker == null) return;
-            synchronized (module.tracker.beds) {
+            BedTracker tracker = module.tracker;
+            if (tracker == null) return;
+            synchronized (tracker.beds) {
                 if (newValue == BedPlatesMode.BLOCKS) {
-                    module.tracker.beds.values().forEach(plate -> plate.rebuildBlocks());
+                    tracker.beds.values().forEach(plate -> plate.rebuildBlocks());
                 } else {
-                    module.tracker.beds.values().forEach(plate -> plate.blocks.clear());
+                    tracker.beds.values().forEach(plate -> plate.blocks.clear());
                 }
             }
         });
@@ -27,7 +28,7 @@ public final class BedPlatesSettings {
         ignoreLocal = new BooleanSetting(hypixel, "Ignore local", true, "On", "Off");
         Runnable refreshOutlines = () -> {
             net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getMinecraft();
-            if (mc.theWorld != null && module.isEnabled()) {
+            if (mc.theWorld != null && mc.renderGlobal != null && module.isEnabled()) {
                 if (mc.isCallingFromMinecraftThread()) mc.renderGlobal.loadRenderers();
                 else mc.addScheduledTask(com.adjustclient.render.RenderUtil.outlineRefresh(mc));
             }

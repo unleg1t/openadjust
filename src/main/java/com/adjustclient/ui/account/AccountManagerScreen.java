@@ -40,6 +40,7 @@ import com.adjustclient.ui.account.login.AddAccountScreen;
 import com.adjustclient.ui.account.repository.CreateRepositoryScreen;
 import com.adjustclient.ui.account.repository.RepositoryListScreen;
 import com.adjustclient.ui.account.repository.RepositoryMembersScreen;
+import com.adjustclient.ui.account.session.SessionListScreen;
 import com.adjustclient.ui.account.view.ViewAccountScreen;
 import com.adjustclient.ui.mainmenu.AdjustMainMenu;
 import com.adjustclient.render.RenderUtil;
@@ -526,10 +527,14 @@ public final class AccountManagerScreen extends GuiScreen {
      */
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+        if (mouseButton == 0 && isOverViewAllSessions(mouseX, mouseY)) {
+            this.mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("gui.button.press"), 1.0F));
+            this.mc.displayGuiScreen(new SessionListScreen());
+            return;
+        }
         super.mouseClicked(mouseX, mouseY, mouseButton);
         this.searchField.mouseClicked(mouseX, mouseY, mouseButton);
         this.accountList.mouseClicked(mouseX, mouseY, mouseButton);
-                                                                                      // getSlotIndexFromScreenCoords, IGuiListEntry.mousePressed)
     }
 
     /**
@@ -569,9 +574,7 @@ public final class AccountManagerScreen extends GuiScreen {
     void drawSessionInfo(int mouseX, int mouseY) {
         if (this.sessionHead != null) {
             this.sessionHead.c();
-        }
-        GL11.glScalef(0.5F, 0.5F, 0.5F);
-        if (this.sessionHead != null) {
+            GL11.glScalef(0.5F, 0.5F, 0.5F);
             this.sessionHead.draw(3.0F, 3.0F);
             FontRenderer fr = this.mc.fontRendererObj;
             String label = this.sessionLabel;
@@ -585,6 +588,8 @@ public final class AccountManagerScreen extends GuiScreen {
             GlStateManager.enableAlpha();
             fr.renderString(name, white, true, 22.0F, 4.0F, 1.0F);
             fr.renderString(name, white, false, 21.0F, 3.0F, 1.0F);
+            int shade = isOverViewAllSessions(mouseX, mouseY) ? 235 : 171;
+            fr.drawString(ChatColor.UNDERLINE + "View All Sessions", new Color(shade, shade, shade).getRGB(), true, 2.0F, 20.0F, 1.0F);
         }
     }
 

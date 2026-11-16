@@ -39,7 +39,7 @@ public class ItemListComponent extends SettingComponent<com.adjustclient.setting
                 .toArray(ItemListEntry[]::new);
     }
 
-    /** The items / blocks setting row (factory b_qDT0SUXcymBfhGqM7FfyCD, called by ComponentFactory.build). */
+    /** The items / blocks setting row. */
     public ItemListComponent(com.adjustclient.setting.ItemsSetting setting) {
         this(setting, true);
     }

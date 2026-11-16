@@ -52,7 +52,7 @@ public final class RotationSolver {
             if (BlockUtil.getCollisionBox(pos) != null) {
                 continue;
             }
-            IBlockState state = MinecraftInstance.mc.theWorld.getBlockState(pos);            // World.b
+            IBlockState state = MinecraftInstance.mc.theWorld.getBlockState(pos);
             if (!BlockUtil.canReplace(state.getBlock(), MinecraftInstance.mc.theWorld, pos)) {
                 continue;
             }
@@ -81,21 +81,21 @@ public final class RotationSolver {
         yaws.add(f1 + 315.0F);
 
         float moveYaw = MovementUtil.getDirection();
-        boolean moveDiagonal = RotationUtil.isDiagonalYaw(moveYaw);               // v547 high
-        boolean f1Diagonal = RotationUtil.isDiagonalYaw(f1);                      // v221
-        float preferredYaw = this.yawOffset != null ? f1 + this.yawOffset : current.x;     // v224
+        boolean moveDiagonal = RotationUtil.isDiagonalYaw(moveYaw);
+        boolean f1Diagonal = RotationUtil.isDiagonalYaw(f1);
+        float preferredYaw = this.yawOffset != null ? f1 + this.yawOffset : current.x;
         // deviation of the movement direction from the nearest multiple of 90 degrees
-        float axisDeviation = MathHelper.wrapAngleTo180_float(moveYaw - Math.round(moveYaw / 90.0F) * 90.0F);   // v233
+        float axisDeviation = MathHelper.wrapAngleTo180_float(moveYaw - Math.round(moveYaw / 90.0F) * 90.0F);
         float backward = moveYaw + 180.0F;
-        float backwardDelta = MathHelper.wrapAngleTo180_float(backward - f1);       // v238
-        float absDeviation = Math.abs(axisDeviation);                               // v239
+        float backwardDelta = MathHelper.wrapAngleTo180_float(backward - f1);
+        float absDeviation = Math.abs(axisDeviation);
         // yaw to aim at when moving diagonally (nearest "odd" 45 degree direction of the backwards direction)
         float diagonalTarget = absDeviation <= 1.0F
                 ? preferredYaw
-                : Math.round((backward - 45.0F) / 90.0F) * 90.0F + 45.0F;           // v8
+                : Math.round((backward - 45.0F) / 90.0F) * 90.0F + 45.0F;
         // yaw (multiple of 45 degrees relative to f1) closest to the backwards direction
-        float nearest45 = Math.round(backwardDelta / 45.0F) * 45.0F + f1;           // v548
-        boolean notF1Diagonal = !f1Diagonal;                                        // v545
+        float nearest45 = Math.round(backwardDelta / 45.0F) * 45.0F + f1;
+        boolean notF1Diagonal = !f1Diagonal;
 
         final float preferredYawF = preferredYaw;
         final float nearest45F = nearest45;
@@ -175,14 +175,14 @@ public final class RotationSolver {
 
         // ---- 5. choose the placement
         PlacementTarget result = null;
-        float chosenYaw = 0.0F;          // v539 / v411
-        boolean fromCurrent = false;     // v543 / v410
+        float chosenYaw = 0.0F;
+        boolean fromCurrent = false;
         boolean tryCandidates = false;
         facesForPitch = new ArrayList<>(faces);
 
         if (strict && this.yawOffset != null) {
             // keep the current yaw if it is still within 45 degrees of the preferred one
-            float diff = MathHelper.wrapAngleTo180_float(preferredYaw - current.x);   // v273
+            float diff = MathHelper.wrapAngleTo180_float(preferredYaw - current.x);
             if (45.0F > Math.abs(diff)) {
                 result = this.solvePitch(player, candidates, facesForPitch, current, rotationFn, current.x);
                 if (result != null) {
@@ -240,7 +240,7 @@ public final class RotationSolver {
                 return null;
             }
         }
-        float difference = MathHelper.wrapAngleTo180_float(preferredYaw - chosenYaw);      // v433
+        float difference = MathHelper.wrapAngleTo180_float(preferredYaw - chosenYaw);
         boolean farFromPreferred = Math.abs(difference) > 0.01F && 45.0F > Math.abs(difference);
         if (this.yawOffset == null) {
             farFromPreferred = false;

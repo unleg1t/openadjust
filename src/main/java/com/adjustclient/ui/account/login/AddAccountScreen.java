@@ -68,12 +68,12 @@ public final class AddAccountScreen extends GuiScreen {
     private GuiButton cancelButton;
     private String statusMessage;
     private Timer statusTimer;
-    private String selectedFilePath;
+    public String selectedFilePath;
     private com.adjustclient.ui.account.importer.ImportMode bulkImportMode;
     private AddAccountType accountType;
     private String browserRefreshToken;
     private com.adjustclient.ui.account.DroppedCookieFile selectedFile;
-    private boolean fileDialogOpen;
+    public boolean fileDialogOpen;
     private Object field132;
 
     /** Tick: expires the status message, refreshes button states / layout, blinks the text fields, shows the cookie file name. */
@@ -329,7 +329,7 @@ public final class AddAccountScreen extends GuiScreen {
 
     private void onAddAccountResponse(BackendResponse response) {
         this.busy = false;
-        if (response.status == ResponseStatus.OK /* ref 8013633: success */ && this.mc.currentScreen == this) {
+        if (response.status == ResponseStatus.OK && this.mc.currentScreen == this) {
             this.mc.displayGuiScreen(Adjust.INSTANCE.accountManager);
             return;
         }
@@ -429,7 +429,7 @@ public final class AddAccountScreen extends GuiScreen {
     }
 
     private void drawLabel(String text, float y) {
-        this.fontRendererObj.drawString(text, 0xA0A0A0 /* 10526880 */, true, (float) (this.width / 2 - 100), y, 1.0F);
+        this.fontRendererObj.drawString(text, 0xA0A0A0, true, (float) (this.width / 2 - 100), y, 1.0F);
     }
 
     /** Creates the four text fields, selects the remembered account type and builds the buttons. */

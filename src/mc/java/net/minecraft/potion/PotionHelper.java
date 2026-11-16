@@ -8,6 +8,8 @@ import java.util.Map;
 import net.minecraft.util.IntegerCache;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import optifine.Config;
+import optifine.CustomColors;
 
 public class PotionHelper
 {
@@ -67,6 +69,11 @@ public class PotionHelper
                 {
                     int j = Potion.potionTypes[potioneffect.getPotionID()].getLiquidColor();
 
+                    if (Config.isCustomColors())
+                    {
+                        j = CustomColors.getPotionColor(potioneffect.getPotionID(), j);
+                    }
+
                     for (int k = 0; k <= potioneffect.getAmplifier(); ++k)
                     {
                         f += (float)(j >> 16 & 255) / 255.0F;
@@ -91,6 +98,11 @@ public class PotionHelper
         }
         else
         {
+            if (Config.isCustomColors())
+            {
+                i = CustomColors.getPotionColor(0, i);
+            }
+
             return i;
         }
     }
@@ -542,6 +554,11 @@ public class PotionHelper
     public static int getPotionPrefixIndexFlags(int p_77908_0_, int p_77908_1_, int p_77908_2_, int p_77908_3_, int p_77908_4_, int p_77908_5_)
     {
         return (checkFlag(p_77908_0_, p_77908_1_) ? 16 : 0) | (checkFlag(p_77908_0_, p_77908_2_) ? 8 : 0) | (checkFlag(p_77908_0_, p_77908_3_) ? 4 : 0) | (checkFlag(p_77908_0_, p_77908_4_) ? 2 : 0) | (checkFlag(p_77908_0_, p_77908_5_) ? 1 : 0);
+    }
+
+    public static void clearPotionColorCache()
+    {
+        DATAVALUE_COLORS.clear();
     }
 
     static

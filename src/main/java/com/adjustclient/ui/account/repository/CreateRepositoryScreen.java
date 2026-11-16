@@ -131,9 +131,8 @@ public final class CreateRepositoryScreen extends GuiScreen {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        this.drawDefaultBackground();                                // GuiScreen.b
+        this.drawDefaultBackground();
         this.drawCenteredString(this.fontRendererObj, "Create a new repository", this.width / 2, 17, 0xFFFFFF);
-        // Client-modified FontRenderer: a(text, scale) = getStringWidth * scale (float), a(text, color, shadow, x, y, scale)
         String limit = "You have a limit of " + ChatColor.YELLOW + "1000 accounts" + ChatColor.RESET + " per repository.";   // ChatColor constants
         float limitWidth = this.fontRendererObj.getStringWidth(limit, 0.5F);
         this.fontRendererObj.drawString(limit, 0xFFFFFF, true, (float) this.width * 0.5F - limitWidth * 0.5F, 28.5F, 0.5F);

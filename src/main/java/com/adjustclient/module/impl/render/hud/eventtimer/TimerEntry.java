@@ -21,10 +21,10 @@ public final class TimerEntry {
         org.lwjgl.opengl.GL11.glPushMatrix();
         org.lwjgl.opengl.GL11.glRotatef(-30.0F, 0.0F, 1.0F, 0.0F);
         org.lwjgl.opengl.GL11.glRotatef(165.0F, 1.0F, 0.0F, 0.0F);
-        net.minecraft.client.renderer.RenderHelper.enableStandardItemLighting();            // RenderHelper.b
+        net.minecraft.client.renderer.RenderHelper.enableStandardItemLighting();
         org.lwjgl.opengl.GL11.glPopMatrix();
         net.minecraft.client.Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(this.icon, xOffset + 10, false, x + 2.0F, y);
-        net.minecraft.client.renderer.RenderHelper.disableStandardItemLighting();           // RenderHelper.a
+        net.minecraft.client.renderer.RenderHelper.disableStandardItemLighting();
         net.minecraft.client.renderer.GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
     }
 

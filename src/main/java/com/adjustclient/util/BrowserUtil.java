@@ -8,7 +8,7 @@ public final class BrowserUtil {
         try {
             String os = System.getProperty("os.name").toLowerCase();
             ProcessBuilder builder;
-            if (os.contains("win")) builder = new ProcessBuilder("cmd", "/c", "start", url);
+            if (os.contains("win")) builder = new ProcessBuilder("cmd", "/c", "start", "\"\"", "\"" + url + "\"");
             else if (os.contains("mac")) builder = new ProcessBuilder("open", url);
             else if (os.contains("nix") || os.contains("nux")) builder = new ProcessBuilder("xdg-open", url);
             else {

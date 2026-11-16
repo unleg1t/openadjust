@@ -1,15 +1,14 @@
 package net.minecraft.client.renderer.chunk;
 
-import com.google.common.collect.Lists;
+import java.util.ArrayDeque;
 import java.util.BitSet;
 import java.util.EnumSet;
-import java.util.Queue;
 import java.util.Set;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.IntegerCache;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import optifine.IntegerCache;
 
 @SideOnly(Side.CLIENT)
 public class VisGraph
@@ -18,7 +17,7 @@ public class VisGraph
     private static final int field_178614_b = (int)Math.pow(16.0D, 1.0D);
     private static final int field_178615_c = (int)Math.pow(16.0D, 2.0D);
     private final BitSet field_178612_d = new BitSet(4096);
-    private static final int[] field_178613_e = new int[1352];
+    private static final int[] INDEX_OF_EDGES = new int[1352];
     private int field_178611_f = 4096;
 
     public void func_178606_a(BlockPos pos)
@@ -56,7 +55,7 @@ public class VisGraph
         }
         else
         {
-            for (int i : field_178613_e)
+            for (int i : INDEX_OF_EDGES)
             {
                 if (!this.field_178612_d.get(i))
                 {
@@ -75,24 +74,24 @@ public class VisGraph
 
     private Set<EnumFacing> func_178604_a(int p_178604_1_)
     {
-        Set<EnumFacing> set = EnumSet.<EnumFacing>noneOf(EnumFacing.class);
-        Queue<Integer> queue = Lists.<Integer>newLinkedList();
-        queue.add(IntegerCache.getInteger(p_178604_1_));
+        EnumSet<EnumFacing> set = EnumSet.<EnumFacing>noneOf(EnumFacing.class);
+        ArrayDeque<Integer> arraydeque = new ArrayDeque<Integer>(384);
+        arraydeque.add(IntegerCache.valueOf(p_178604_1_));
         this.field_178612_d.set(p_178604_1_, true);
 
-        while (!((Queue)queue).isEmpty())
+        while (!arraydeque.isEmpty())
         {
-            int i = ((Integer)queue.poll()).intValue();
+            int i = arraydeque.poll().intValue();
             this.func_178610_a(i, set);
 
-            for (EnumFacing enumfacing : EnumFacing.values())
+            for (EnumFacing enumfacing : EnumFacing.VALUES)
             {
                 int j = this.func_178603_a(i, enumfacing);
 
                 if (j >= 0 && !this.field_178612_d.get(j))
                 {
                     this.field_178612_d.set(j, true);
-                    queue.add(IntegerCache.getInteger(j));
+                    arraydeque.add(IntegerCache.valueOf(j));
                 }
             }
         }
@@ -207,7 +206,7 @@ public class VisGraph
                 {
                     if (l == 0 || l == 15 || i1 == 0 || i1 == 15 || j1 == 0 || j1 == 15)
                     {
-                        field_178613_e[k++] = getIndex(l, i1, j1);
+                        INDEX_OF_EDGES[k++] = getIndex(l, i1, j1);
                     }
                 }
             }

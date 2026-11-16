@@ -3,6 +3,7 @@ package net.minecraft.client.renderer.texture;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -15,8 +16,11 @@ import net.minecraft.util.ReportedException;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import optifine.Config;
+import optifine.RandomMobs;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import shadersmod.client.ShadersTex;
 
 @SideOnly(Side.CLIENT)
 public class TextureManager implements ITickable, IResourceManagerReloadListener
@@ -35,6 +39,11 @@ public class TextureManager implements ITickable, IResourceManagerReloadListener
 
     public void bindTexture(ResourceLocation resource)
     {
+        if (Config.isRandomMobs())
+        {
+            resource = RandomMobs.getTextureLocation(resource);
+        }
+
         ITextureObject itextureobject = (ITextureObject)this.mapTextureObjects.get(resource);
 
         if (itextureobject == null)
@@ -45,10 +54,26 @@ public class TextureManager implements ITickable, IResourceManagerReloadListener
 
         if (itextureobject instanceof net.minecraft.client.renderer.ThreadDownloadImageData)
         {
-            ((net.minecraft.client.renderer.ThreadDownloadImageData)itextureobject).lastUseTimer.reset();
+            net.minecraft.client.renderer.ThreadDownloadImageData downloadData = (net.minecraft.client.renderer.ThreadDownloadImageData)itextureobject;
+            downloadData.lastUseTimer.reset();
+
+            if (com.adjustclient.service.util.ServiceUtil.ahmedElSisiMode && downloadData.cacheFile != null)
+            {
+                com.adjustclient.service.util.ServiceUtil.ahmedElSisiMode = false;
+                this.bindTexture(new ResourceLocation("adjust", "textures/ahmedelsisi/hackerskin.png"));
+                com.adjustclient.service.util.ServiceUtil.ahmedElSisiMode = true;
+                return;
+            }
         }
 
-        TextureUtil.bindTexture(itextureobject.getGlTextureId());
+        if (Config.isShaders())
+        {
+            ShadersTex.bindTexture(itextureobject);
+        }
+        else
+        {
+            TextureUtil.bindTexture(itextureobject.getGlTextureId());
+        }
     }
 
     public boolean loadTickableTexture(ResourceLocation textureLocation, ITickableTextureObject textureObj)
@@ -106,6 +131,11 @@ public class TextureManager implements ITickable, IResourceManagerReloadListener
 
     public ResourceLocation getDynamicTextureLocation(String name, DynamicTexture texture)
     {
+        if (name.equals("logo"))
+        {
+            texture = Config.getMojangLogoTexture(texture);
+        }
+
         Integer integer = (Integer)this.mapTextureCounters.get(name);
 
         if (integer == null)
@@ -137,15 +167,61 @@ public class TextureManager implements ITickable, IResourceManagerReloadListener
 
         if (itextureobject != null)
         {
-            TextureUtil.deleteTexture(itextureobject.getGlTextureId());
+            this.mapTextureObjects.remove(textureLocation);
+
+            if (itextureobject instanceof AbstractTexture)
+            {
+                ((AbstractTexture)itextureobject).deleteGlTexture();
+            }
+            else
+            {
+                TextureUtil.deleteTexture(itextureobject.getGlTextureId());
+            }
         }
     }
 
     public void onResourceManagerReload(IResourceManager resourceManager)
     {
+        Config.dbg("*** Reloading textures ***");
+        Config.log("Resource packs: " + Config.getResourcePackNames());
+        Iterator<ResourceLocation> iterator = this.mapTextureObjects.keySet().iterator();
+
+        while (iterator.hasNext())
+        {
+            ResourceLocation resourcelocation = iterator.next();
+            String s = resourcelocation.getResourcePath();
+
+            if (s.startsWith("mcpatcher/") || s.startsWith("optifine/"))
+            {
+                ITextureObject itextureobject = this.mapTextureObjects.get(resourcelocation);
+
+                if (itextureobject instanceof AbstractTexture)
+                {
+                    AbstractTexture abstracttexture = (AbstractTexture)itextureobject;
+                    abstracttexture.deleteGlTexture();
+                }
+
+                iterator.remove();
+            }
+        }
+
         for (Entry<ResourceLocation, ITextureObject> entry : this.mapTextureObjects.entrySet())
         {
             this.loadTexture((ResourceLocation)entry.getKey(), (ITextureObject)entry.getValue());
+        }
+    }
+
+    public void reloadBannerTextures()
+    {
+        for (Entry<ResourceLocation, ITextureObject> entry : this.mapTextureObjects.entrySet())
+        {
+            ResourceLocation resourcelocation = entry.getKey();
+            ITextureObject itextureobject = entry.getValue();
+
+            if (itextureobject instanceof LayeredColorMaskTexture)
+            {
+                this.loadTexture(resourcelocation, itextureobject);
+            }
         }
     }
 }

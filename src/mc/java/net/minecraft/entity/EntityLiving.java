@@ -10,6 +10,7 @@ import net.minecraft.entity.ai.EntitySenses;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.monster.EntityGhast;
+import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.passive.EntityTameable;
 import net.minecraft.entity.player.EntityPlayer;
@@ -35,8 +36,12 @@ import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.EnumDifficulty;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
+import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import optifine.BlockPosM;
+import optifine.Config;
+import optifine.Reflector;
 
 public abstract class EntityLiving extends EntityLivingBase
 {
@@ -58,6 +63,9 @@ public abstract class EntityLiving extends EntityLivingBase
     private boolean isLeashed;
     private Entity leashedToEntity;
     private NBTTagCompound leashNBTTag;
+    public int randomMobsId = 0;
+    public BiomeGenBase spawnBiome = null;
+    public BlockPos spawnPosition = null;
 
     public EntityLiving(World worldIn)
     {
@@ -75,6 +83,10 @@ public abstract class EntityLiving extends EntityLivingBase
         {
             this.equipmentDropChances[i] = 0.085F;
         }
+
+        UUID uuid = this.getUniqueID();
+        long j = uuid.getLeastSignificantBits();
+        this.randomMobsId = (int)(j & 2147483647L);
     }
 
     protected void applyEntityAttributes()
@@ -121,6 +133,7 @@ public abstract class EntityLiving extends EntityLivingBase
     public void setAttackTarget(EntityLivingBase entitylivingbaseIn)
     {
         this.attackTarget = entitylivingbaseIn;
+        Reflector.callVoid(Reflector.ForgeHooks_onLivingSetAttackTarget, new Object[] {this, entitylivingbaseIn});
     }
 
     public boolean canAttackClass(Class <? extends EntityLivingBase > cls)
@@ -224,11 +237,18 @@ public abstract class EntityLiving extends EntityLivingBase
 
     public void onUpdate()
     {
-        super.onUpdate();
-
-        if (!this.worldObj.isRemote)
+        if (Config.isSmoothWorld() && this.canSkipUpdate())
         {
-            this.updateLeashedState();
+            this.onUpdateMinimal();
+        }
+        else
+        {
+            super.onUpdate();
+
+            if (!this.worldObj.isRemote)
+            {
+                this.updateLeashedState();
+            }
         }
     }
 
@@ -498,9 +518,24 @@ public abstract class EntityLiving extends EntityLivingBase
 
     protected void despawnEntity()
     {
+        Object object = null;
+        Object object1 = Reflector.getFieldValue(Reflector.Event_Result_DEFAULT);
+        Object object2 = Reflector.getFieldValue(Reflector.Event_Result_DENY);
+
         if (this.persistenceRequired)
         {
             this.entityAge = 0;
+        }
+        else if ((this.entityAge & 31) == 31 && (object = Reflector.call(Reflector.ForgeEventFactory_canEntityDespawn, new Object[] {this})) != object1)
+        {
+            if (object == object2)
+            {
+                this.entityAge = 0;
+            }
+            else
+            {
+                this.setDead();
+            }
         }
         else
         {
@@ -1127,6 +1162,87 @@ public abstract class EntityLiving extends EntityLivingBase
     public boolean isAIDisabled()
     {
         return this.dataWatcher.getWatchableObjectByte(15) != 0;
+    }
+
+    public boolean isEntityInsideOpaqueBlock()
+    {
+        if (this.noClip)
+        {
+            return false;
+        }
+        else
+        {
+            BlockPosM blockposm = new BlockPosM(0, 0, 0);
+
+            for (int i = 0; i < 8; ++i)
+            {
+                double d0 = this.posX + (double)(((float)((i >> 0) % 2) - 0.5F) * this.width * 0.8F);
+                double d1 = this.posY + (double)(((float)((i >> 1) % 2) - 0.5F) * 0.1F);
+                double d2 = this.posZ + (double)(((float)((i >> 2) % 2) - 0.5F) * this.width * 0.8F);
+                blockposm.setXyz(d0, d1 + (double)this.getEyeHeight(), d2);
+
+                if (this.worldObj.getBlockState(blockposm).getBlock().isVisuallyOpaque())
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+    }
+
+    private boolean canSkipUpdate()
+    {
+        if (this.isChild())
+        {
+            return false;
+        }
+        else if (this.hurtTime > 0)
+        {
+            return false;
+        }
+        else if (this.ticksExisted < 20)
+        {
+            return false;
+        }
+        else
+        {
+            World world = this.getEntityWorld();
+
+            if (world == null)
+            {
+                return false;
+            }
+            else if (world.playerEntities.size() != 1)
+            {
+                return false;
+            }
+            else
+            {
+                Entity entity = (Entity)world.playerEntities.get(0);
+                double d0 = Math.max(Math.abs(this.posX - entity.posX) - 16.0D, 0.0D);
+                double d1 = Math.max(Math.abs(this.posZ - entity.posZ) - 16.0D, 0.0D);
+                double d2 = d0 * d0 + d1 * d1;
+                return !this.isInRangeToRenderDist(d2);
+            }
+        }
+    }
+
+    private void onUpdateMinimal()
+    {
+        ++this.entityAge;
+
+        if (this instanceof EntityMob)
+        {
+            float f = this.getBrightness(1.0F);
+
+            if (f > 0.5F)
+            {
+                this.entityAge += 2;
+            }
+        }
+
+        this.despawnEntity();
     }
 
     public static enum SpawnPlacementType

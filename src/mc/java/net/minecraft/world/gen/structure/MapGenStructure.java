@@ -11,16 +11,20 @@ import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.BlockPos;
+import net.minecraft.util.LongHashMap;
 import net.minecraft.util.ReportedException;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.ChunkPrimer;
 import net.minecraft.world.gen.MapGenBase;
+import net.minecraft.world.storage.MapStorage;
+import optifine.Reflector;
 
 public abstract class MapGenStructure extends MapGenBase
 {
     private MapGenStructureData structureData;
     protected Map<Long, StructureStart> structureMap = Maps.<Long, StructureStart>newHashMap();
+    private LongHashMap<StructureStart> structureLongMap = new LongHashMap<StructureStart>();
 
     public abstract String getStructureName();
 
@@ -28,7 +32,7 @@ public abstract class MapGenStructure extends MapGenBase
     {
         this.initializeStructureData(worldIn);
 
-        if (!this.structureMap.containsKey(Long.valueOf(ChunkCoordIntPair.chunkXZ2Int(chunkX, chunkZ))))
+        if (!this.structureLongMap.containsItem(ChunkCoordIntPair.chunkXZ2Int(chunkX, chunkZ)))
         {
             this.rand.nextInt();
 
@@ -38,6 +42,7 @@ public abstract class MapGenStructure extends MapGenBase
                 {
                     StructureStart structurestart = this.getStructureStart(chunkX, chunkZ);
                     this.structureMap.put(Long.valueOf(ChunkCoordIntPair.chunkXZ2Int(chunkX, chunkZ)), structurestart);
+                    this.structureLongMap.add(ChunkCoordIntPair.chunkXZ2Int(chunkX, chunkZ), structurestart);
                     this.setStructureStart(chunkX, chunkZ, structurestart);
                 }
             }
@@ -217,12 +222,29 @@ public abstract class MapGenStructure extends MapGenBase
     {
         if (this.structureData == null)
         {
-            this.structureData = (MapGenStructureData)worldIn.loadItemData(MapGenStructureData.class, this.getStructureName());
+            if (Reflector.ForgeWorld_getPerWorldStorage.exists())
+            {
+                MapStorage mapstorage = (MapStorage)Reflector.call(worldIn, Reflector.ForgeWorld_getPerWorldStorage, new Object[0]);
+                this.structureData = (MapGenStructureData)mapstorage.loadData(MapGenStructureData.class, this.getStructureName());
+            }
+            else
+            {
+                this.structureData = (MapGenStructureData)worldIn.loadItemData(MapGenStructureData.class, this.getStructureName());
+            }
 
             if (this.structureData == null)
             {
                 this.structureData = new MapGenStructureData(this.getStructureName());
-                worldIn.setItemData(this.getStructureName(), this.structureData);
+
+                if (Reflector.ForgeWorld_getPerWorldStorage.exists())
+                {
+                    MapStorage mapstorage1 = (MapStorage)Reflector.call(worldIn, Reflector.ForgeWorld_getPerWorldStorage, new Object[0]);
+                    mapstorage1.setData(this.getStructureName(), this.structureData);
+                }
+                else
+                {
+                    worldIn.setItemData(this.getStructureName(), this.structureData);
+                }
             }
             else
             {
@@ -245,6 +267,7 @@ public abstract class MapGenStructure extends MapGenBase
                             if (structurestart != null)
                             {
                                 this.structureMap.put(Long.valueOf(ChunkCoordIntPair.chunkXZ2Int(i, j)), structurestart);
+                                this.structureLongMap.add(ChunkCoordIntPair.chunkXZ2Int(i, j), structurestart);
                             }
                         }
                     }

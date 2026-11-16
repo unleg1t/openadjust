@@ -44,6 +44,7 @@ public final class ScreenUtil implements MinecraftInstance {
     }
     public static boolean isAccountScreenOpen() {
         return isContainerOpen(com.adjustclient.ui.account.importer.BulkImportScreen.class,
+                com.adjustclient.ui.account.session.SessionListScreen.class,
                 com.adjustclient.ui.account.view.CreateProfileScreen.class,
                 com.adjustclient.ui.account.repository.CreateRepositoryScreen.class,
                 com.adjustclient.ui.account.view.ViewAccountScreen.class,

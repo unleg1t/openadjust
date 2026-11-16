@@ -3,8 +3,13 @@ package com.adjustclient.module.impl.player.voicechat;
 import com.adjustclient.Adjust;
 import com.adjustclient.audio.device.DeviceInfo;
 import com.adjustclient.audio.device.DeviceType;
+import com.adjustclient.event.DisconnectTeardownEvent;
 import com.adjustclient.event.EventHandler;
+import com.adjustclient.event.PreClientTickEvent;
+import com.adjustclient.event.ServerConnectionAttemptEvent;
+import com.adjustclient.event.ServerJoinCompleteEvent;
 import com.adjustclient.event.VoiceAuthenticatedEvent;
+import com.adjustclient.event.WorldResetEvent;
 import com.adjustclient.logging.LogLevel;
 import com.adjustclient.logging.Logger;
 import com.adjustclient.module.Category;
@@ -61,6 +66,7 @@ public final class VoiceChatModule extends Module implements MinecraftInstance {
     public final Set<UUID> watchedPlayers = ConcurrentHashMap.newKeySet();
     public int playerUpdateTicks;
     public long updateDeadline;
+    private long deviceRetryDeadline;
 
     public VoiceChatModule() {
         super("Voice Chat", Category.PLAYER);
@@ -110,7 +116,8 @@ public final class VoiceChatModule extends Module implements MinecraftInstance {
         ServerAddress address = currentServer ? getServerAddress() : new ServerAddress("", 25565);
         Logger.log(LogLevel.INFO, true, "Updating voice chat server: {}:{}", IDN.toASCII(address.getIP()), address.getPort());
         getSessionManager().sender.sendServerAddress(address);
-        Channel channel = controller.channelRegistry.channels.get(controller.currentChannelId);
+        VoiceChatController channels = getController();
+        Channel channel = channels.channelRegistry.channels.get(channels.currentChannelId);
         if (channel == null || channel instanceof DefaultChannel || !channel.isOwner()) return;
         channel.properties.set(ChannelProperty.SERVER_ADDRESS, IDN.toASCII(address.getIP()) + ":" + address.getPort());
         getSessionManager().sender.client.sendProperties(channel.id, channel.properties);
@@ -118,20 +125,29 @@ public final class VoiceChatModule extends Module implements MinecraftInstance {
 
     public void updatePlayers() {
         VoiceAudioManager audio = getAudioManager();
-        if (audio.captureDevice == null || audio.outputDevice == null) audio.selectInitialDevices();
+        if ((audio.captureDevice == null || audio.outputDevice == null)
+                && System.currentTimeMillis() >= deviceRetryDeadline) {
+            deviceRetryDeadline = System.currentTimeMillis() + 5000L;
+            audio.selectInitialDevices();
+        }
         VoiceSessionManager manager = getSessionManager();
         if (manager.handler.authenticated) {
             if (playersDirty.get() || ++playerUpdateTicks > 100) {
                 playersDirty.set(false);
                 playerUpdateTicks = 0;
                 Set<UUID> ids = new HashSet<>();
-                if (mc.thePlayer != null) {
-                    for (EntityPlayer player : mc.theWorld.playerEntities) ids.add(player.getUniqueID());
+                if (mc.thePlayer != null && mc.theWorld != null) {
+                    for (EntityPlayer player : mc.theWorld.playerEntities) {
+                        if (player.getUniqueID() != null) ids.add(player.getUniqueID());
+                    }
                 }
-                if (controller.hasActiveChannel()) {
-                    Channel channel = controller.channelRegistry.channels.get(controller.currentChannelId);
+                VoiceChatController channels = getController();
+                if (channels.hasActiveChannel()) {
+                    Channel channel = channels.channelRegistry.channels.get(channels.currentChannelId);
                     if (channel != null) {
-                        for (VoiceUser user : channel.users.objects) ids.add(user.id);
+                        for (VoiceUser user : channel.users.objects) {
+                            if (user.id != null) ids.add(user.id);
+                        }
                     }
                 }
                 ids.addAll(watchedPlayers);
@@ -171,6 +187,36 @@ public final class VoiceChatModule extends Module implements MinecraftInstance {
     }
 
     @EventHandler
+    public void onPreTick(PreClientTickEvent event) {
+        if (!isEnabled()) return;
+        updatePlayers();
+    }
+
+    @EventHandler
+    public void onServerConnectAttempt(ServerConnectionAttemptEvent event) {
+        if (!isEnabled()) return;
+        updateVoiceServer(true);
+    }
+
+    @EventHandler
+    public void onWorldReset(WorldResetEvent event) {
+        if (!isEnabled()) return;
+        rebuildSoundboardSettings();
+    }
+
+    @EventHandler
+    public void onDisconnectTeardown(DisconnectTeardownEvent event) {
+        if (!isEnabled()) return;
+        disconnect();
+    }
+
+    @EventHandler
+    public void onServerJoinComplete(ServerJoinCompleteEvent event) {
+        if (!isEnabled()) return;
+        reconnect();
+    }
+
+    @EventHandler
     public void onAuthenticated(VoiceAuthenticatedEvent event) {
         if (!isEnabled()) return;
         Logger.log(LogLevel.INFO, true, "Authenticated in VoiceChat: {}", event.session.getProfile().getName());
@@ -202,6 +248,7 @@ public final class VoiceChatModule extends Module implements MinecraftInstance {
     }
 
     public boolean toggleMute(UUID playerId) {
+        if (playerId == null) return false;
         if (watchedPlayers.contains(playerId)) {
             watchedPlayers.remove(playerId);
             return false;
@@ -233,9 +280,21 @@ public final class VoiceChatModule extends Module implements MinecraftInstance {
 
     @Override
     public void onEnable() {
+        deviceRetryDeadline = System.currentTimeMillis() + 5000L;
         getAudioManager().getDevices(DeviceType.INPUT);
         getAudioManager().getDevices(DeviceType.OUTPUT);
+        if (getSessionManager().session == null && mc.getSession() != null) {
+            getSessionManager().switchSession(mc.getSession());
+        }
         updateVoiceServer(true);
+    }
+
+    @Override
+    public void onDisable() {
+        disconnect();
+        if (audioStreamManager != null) {
+            audioStreamManager.clear();
+        }
     }
 
     @Override
@@ -252,8 +311,8 @@ public final class VoiceChatModule extends Module implements MinecraftInstance {
         builder.addText("Soundboard has been stopped.", 0xFFBEBCBD);
         builder.lifetimeSteps = 43;
         Notification notification = builder.build();
-        HUDModule hud = HUDModule.INSTANCE_ALT;
-        if (!hud.isEnabled()) return;
+        HUDModule hud = HUDModule.INSTANCE_ALT != null ? HUDModule.INSTANCE_ALT : HUDModule.INSTANCE;
+        if (hud == null || !hud.isEnabled() || hud.notifications == null) return;
         Notifications notifications = hud.notifications;
         notifications.add(notification);
     }

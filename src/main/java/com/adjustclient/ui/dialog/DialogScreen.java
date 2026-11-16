@@ -159,8 +159,9 @@ public class DialogScreen extends AdjustScreen {
         }
     }
 
-    public boolean mouseClicked(Vec2f mouse, int button, boolean pressed, ScaledResolution window) {
+    @Override public boolean mouseClicked(Vec2f mouse, int button, boolean pressed, ScaledResolution window) {
         if (!pressed || button != 0) return true;
+        if (lines == null) layout();
         for (DropdownElement dropdown : dropdowns) {
             if (dropdown.mouseClicked(mouse)) {
                 for (TextInputElement element : textInputs) element.box.input.focused = false;
@@ -194,8 +195,9 @@ public class DialogScreen extends AdjustScreen {
     }
 
     @Override public boolean mouseClicked(Vec2f mouse, int button, boolean pressed) {
+        net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getMinecraft();
         return mouseClicked(mouse, button, pressed,
-                new ScaledResolution(net.minecraft.client.Minecraft.getMinecraft()));
+                new ScaledResolution(mc, com.adjustclient.module.impl.render.hud.HUDModule.getClickGuiScale()));
     }
 
     public void updateSize() {

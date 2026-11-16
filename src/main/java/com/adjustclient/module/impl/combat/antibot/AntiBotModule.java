@@ -52,6 +52,11 @@ public final class AntiBotModule extends Module implements MinecraftInstance {
     }
 
     @EventHandler
+    public void onServerConnect(com.adjustclient.event.ServerConnectionAttemptEvent event) {
+        cleanupPending = true;
+    }
+
+    @EventHandler
     public void onPacket(DirectionalPacketEvent event) {
         if (event.isCancelled() || !isEnabled() || mc.theWorld == null || mc.thePlayer == null || event.outgoing) return;
         if (cleanupPending) {

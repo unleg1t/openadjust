@@ -7,6 +7,7 @@ import com.adjustclient.module.impl.render.motionblur.MotionBlurRenderer;
 import com.google.common.collect.Maps;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.Map;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBed;
@@ -108,6 +109,8 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import optifine.PlayerItemsLayer;
+import optifine.Reflector;
 
 @SideOnly(Side.CLIENT)
 public class RenderManager
@@ -198,6 +201,26 @@ public class RenderManager
         this.playerRenderer = new RenderPlayer(this);
         this.skinMap.put("default", this.playerRenderer);
         this.skinMap.put("slim", new RenderPlayer(this, true));
+        boolean hasPlayerItemsLayer = false;
+
+        for (Object layer : this.playerRenderer.layerRenderers)
+        {
+            if (layer instanceof PlayerItemsLayer)
+            {
+                hasPlayerItemsLayer = true;
+                break;
+            }
+        }
+
+        if (!hasPlayerItemsLayer)
+        {
+            PlayerItemsLayer.register(this.skinMap);
+        }
+
+        if (Reflector.RenderingRegistry_loadEntityRenderers.exists())
+        {
+            Reflector.call(Reflector.RenderingRegistry_loadEntityRenderers, new Object[] {this, this.entityRenderMap});
+        }
     }
 
     public void setRenderPosition(double renderPosXIn, double renderPosYIn, double renderPosZIn)
@@ -247,7 +270,14 @@ public class RenderManager
             IBlockState iblockstate = worldIn.getBlockState(new BlockPos(livingPlayerIn));
             Block block = iblockstate.getBlock();
 
-            if (block == Blocks.bed)
+            if (Reflector.callBoolean(Reflector.ForgeBlock_isBed, new Object[] {worldIn, new BlockPos(livingPlayerIn), (EntityLivingBase)livingPlayerIn}))
+            {
+                EnumFacing enumfacing = (EnumFacing)Reflector.call(block, Reflector.ForgeBlock_getBedDirection, new Object[] {worldIn, new BlockPos(livingPlayerIn)});
+                int i = enumfacing.getHorizontalIndex();
+                this.playerViewY = (float)(i * 90 + 180);
+                this.playerViewX = 0.0F;
+            }
+            else if (block == Blocks.bed)
             {
                 int i = ((EnumFacing)iblockstate.getValue(BlockBed.FACING)).getHorizontalIndex();
                 this.playerViewY = (float)(i * 90 + 180);
@@ -575,5 +605,20 @@ public class RenderManager
     public void setRenderOutlines(boolean renderOutlinesIn)
     {
         this.renderOutlines = renderOutlinesIn;
+    }
+
+    public Map<Class<? extends Entity>, Render<? extends Entity>> getEntityRenderMap()
+    {
+        return this.entityRenderMap;
+    }
+
+    public void setEntityRenderMap(Map<Class<? extends Entity>, Render<? extends Entity>> entityRenderMap)
+    {
+        this.entityRenderMap = entityRenderMap;
+    }
+
+    public Map<String, RenderPlayer> getSkinMap()
+    {
+        return Collections.<String, RenderPlayer>unmodifiableMap(this.skinMap);
     }
 }

@@ -19,15 +19,30 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldSettings;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import optifine.CapeUtils;
+import optifine.Config;
+import optifine.PlayerConfigurations;
+import optifine.Reflector;
 
 @SideOnly(Side.CLIENT)
 public abstract class AbstractClientPlayer extends EntityPlayer
 {
     public NetworkPlayerInfo playerInfo;
+    private ResourceLocation locationOfCape = null;
+    private String nameClear = null;
 
     public AbstractClientPlayer(World worldIn, GameProfile playerProfile)
     {
         super(worldIn, playerProfile);
+        this.nameClear = playerProfile.getName();
+
+        if (this.nameClear != null && !this.nameClear.isEmpty())
+        {
+            this.nameClear = StringUtils.stripControlCodes(this.nameClear);
+        }
+
+        CapeUtils.downloadCape(this);
+        PlayerConfigurations.getPlayerConfiguration(this);
     }
 
     public boolean isSpectator()
@@ -70,8 +85,19 @@ public abstract class AbstractClientPlayer extends EntityPlayer
 
     public ResourceLocation getLocationCape()
     {
-        NetworkPlayerInfo networkplayerinfo = this.getPlayerInfo();
-        return networkplayerinfo == null ? null : networkplayerinfo.getLocationCape();
+        if (!Config.isShowCapes())
+        {
+            return null;
+        }
+        else if (this.locationOfCape != null)
+        {
+            return this.locationOfCape;
+        }
+        else
+        {
+            NetworkPlayerInfo networkplayerinfo = this.getPlayerInfo();
+            return networkplayerinfo == null ? null : networkplayerinfo.getLocationCape();
+        }
     }
 
     public static ThreadDownloadImageData getDownloadImageSkin(ResourceLocation resourceLocationIn, String username)
@@ -101,6 +127,11 @@ public abstract class AbstractClientPlayer extends EntityPlayer
 
     public float getFovModifier()
     {
+        if (!Config.isDynamicFov())
+        {
+            return 1.0F;
+        }
+
         float f = 1.0F;
 
         if (this.capabilities.isFlying)
@@ -133,6 +164,21 @@ public abstract class AbstractClientPlayer extends EntityPlayer
             f *= 1.0F - f1 * 0.15F;
         }
 
-        return f;
+        return Reflector.ForgeHooksClient_getOffsetFOV.exists() ? Reflector.callFloat(Reflector.ForgeHooksClient_getOffsetFOV, new Object[] {this, Float.valueOf(f)}) : f;
+    }
+
+    public String getNameClear()
+    {
+        return this.nameClear;
+    }
+
+    public ResourceLocation getLocationOfCape()
+    {
+        return this.locationOfCape;
+    }
+
+    public void setLocationOfCape(ResourceLocation p_setLocationOfCape_1_)
+    {
+        this.locationOfCape = p_setLocationOfCape_1_;
     }
 }

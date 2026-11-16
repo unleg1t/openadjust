@@ -107,7 +107,7 @@ public final class MicrosoftCredentialAccount extends AccountEntry {
      * The e-mail/password login chain (see class comment). All HTTP requests use connect/read timeouts of 5000 ms.
      * Returns {@link LoginStatus#FAILED} for every page-scraping failure.
      */
-    private static LoginResult login(String email, String password) {
+    public static LoginResult login(String email, String password) {
         CookieHandler previousCookieHandler = CookieHandler.getDefault();
         CookieHandler.setDefault(new CookieManager());
         try {

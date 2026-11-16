@@ -4,6 +4,7 @@ import com.adjustclient.Adjust;
 import com.adjustclient.event.*;
 import com.adjustclient.hypixel.HypixelGameState;
 import com.adjustclient.service.storage.LocalStorage;
+import com.adjustclient.ui.account.session.SessionListScreen;
 import com.adjustclient.util.ByteUtil;
 import com.adjustclient.util.MinecraftInstance;
 import com.adjustclient.util.Timer;
@@ -20,7 +21,6 @@ import net.minecraft.util.Session;
 
 public final class SessionService implements Listener, MinecraftInstance {
     public static SessionService INSTANCE;
-    public static String persistedString;
     public Map<UUID, SessionStats> sessions;
     public Timer gameTimer;
     public Timer totalTimer;
@@ -70,7 +70,7 @@ public final class SessionService implements Listener, MinecraftInstance {
             DataOutputStream output = new DataOutputStream(bytes);
             output.writeByte('S');
             output.writeByte(0);
-            output.writeUTF(persistedString != null ? persistedString : "");
+            output.writeUTF(SessionListScreen.selectedName != null ? SessionListScreen.selectedName : "");
             synchronized (sessions) {
                 output.writeInt(sessions.size());
                 for (Map.Entry<UUID, SessionStats> entry : sessions.entrySet()) {
@@ -196,7 +196,7 @@ public final class SessionService implements Listener, MinecraftInstance {
         try (DataInputStream input = new DataInputStream(new ByteArrayInputStream(data))) {
             if (input.readUnsignedByte() != 'S') throw new IOException("Invalid session data header");
             input.readUnsignedByte();
-            persistedString = input.readUTF();
+            SessionListScreen.selectedName = input.readUTF();
             int count = input.readInt();
             for (int i = 0; i < count; i++) {
                 long most = input.readLong();

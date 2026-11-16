@@ -77,7 +77,7 @@ public final class BedPreviewRenderer {
         GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
         GlStateManager.enableRescaleNormal();
         GlStateManager.enableCull();
-        RenderHelper.enableStandardItemLighting(); // RenderHelper.b
+        RenderHelper.enableStandardItemLighting();
         mc.getTextureManager().bindTexture(TextureMap.locationBlocksTexture);
         GL11.glTranslatef(x + w / 2.0F, y + h / 2.0F + 1.0F, 150.0F);
         GL11.glScalef(scale, -scale, scale);

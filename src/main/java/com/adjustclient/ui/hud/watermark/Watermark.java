@@ -2,6 +2,7 @@ package com.adjustclient.ui.hud.watermark;
 
 import com.adjustclient.render.font.Fonts;
 import com.adjustclient.render.font.NvgFontRenderer;
+import com.adjustclient.service.util.ServiceUtil;
 import com.adjustclient.ui.hud.HudElement;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.util.ChatColor;
@@ -35,6 +36,14 @@ public final class Watermark extends HudElement {
 
         NvgFontRenderer font = Fonts.TAHOMA_14;
         float y = 2.5F;
+
+        if (ServiceUtil.ahmedElSisiMode) {
+            float x = font.drawString(ChatColor.RESET + "مح" + ChatColor.WHITE + "ارب الله" + ChatColor.RED, 2.5F, y, HUDModule.getHudColor().getRGB());
+            ServiceUtil.ahmedElSisiMode = false;
+            Fonts.TAHOMA_14.drawString(ChatColor.BOLD + "Danger Edition 0.7D", x, y, new Color(223, 56, 39).getRGB());
+            ServiceUtil.ahmedElSisiMode = true;
+            return;
+        }
 
         String first = ChatColor.BOLD + String.valueOf(clientName.charAt(0));
         Color hudColor = HUDModule.getHudColor();

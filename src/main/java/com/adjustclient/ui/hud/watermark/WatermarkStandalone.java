@@ -106,7 +106,7 @@ public final class WatermarkStandalone {
             if (overrideArgb != null) {
                 return overrideArgb;
             }
-            return getColor(mode, storedArgb, animatedKeepsStoredAlpha, nowMs, 0 /* HUD_COLOR here would recurse into R() itself */);
+            return getColor(mode, storedArgb, animatedKeepsStoredAlpha, nowMs, 0);
         }
 
         public static int getColor(Mode mode, int stored, boolean keepAlpha, long nowMs, int hudArgb) {

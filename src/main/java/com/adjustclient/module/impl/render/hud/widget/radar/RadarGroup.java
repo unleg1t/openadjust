@@ -17,12 +17,12 @@ final class RadarGroup {
     final NumberSetting size;
 
     /**
-     * @param parent         a2: the Radar's ExpandSetting
-     * @param name           a3: group label ("Local", "Players", ...)
-     * @param enabledDefault a4
-     * @param color          a5: default colour
-     * @param alpha          a6: default alpha (min 70, max 255, step 1)
-     * @param size           7th (stack) argument: default dot size (min 1, max 3, step 1)
+     * @param parent         the Radar's ExpandSetting
+     * @param name           group label ("Local", "Players", ...)
+     * @param enabledDefault whether the group is enabled by default
+     * @param color          default colour
+     * @param alpha          default alpha (min 70, max 255, step 1)
+     * @param size           default dot size (min 1, max 3, step 1)
      */
     RadarGroup(ExpandSetting parent, String name, boolean enabledDefault, Color color, int alpha, int size) {
         this.group = new ExpandSetting(parent, name);

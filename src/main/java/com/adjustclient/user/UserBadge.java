@@ -16,7 +16,7 @@ public enum UserBadge {
     NIGGER("Nigger", ChatColor.BLACK, null),
     HACKER("!", ChatColor.OBFUSCATED, null),
     INDIAN("Indian", ChatColor.YELLOW, "Shits on the street, showers haven't been invented for him yet."),
-    EGIRL("E-Girl", null, null);
+    EGIRL("E-Girl", null, "Real woman (not trans), verified by Ahmed El-Sisi.");
 
     public final String prefix;
     public final ChatColor color;

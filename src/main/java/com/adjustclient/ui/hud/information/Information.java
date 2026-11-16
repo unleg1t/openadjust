@@ -20,6 +20,7 @@ import com.adjustclient.Adjust;
 import com.adjustclient.changelog.Changelog;
 import com.adjustclient.module.impl.render.hud.HUDModule;
 import com.adjustclient.rotation.handler.RenderRotationTracker;
+import com.adjustclient.service.util.ServiceUtil;
 import com.adjustclient.ui.hud.watermark.WatermarkStandalone;
 import com.adjustclient.util.RandomUtil;
 import com.adjustclient.util.anticheat.ServerTracker;
@@ -195,13 +196,20 @@ public final class Information extends HudElement implements Listener {
         this.animation.update(target);
         float height = (float) sr.getScaledHeight();
 
-        var userManager = Adjust.INSTANCE != null ? (com.adjustclient.property.UserManager) Adjust.INSTANCE.field40 : null;
-        var selfUser = userManager != null ? (com.adjustclient.user.ClientUser) userManager.field16 : null;
-        String name = selfUser != null && selfUser.name != null ? selfUser.name : Adjust.username;
-        if (name == null) {
-            name = "";
+        boolean ahmedMode = ServiceUtil.ahmedElSisiMode;
+        String name;
+        if (ahmedMode) {
+            name = "Ahmed El-Sisi";
+        } else {
+            var userManager = Adjust.INSTANCE != null ? (com.adjustclient.property.UserManager) Adjust.INSTANCE.field40 : null;
+            var selfUser = userManager != null ? (com.adjustclient.user.ClientUser) userManager.field16 : null;
+            name = selfUser != null && selfUser.name != null ? selfUser.name : Adjust.username;
+            if (name == null) {
+                name = "";
+            }
         }
 
+        ServiceUtil.ahmedElSisiMode = false;
         float y = height - this.animation.getValue();
         Color hud = HUDModule.getHudColor();
         int argb = hud.getRGB();
@@ -211,10 +219,13 @@ public final class Information extends HudElement implements Listener {
         font12.drawString(name, 2.0F, y, argb);
 
         NvgFontRenderer font10 = Fonts.TAHOMA_10;
-        String edition = Changelog.latest.shortTitle;
+        String edition = ahmedMode
+                ? ChatColor.RED + "" + ChatColor.ITALIC + ChatColor.UNDERLINE + "Dangerous Edition 0.7D"
+                : Changelog.latest.shortTitle;
         float nameWidth = font12.getStringWidth(name);
         float y2 = (height - this.animation.getValue()) + 1.0F;
         font10.drawString(edition, nameWidth + 3.5F, y2, new Color(208, 208, 208, 220).getRGB());
+        ServiceUtil.ahmedElSisiMode = ahmedMode;
 
         // ---- the information lines, bottom up, 6.0 apart ----
         float step = 6.0F;

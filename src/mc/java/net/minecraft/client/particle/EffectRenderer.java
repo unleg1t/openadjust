@@ -23,11 +23,14 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.MathHelper;
+import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.ReportedException;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import optifine.Config;
+import optifine.Reflector;
 
 @SideOnly(Side.CLIENT)
 public class EffectRenderer
@@ -115,6 +118,31 @@ public class EffectRenderer
 
     public EntityFX spawnEffectParticle(int particleId, double xCoord, double yCoord, double zCoord, double xSpeed, double ySpeed, double zSpeed, int... parameters)
     {
+        if (particleId == EnumParticleTypes.SUSPENDED.getParticleID() && !Config.isWaterParticles())
+        {
+            return null;
+        }
+        else if (particleId == EnumParticleTypes.SUSPENDED_DEPTH.getParticleID() && !Config.isVoidParticles())
+        {
+            return null;
+        }
+        else if ((particleId == EnumParticleTypes.SPELL_MOB.getParticleID() || particleId == EnumParticleTypes.SPELL_MOB_AMBIENT.getParticleID() || particleId == EnumParticleTypes.SPELL.getParticleID() || particleId == EnumParticleTypes.SPELL_INSTANT.getParticleID() || particleId == EnumParticleTypes.SPELL_WITCH.getParticleID()) && !Config.isPotionParticles())
+        {
+            return null;
+        }
+        else if (particleId == EnumParticleTypes.PORTAL.getParticleID() && !Config.isPortalParticles())
+        {
+            return null;
+        }
+        else if ((particleId == EnumParticleTypes.DRIP_WATER.getParticleID() || particleId == EnumParticleTypes.DRIP_LAVA.getParticleID()) && !Config.isDrippingWaterLava())
+        {
+            return null;
+        }
+        else if (particleId == EnumParticleTypes.FIREWORKS_SPARK.getParticleID() && !Config.isFireworkParticles())
+        {
+            return null;
+        }
+
         IParticleFactory iparticlefactory = (IParticleFactory)this.particleTypes.get(Integer.valueOf(particleId));
 
         if (iparticlefactory != null)
@@ -133,15 +161,24 @@ public class EffectRenderer
 
     public void addEffect(EntityFX effect)
     {
-        int i = effect.getFXLayer();
-        int j = effect.getAlpha() != 1.0F ? 0 : 1;
-
-        if (this.fxLayers[i][j].size() >= 4000)
+        if (effect != null)
         {
-            this.fxLayers[i][j].remove(0);
-        }
+            if (!(effect instanceof EntityFirework.SparkFX) || Config.isFireworkParticles())
+            {
+                int i = effect.getFXLayer();
+                int j = effect.getAlpha() != 1.0F ? 0 : 1;
 
-        this.fxLayers[i][j].add(effect);
+                if (this.fxLayers[i][j].size() >= 4000)
+                {
+                    this.fxLayers[i][j].remove(0);
+                }
+
+                if (!(effect instanceof Barrier) || !this.reuseBarrierParticle(effect, this.fxLayers[i][j]))
+                {
+                    this.fxLayers[i][j].add(effect);
+                }
+            }
+        }
     }
 
     public void updateEffects()
@@ -351,7 +388,20 @@ public class EffectRenderer
 
     public void addBlockDestroyEffects(BlockPos pos, IBlockState state)
     {
-        if (state.getBlock().getMaterial() != Material.air)
+        boolean flag;
+
+        if (Reflector.ForgeBlock_addDestroyEffects.exists() && Reflector.ForgeBlock_isAir.exists())
+        {
+            Block block = state.getBlock();
+            Reflector.callBoolean(block, Reflector.ForgeBlock_isAir, new Object[] {this.worldObj, pos});
+            flag = !Reflector.callBoolean(block, Reflector.ForgeBlock_isAir, new Object[] {this.worldObj, pos}) && !Reflector.callBoolean(block, Reflector.ForgeBlock_addDestroyEffects, new Object[] {this.worldObj, pos, this});
+        }
+        else
+        {
+            flag = state.getBlock().getMaterial() != Material.air;
+        }
+
+        if (flag)
         {
             state = state.getBlock().getActualState(state, this.worldObj, pos);
             int i = 4;
@@ -456,5 +506,30 @@ public class EffectRenderer
         }
 
         return "" + i;
+    }
+
+    private boolean reuseBarrierParticle(EntityFX p_reuseBarrierParticle_1_, List<EntityFX> p_reuseBarrierParticle_2_)
+    {
+        for (EntityFX entityfx : p_reuseBarrierParticle_2_)
+        {
+            if (entityfx instanceof Barrier && p_reuseBarrierParticle_1_.posX == entityfx.posX && p_reuseBarrierParticle_1_.posY == entityfx.posY && p_reuseBarrierParticle_1_.posZ == entityfx.posZ)
+            {
+                entityfx.particleAge = 0;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public void addBlockHitEffects(BlockPos p_addBlockHitEffects_1_, MovingObjectPosition p_addBlockHitEffects_2_)
+    {
+        Block block = this.worldObj.getBlockState(p_addBlockHitEffects_1_).getBlock();
+        boolean flag = Reflector.callBoolean(block, Reflector.ForgeBlock_addHitEffects, new Object[] {this.worldObj, p_addBlockHitEffects_2_, this});
+
+        if (block != null && !flag)
+        {
+            this.addBlockHitEffects(p_addBlockHitEffects_1_, p_addBlockHitEffects_2_.sideHit);
+        }
     }
 }

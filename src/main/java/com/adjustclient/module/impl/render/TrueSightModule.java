@@ -13,7 +13,8 @@ public final class TrueSightModule extends Module {
     public TrueSightModule() {
         super("True Sight", Category.RENDER);
         INSTANCE = this;
-        opacity = new NumberSetting(this, "Opacity", 50, 10, 100, 1);
+        opacity = new NumberSetting(this, "Opacity", 50, 10, 100, 1)
+                .formatter(NumberSetting.INTEGER_SUFFIX_B);
         ignoreTeammates = new BooleanSetting(this, "Ignore teammates", false);
     }
     @com.adjustclient.event.EventHandler

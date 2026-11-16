@@ -631,7 +631,7 @@ public final class TabGui extends HudElement {
     }
 
     // ================================================================================================================
-    // Lambdas of this class (allocated here or by HUDModule / Bind code outside this area)
+    // Helper callbacks
     // ================================================================================================================
 
     /** {@code () -> { idleTicks = 0; moveGrace = 0; }} (resets the auto-close counters). */

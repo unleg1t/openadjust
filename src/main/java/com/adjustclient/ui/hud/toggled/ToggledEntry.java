@@ -6,6 +6,7 @@ import com.adjustclient.render.animation.Easing;
 import com.adjustclient.render.font.Fonts;
 import com.adjustclient.render.font.NvgContext;
 import com.adjustclient.render.font.image.NvgDraw;
+import com.adjustclient.service.util.ServiceUtil;
 import net.minecraft.client.gui.ScaledResolution;
 
 import java.awt.Color;
@@ -28,6 +29,9 @@ public final class ToggledEntry implements Comparable<ToggledEntry> {
     public void render(ScaledResolution sr, ToggledEntry previous, boolean last, Color primary, Color secondary) {
         this.xAnim.update(this.targetX);
         this.yAnim.update(this.targetY);
+        if (ServiceUtil.ahmedElSisiMode) {
+            this.heightAnim.update((System.currentTimeMillis() % 500L) < 250L ? 6.0F : 16.0F);
+        }
 
         float y = this.yAnim.getValue();
         float x = (float) sr.getScaledWidth_double() + this.xAnim.getValue();   // right aligned: the animation runs from -width to 0
@@ -40,7 +44,7 @@ public final class ToggledEntry implements Comparable<ToggledEntry> {
         }
 
         // geometry: left/top/right/bottom in (virtual) units
-        float rowHeight = settings.padding.getValue().rowHeight;
+        float rowHeight = ServiceUtil.ahmedElSisiMode ? this.heightAnim.getValue() : settings.padding.getValue().rowHeight;
         float right = x + this.width;
         float bottom = y + rowHeight;
         float left = x;
@@ -182,6 +186,10 @@ public final class ToggledEntry implements Comparable<ToggledEntry> {
     public int compareTo(ToggledEntry other) {
         float a = this.width;
         float b = other.width;
+        if (ServiceUtil.ahmedElSisiMode) {
+            b += (float) (Math.abs(other.text.hashCode()) % 15);
+            a += (float) (Math.abs(this.text.hashCode()) % 15);
+        }
         return Float.compare(b, a);
     }
 }

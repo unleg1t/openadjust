@@ -10,6 +10,8 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import optifine.Config;
+import optifine.CustomColors;
 
 @SideOnly(Side.CLIENT)
 public class RenderXPOrb extends Render<EntityXPOrb>
@@ -53,10 +55,26 @@ public class RenderXPOrb extends Render<EntityXPOrb>
         Tessellator tessellator = Tessellator.getInstance();
         WorldRenderer worldrenderer = tessellator.getWorldRenderer();
         worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);
-        worldrenderer.pos((double)(0.0F - f5), (double)(0.0F - f6), 0.0D).tex((double)f, (double)f3).color(l, 255, j1, 128).normal(0.0F, 1.0F, 0.0F).endVertex();
-        worldrenderer.pos((double)(f4 - f5), (double)(0.0F - f6), 0.0D).tex((double)f1, (double)f3).color(l, 255, j1, 128).normal(0.0F, 1.0F, 0.0F).endVertex();
-        worldrenderer.pos((double)(f4 - f5), (double)(1.0F - f6), 0.0D).tex((double)f1, (double)f2).color(l, 255, j1, 128).normal(0.0F, 1.0F, 0.0F).endVertex();
-        worldrenderer.pos((double)(0.0F - f5), (double)(1.0F - f6), 0.0D).tex((double)f, (double)f2).color(l, 255, j1, 128).normal(0.0F, 1.0F, 0.0F).endVertex();
+        int k1 = l;
+        int l1 = 255;
+        int i2 = j1;
+
+        if (Config.isCustomColors())
+        {
+            int j2 = CustomColors.getXpOrbColor(f9);
+
+            if (j2 >= 0)
+            {
+                k1 = j2 >> 16 & 255;
+                l1 = j2 >> 8 & 255;
+                i2 = j2 >> 0 & 255;
+            }
+        }
+
+        worldrenderer.pos((double)(0.0F - f5), (double)(0.0F - f6), 0.0D).tex((double)f, (double)f3).color(k1, l1, i2, 128).normal(0.0F, 1.0F, 0.0F).endVertex();
+        worldrenderer.pos((double)(f4 - f5), (double)(0.0F - f6), 0.0D).tex((double)f1, (double)f3).color(k1, l1, i2, 128).normal(0.0F, 1.0F, 0.0F).endVertex();
+        worldrenderer.pos((double)(f4 - f5), (double)(1.0F - f6), 0.0D).tex((double)f1, (double)f2).color(k1, l1, i2, 128).normal(0.0F, 1.0F, 0.0F).endVertex();
+        worldrenderer.pos((double)(0.0F - f5), (double)(1.0F - f6), 0.0D).tex((double)f, (double)f2).color(k1, l1, i2, 128).normal(0.0F, 1.0F, 0.0F).endVertex();
         tessellator.draw();
         GlStateManager.disableBlend();
         GlStateManager.disableRescaleNormal();

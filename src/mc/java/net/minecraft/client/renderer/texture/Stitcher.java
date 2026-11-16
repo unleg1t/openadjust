@@ -63,7 +63,7 @@ public class Stitcher
         {
             if (!this.allocateSlot(stitcher$holder))
             {
-                String s = String.format("Unable to fit: %s - size: %dx%d - Maybe try a lowerresolution resourcepack?", new Object[] {stitcher$holder.getAtlasSprite().getIconName(), Integer.valueOf(stitcher$holder.getAtlasSprite().getIconWidth()), Integer.valueOf(stitcher$holder.getAtlasSprite().getIconHeight())});
+                String s = String.format("Unable to fit: %s, size: %dx%d, atlas: %dx%d, atlasMax: %dx%d - Maybe try a lower resolution resourcepack?", new Object[] {stitcher$holder.getAtlasSprite().getIconName(), Integer.valueOf(stitcher$holder.getAtlasSprite().getIconWidth()), Integer.valueOf(stitcher$holder.getAtlasSprite().getIconHeight()), Integer.valueOf(this.currentWidth), Integer.valueOf(this.currentHeight), Integer.valueOf(this.maxWidth), Integer.valueOf(this.maxHeight)});
                 throw new StitcherException(stitcher$holder, s);
             }
         }
@@ -171,7 +171,7 @@ public class Stitcher
 
         int j1 = Math.max(p_94311_1_.getWidth(), p_94311_1_.getHeight());
 
-        if (MathHelper.roundUpToPowerOfTwo((flag1 ? this.currentHeight : this.currentWidth) + j1) > (flag1 ? this.maxHeight : this.maxWidth))
+        if (MathHelper.roundUpToPowerOfTwo((!flag1 ? this.currentHeight : this.currentWidth) + j1) > (!flag1 ? this.maxHeight : this.maxWidth))
         {
             return false;
         }
@@ -260,7 +260,7 @@ public class Stitcher
 
             public String toString()
             {
-                return "Holder{width=" + this.width + ", height=" + this.height + '}';
+                return "Holder{width=" + this.width + ", height=" + this.height + ", name=" + this.theTexture.getIconName() + '}';
             }
 
             public int compareTo(Stitcher.Holder p_compareTo_1_)

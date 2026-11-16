@@ -342,7 +342,7 @@ public final class ClickGuiScreen extends AdjustScreen {
         for (Modifier m : allModifiers()) {
             m.reset();
         }
-        closeAll();                                                         // c.o
+        closeAll();
         this.draggedTab = null;
         this.layoutDirty = true;
         backdrop.animation.value = 0.0F;
@@ -420,7 +420,7 @@ public final class ClickGuiScreen extends AdjustScreen {
             dragMoved = true;
             layoutDirty = true;
         }
-        updateShownFlags();                                                  // c.y
+        updateShownFlags();
         for (ClickGuiTab tab : tabs) {
             if (counter == 0) {
                 tab.scrollAnimation.value = tab.scroll;
@@ -432,8 +432,8 @@ public final class ClickGuiScreen extends AdjustScreen {
             }
         }
         if (layoutDirty) {
-            refreshAllTabs();                                                // c.w
-            layoutAllTabs();                                                 // c.x
+            refreshAllTabs();
+            layoutAllTabs();
             layoutDirty = false;
         }
         ClickGuiTab hovered = null;                                          // topmost tab under the mouse (list is back to front)

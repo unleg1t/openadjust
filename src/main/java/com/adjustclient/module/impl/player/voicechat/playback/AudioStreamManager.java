@@ -29,7 +29,7 @@ public final class AudioStreamManager implements MinecraftInstance {
     }
 
     public PlayerAudioStream getLocalStream() {
-        Session session = VoiceChatModule.INSTANCE.sessionManager.session;
+        Session session = VoiceChatModule.INSTANCE.getSessionManager().session;
         if (session == null) session = mc.getSession();
         UUID playerUuid = com.adjustclient.service.session.SessionService.resolveSessionUuid(session);
         if (playerUuid == null) return null;
@@ -81,12 +81,13 @@ public final class AudioStreamManager implements MinecraftInstance {
     }
 
     public void accept(UUID playerId, byte[] data, long sequence) {
-        if (!VoiceChatModule.INSTANCE.isEnabled()) return;
+        if (playerId == null || !VoiceChatModule.INSTANCE.isEnabled()) return;
         Channel current = controller.channelRegistry.channels.get(controller.currentChannelId);
         if (current != null && !current.id.equals(new UUID(0L, 0L))) {
             Session session = VoiceChatModule.INSTANCE.getSessionManager().session;
-            if (session == null) return;
-            VoiceUser localUser = current.users.get(session.getProfile().getId());
+            UUID localId = com.adjustclient.service.session.SessionService.resolveSessionUuid(session);
+            if (localId == null) return;
+            VoiceUser localUser = current.users.get(localId);
             if (localUser == null || !localUser.getAudioStream().receiveAllowed) return;
         }
         PlayerAudioStream stream = streams.get(playerId);
@@ -117,7 +118,7 @@ public final class AudioStreamManager implements MinecraftInstance {
         }
     }
 
-    public PlayerAudioStream get(UUID playerId) { return streams.get(playerId); }
+    public PlayerAudioStream get(UUID playerId) { return playerId == null ? null : streams.get(playerId); }
 
     public void clear() {
         for (UUID playerId : streams.keySet().toArray(new UUID[0])) remove(playerId);

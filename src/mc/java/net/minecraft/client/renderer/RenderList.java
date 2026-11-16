@@ -5,6 +5,7 @@ import net.minecraft.client.renderer.chunk.RenderChunk;
 import net.minecraft.util.EnumWorldBlockLayer;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import optifine.Config;
 import org.lwjgl.opengl.GL11;
 
 @SideOnly(Side.CLIENT)
@@ -14,6 +15,11 @@ public class RenderList extends ChunkRenderContainer
     {
         if (this.initialized)
         {
+            if (this.renderChunks.size() == 0)
+            {
+                return;
+            }
+
             for (RenderChunk renderchunk : this.renderChunks)
             {
                 ListedRenderChunk listedrenderchunk = (ListedRenderChunk)renderchunk;
@@ -21,6 +27,11 @@ public class RenderList extends ChunkRenderContainer
                 this.preRenderChunk(renderchunk);
                 GL11.glCallList(listedrenderchunk.getDisplayList(layer, listedrenderchunk.getCompiledChunk()));
                 GlStateManager.popMatrix();
+            }
+
+            if (Config.isMultiTexture())
+            {
+                GlStateManager.bindCurrentTexture();
             }
 
             GlStateManager.resetColor();

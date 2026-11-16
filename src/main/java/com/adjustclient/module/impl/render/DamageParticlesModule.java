@@ -10,9 +10,11 @@ import com.adjustclient.setting.*;
 import com.adjustclient.util.MinecraftInstance;
 import com.adjustclient.util.RandomUtil;
 import com.adjustclient.render.ColorUtil;
+import com.adjustclient.service.util.ServiceUtil;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import java.awt.Color;
 import java.util.*;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
@@ -21,7 +23,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.Packet;
 import net.minecraft.network.play.server.*;
 import org.lwjgl.opengl.GL11;
-import com.adjustclient.ui.hud.watermark.WatermarkStandalone;
 
 public final class DamageParticlesModule extends Module implements MinecraftInstance {
     public static DamageParticlesModule INSTANCE;
@@ -57,6 +58,8 @@ public final class DamageParticlesModule extends Module implements MinecraftInst
         if (!isEnabled()) return;
         synchronized (particles) {
             if (particles.isEmpty()) return;
+            boolean savedAhmedMode = ServiceUtil.ahmedElSisiMode;
+            ServiceUtil.ahmedElSisiMode = false;
             GlStateManager.enableBlend();
             GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
             GlStateManager.disableDepth();
@@ -65,6 +68,7 @@ public final class DamageParticlesModule extends Module implements MinecraftInst
             GlStateManager.depthMask(true);
             GlStateManager.enableDepth();
             GlStateManager.disableBlend();
+            ServiceUtil.ahmedElSisiMode = savedAhmedMode;
         }
     }
 
@@ -162,6 +166,9 @@ public final class DamageParticlesModule extends Module implements MinecraftInst
                     (int) (selected.getBlue() * 0.63F), selected.getAlpha());
             color = ColorUtil.blend(dark, selected.brighter(), fraction).getRGB();
         } else color = Color.HSBtoRGB((1.0F - fraction) * 0.33333334F, 0.60000002F, 0.60000002F) | 0xff000000;
+        if (ServiceUtil.ahmedElSisiMode && !(entity instanceof EntityPlayerSP) && !text.contains("+")) {
+            text = "Oy Vey! " + text;
+        }
         synchronized (particles) { particles.add(new DamageParticle(this, text, color, entity)); }
         synchronized (pending) { pending.remove(entity.getEntityId()); }
     }

@@ -1,5 +1,6 @@
 package net.minecraft.client.resources;
 
+import java.util.Map;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -16,5 +17,10 @@ public class I18n
     public static String format(String translateKey, Object... parameters)
     {
         return i18nLocale.formatMessage(translateKey, parameters);
+    }
+
+    public static Map<String, String> getLocaleProperties()
+    {
+        return i18nLocale.properties;
     }
 }

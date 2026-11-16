@@ -59,17 +59,22 @@ public final class OutlineShader {
     }
 
     public void drawFramebuffer(Framebuffer target) {
-        ScaledResolution resolution = new ScaledResolution(Minecraft.getMinecraft());
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, target.framebufferTexture);
+        drawFramebuffer(target, new ScaledResolution(Minecraft.getMinecraft()));
+    }
+
+    public void drawFramebuffer(Framebuffer target, ScaledResolution resolution) {
+        double width = resolution.getScaledWidth_double();
+        double height = resolution.getScaledHeight_double();
+        GlStateManager.bindTexture(target.framebufferTexture);
         GL11.glBegin(GL11.GL_QUADS);
         GL11.glTexCoord2d(0, 1);
         GL11.glVertex2d(0, 0);
         GL11.glTexCoord2d(0, 0);
-        GL11.glVertex2d(0, resolution.getScaledHeight());
+        GL11.glVertex2d(0, height);
         GL11.glTexCoord2d(1, 0);
-        GL11.glVertex2d(resolution.getScaledWidth(), resolution.getScaledHeight());
+        GL11.glVertex2d(width, height);
         GL11.glTexCoord2d(1, 1);
-        GL11.glVertex2d(resolution.getScaledWidth(), 0);
+        GL11.glVertex2d(width, 0);
         GL11.glEnd();
         GL20.glUseProgram(0);
     }
@@ -87,14 +92,14 @@ public final class OutlineShader {
     public void endCapture(int color, ScaledResolution resolution, float radius) {
         Minecraft mc = Minecraft.getMinecraft();
         mc.gameSettings.entityShadows = entityShadows;
-        GL11.glEnable(GL11.GL_BLEND);
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        GlStateManager.enableBlend();
+        GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO);
         mc.getFramebuffer().bindFramebuffer(true);
         mc.entityRenderer.enableLightmap();
         RenderHelper.disableStandardItemLighting();
         startShader(color, radius);
         mc.entityRenderer.setupOverlayRendering(resolution);
-        drawFramebuffer(framebuffer);
+        drawFramebuffer(framebuffer, resolution);
         GL20.glUseProgram(0);
         GL11.glPopMatrix();
         GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit);

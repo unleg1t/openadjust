@@ -6,6 +6,8 @@ import com.adjustclient.render.animation.Animation;
 import com.adjustclient.render.animation.Easing;
 import com.adjustclient.render.font.Fonts;
 import com.adjustclient.render.font.image.NvgDraw;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.util.ChatColor;
 import com.adjustclient.ui.mainmenu.AdjustMainMenu;
 import com.adjustclient.ui.screen.AdjustScreen;
@@ -31,8 +33,13 @@ public final class DragDropOverlay {
         if (0.0F >= value) {
             return;
         }
-        float height = (float) AdjustScreen.screenResolution.getScaledHeight();
-        float width = (float) AdjustScreen.screenResolution.scaledWidth;
+        Minecraft mc = Minecraft.getMinecraft();
+        ScaledResolution resolution = mc != null && mc.currentScreen != null ? new ScaledResolution(mc) : AdjustScreen.screenResolution;
+        if (resolution == null) {
+            return;
+        }
+        float height = (float) resolution.getScaledHeight();
+        float width = (float) resolution.scaledWidth;
         int veilAlpha = (int) (value * 175.0F);
         NvgDraw.fillRect(new Color(28, 28, 28, veilAlpha).getRGB(), 0.0F, 0.0F, width, height);
 

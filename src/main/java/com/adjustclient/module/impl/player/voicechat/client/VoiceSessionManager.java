@@ -15,7 +15,11 @@ import net.minecraft.util.Session;
 import com.mojang.authlib.exceptions.AuthenticationException;
 
 public final class VoiceSessionManager {
-    public final ExecutorService executor = Executors.newSingleThreadExecutor();
+    public final ExecutorService executor = Executors.newSingleThreadExecutor(runnable -> {
+        Thread thread = new Thread(runnable, "VoiceSession");
+        thread.setDaemon(true);
+        return thread;
+    });
     public final VoiceChatClient client;
     public final VoiceSender sender;
     public final VoiceSessionHandler handler;
@@ -30,15 +34,26 @@ public final class VoiceSessionManager {
     }
 
     public void switchSession(Session session) {
-        if (!VoiceChatModule.INSTANCE.isEnabled()) return;
+        if (session == null || !VoiceChatModule.INSTANCE.isEnabled()) return;
         this.session = session;
         client.authenticators.put(VoiceServer.MOJANG, serverHash -> {
+            Session activeSession = this.session;
+            if (activeSession == null || activeSession.getProfile() == null
+                    || activeSession.getProfile().getId() == null
+                    || activeSession.getToken() == null
+                    || activeSession.getToken().isEmpty()
+                    || "0".equals(activeSession.getToken())) {
+                if (activeSession != null && activeSession.getToken() != null) {
+                    failedTokens.add(activeSession.getToken());
+                }
+                return null;
+            }
             try {
-                Minecraft.getMinecraft().getSessionService().joinServer(this.session.getProfile(),
-                        this.session.getToken(), serverHash);
-                return new AuthenticationResponse(this.session.getUsername(), null);
+                Minecraft.getMinecraft().getSessionService().joinServer(activeSession.getProfile(),
+                        activeSession.getToken(), serverHash);
+                return new AuthenticationResponse(activeSession.getUsername(), null);
             } catch (com.mojang.authlib.exceptions.InvalidCredentialsException exception) {
-                failedTokens.add(this.session.getToken());
+                failedTokens.add(activeSession.getToken());
                 return null;
             } catch (Exception exception) {
                 return null;
@@ -54,7 +69,9 @@ public final class VoiceSessionManager {
     }
 
     public void reconnect() {
-        if (session == null || failedTokens.contains(session.getToken())) return;
+        Session activeSession = session;
+        if (activeSession == null || activeSession.getToken() == null
+                || failedTokens.contains(activeSession.getToken())) return;
         executor.execute(() -> {
             try {
                 String host = VoiceChatModule.INSTANCE.settings.useBackupServer.isEnabled()
@@ -66,7 +83,9 @@ public final class VoiceSessionManager {
                     address = InetSocketAddress.createUnresolved(host, 8066);
                 }
                 final InetSocketAddress target = address;
-                Executors.newSingleThreadExecutor().execute(() -> client.connect(target, VoiceServer.MOJANG));
+                Thread connectThread = new Thread(() -> client.connect(target, VoiceServer.MOJANG), "VoiceConnect");
+                connectThread.setDaemon(true);
+                connectThread.start();
             } catch (Exception exception) {
                 exception.printStackTrace();
             }

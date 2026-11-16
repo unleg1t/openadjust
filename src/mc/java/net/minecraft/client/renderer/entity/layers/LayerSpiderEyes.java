@@ -7,6 +7,8 @@ import net.minecraft.entity.monster.EntitySpider;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import optifine.Config;
+import shadersmod.client.Shaders;
 
 @SideOnly(Side.CLIENT)
 public class LayerSpiderEyes implements LayerRenderer<EntitySpider>
@@ -40,6 +42,12 @@ public class LayerSpiderEyes implements LayerRenderer<EntitySpider>
         int k = i / 65536;
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, (float)j / 1.0F, (float)k / 1.0F);
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+
+        if (Config.isShaders())
+        {
+            Shaders.beginSpiderEyes();
+        }
+
         this.spiderRenderer.getMainModel().render(entitylivingbaseIn, p_177141_2_, p_177141_3_, p_177141_5_, p_177141_6_, p_177141_7_, scale);
         i = entitylivingbaseIn.getBrightnessForRender(partialTicks);
         j = i % 65536;

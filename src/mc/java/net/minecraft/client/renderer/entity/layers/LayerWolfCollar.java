@@ -8,6 +8,8 @@ import net.minecraft.item.EnumDyeColor;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import optifine.Config;
+import optifine.CustomColors;
 
 @SideOnly(Side.CLIENT)
 public class LayerWolfCollar implements LayerRenderer<EntityWolf>
@@ -27,6 +29,12 @@ public class LayerWolfCollar implements LayerRenderer<EntityWolf>
             this.wolfRenderer.bindTexture(WOLF_COLLAR);
             EnumDyeColor enumdyecolor = EnumDyeColor.byMetadata(entitylivingbaseIn.getCollarColor().getMetadata());
             float[] afloat = EntitySheep.getDyeRgb(enumdyecolor);
+
+            if (Config.isCustomColors())
+            {
+                afloat = CustomColors.getWolfCollarColors(enumdyecolor, afloat);
+            }
+
             GlStateManager.color(afloat[0], afloat[1], afloat[2]);
             this.wolfRenderer.getMainModel().render(entitylivingbaseIn, p_177141_2_, p_177141_3_, p_177141_5_, p_177141_6_, p_177141_7_, scale);
         }

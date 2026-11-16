@@ -57,7 +57,7 @@ public enum EnumFacing implements IStringSerializable
 
     public EnumFacing getOpposite()
     {
-        return getFront(this.opposite);
+        return VALUES[this.opposite];
     }
 
     @SideOnly(Side.CLIENT)

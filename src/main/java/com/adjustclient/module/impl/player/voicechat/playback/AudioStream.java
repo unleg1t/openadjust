@@ -38,7 +38,12 @@ public abstract class AudioStream implements MinecraftInstance {
         config.maxFrameSize = 57600;
         config.maxPacketSize = 38280;
         decoder = new OpusDecoderHandle();
-        decoder.codec = new OpusCodec(config);
+        try {
+            decoder.codec = new OpusCodec(config);
+        } catch (Throwable exception) {
+            com.adjustclient.logging.Logger.log(com.adjustclient.logging.LogLevel.ERROR, true, "Couldn't create Opus decoder {}", exception);
+            decoder = null;
+        }
         PlayerAudioStream playerStream = (PlayerAudioStream) this;
         if (this instanceof com.adjustclient.module.impl.player.voicechat.playback.realistic.RealisticAudioStream) {
             com.adjustclient.module.impl.player.voicechat.playback.realistic.RealisticAudioStream realistic =
@@ -107,7 +112,7 @@ public abstract class AudioStream implements MinecraftInstance {
     }
 
     public void update() {
-        filterChain.update();
+        if (filterChain != null) filterChain.update();
         boolean active = isTalking();
         if (talking != active) talking = active;
     }
@@ -115,13 +120,15 @@ public abstract class AudioStream implements MinecraftInstance {
     public boolean isTalking() { return lastPacketTime + 100L > System.currentTimeMillis(); }
 
     public boolean isExpired() {
-        return System.currentTimeMillis() > lastPacketTime + 3000L && filterChain.isActive();
+        return System.currentTimeMillis() > lastPacketTime + 3000L && (filterChain == null || filterChain.isActive());
     }
 
     public void close() {
         frames.clear();
         pending.clear();
-        for (AudioFilter filter : filterChain.filters) filter.reset();
+        if (filterChain != null) {
+            for (AudioFilter filter : filterChain.filters) filter.reset();
+        }
         lastFrame = null;
         closed = true;
         if (decoder != null) {

@@ -29,7 +29,7 @@ public final class PotionEntry {
         } else if (maxed) {
             this.durationText = null;
         } else {
-            this.durationText = StringUtils.ticksToElapsedTime(duration);     // net.minecraft.util.StringUtils.a
+            this.durationText = StringUtils.ticksToElapsedTime(duration);
         }
         if (amplifier >= 1) {
             this.levelText = StringUtil.toRoman(amplifier + 1);          // roman numeral

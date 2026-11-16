@@ -176,4 +176,32 @@ public class Vec3
         double d2 = this.zCoord * (double)f - this.xCoord * (double)f1;
         return new Vec3(d0, d1, d2);
     }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (this == obj)
+        {
+            return true;
+        }
+        else if (!(obj instanceof Vec3))
+        {
+            return false;
+        }
+        else
+        {
+            Vec3 vec3 = (Vec3)obj;
+            return Double.compare(this.xCoord, vec3.xCoord) == 0 && Double.compare(this.yCoord, vec3.yCoord) == 0 && Double.compare(this.zCoord, vec3.zCoord) == 0;
+        }
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int i = 1;
+        i = 31 * i + Double.hashCode(this.xCoord);
+        i = 31 * i + Double.hashCode(this.yCoord);
+        i = 31 * i + Double.hashCode(this.zCoord);
+        return i;
+    }
 }

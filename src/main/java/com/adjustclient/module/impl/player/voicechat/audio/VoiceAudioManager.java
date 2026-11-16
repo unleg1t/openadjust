@@ -3,6 +3,8 @@ package com.adjustclient.module.impl.player.voicechat.audio;
 import com.adjustclient.audio.device.*;
 import com.adjustclient.audio.device.openal.*;
 import com.adjustclient.audio.openal.*;
+import com.adjustclient.logging.LogLevel;
+import com.adjustclient.logging.Logger;
 import com.adjustclient.util.MinecraftInstance;
 import java.util.*;
 import java.util.concurrent.Future;
@@ -48,8 +50,13 @@ public final class VoiceAudioManager implements MinecraftInstance {
                 } catch (Exception ignored) { }
             });
         }
-        captureDevice = device;
-        reopenCapture(device);
+        try {
+            captureDevice = device;
+            reopenCapture(device);
+        } catch (AudioDeviceException exception) {
+            captureDevice = null;
+            throw exception;
+        }
     }
 
     public void setOutputDevice(OpenAlOutputDevice device) throws AudioDeviceException {
@@ -61,8 +68,13 @@ public final class VoiceAudioManager implements MinecraftInstance {
                 try { old.close(); } catch (Exception ignored) { }
             });
         }
-        outputDevice = device;
-        reopenOutput(device);
+        try {
+            outputDevice = device;
+            reopenOutput(device);
+        } catch (AudioDeviceException exception) {
+            outputDevice = null;
+            throw exception;
+        }
     }
 
     public void setDevice(AudioDevice device) throws AudioDeviceException {
@@ -132,7 +144,12 @@ public final class VoiceAudioManager implements MinecraftInstance {
             backend.refreshInputDevices(captureFormat);
         }
         if (captureDevice != null && !isMicrophoneReady()) {
-            try { reopenCapture(captureDevice); } catch (AudioDeviceException exception) { throw new RuntimeException(exception); }
+            try {
+                reopenCapture(captureDevice);
+            } catch (Exception exception) {
+                Logger.log(LogLevel.ERROR, true, "Failed to reopen capture device: {}", exception);
+                captureDevice = null;
+            }
         }
     }
 
@@ -146,13 +163,19 @@ public final class VoiceAudioManager implements MinecraftInstance {
         if (outputDevice != null && (outputDevice.device == null || outputDevice.device.handle == 0L
                 || outputDevice.context == null || outputDevice.context.handle == 0L
                 || speaker.loopFuture == null || speaker.loopFuture.isDone())) {
-            try { reopenOutput(outputDevice); } catch (AudioDeviceException exception) { throw new RuntimeException(exception); }
+            try {
+                reopenOutput(outputDevice);
+            } catch (Exception exception) {
+                Logger.log(LogLevel.ERROR, true, "Failed to reopen output device: {}", exception);
+                outputDevice = null;
+            }
         }
     }
 
     public DeviceInfo getDefaultDevice(DeviceType type) {
         if (backends.isEmpty()) return null;
         String name = type == DeviceType.INPUT ? AlCaptureDevice.defaultName() : AlPlaybackDevice.defaultName();
+        if (name == null) return null;
         return new DeviceInfo(backends.get(0), new DeviceIdentifier("openal", name), name.replaceAll("OpenAL Soft on ", ""),
                 type, type == DeviceType.INPUT ? captureFormat : outputFormat);
     }
@@ -162,8 +185,16 @@ public final class VoiceAudioManager implements MinecraftInstance {
     public void selectInitialDevices() {
         refreshAll();
         try {
-            applySelection(DeviceType.OUTPUT, getDevices(DeviceType.OUTPUT).getFirst().identifier.toString());
-            applySelection(DeviceType.INPUT, getDevices(DeviceType.INPUT).getFirst().identifier.toString());
+            List<DeviceInfo> outputs = getDevices(DeviceType.OUTPUT);
+            if (!outputs.isEmpty()) {
+                applySelection(DeviceType.OUTPUT, outputs.get(0).identifier.toString());
+            }
+        } catch (Exception ignored) { }
+        try {
+            List<DeviceInfo> inputs = getDevices(DeviceType.INPUT);
+            if (!inputs.isEmpty()) {
+                applySelection(DeviceType.INPUT, inputs.get(0).identifier.toString());
+            }
         } catch (Exception ignored) { }
         refreshAll();
     }

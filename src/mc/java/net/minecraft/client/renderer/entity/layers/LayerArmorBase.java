@@ -6,12 +6,18 @@ import java.util.Map;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.entity.RendererLivingEntity;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import optifine.Config;
+import optifine.CustomItems;
+import optifine.Reflector;
+import shadersmod.client.Shaders;
+import shadersmod.client.ShadersRender;
 
 @SideOnly(Side.CLIENT)
 public abstract class LayerArmorBase<T extends ModelBase> implements LayerRenderer<EntityLivingBase>
@@ -56,9 +62,26 @@ public abstract class LayerArmorBase<T extends ModelBase> implements LayerRender
             T t = this.getArmorModel(armorSlot);
             t.setModelAttributes(this.renderer.getMainModel());
             t.setLivingAnimations(entitylivingbaseIn, p_177182_2_, p_177182_3_, partialTicks);
+
+            if (Reflector.ForgeHooksClient.exists())
+            {
+                t = (T)this.getArmorModelHook(entitylivingbaseIn, itemstack, armorSlot, t);
+            }
+
             this.setModelPartVisible(t, armorSlot);
             boolean flag = this.isSlotForLeggings(armorSlot);
-            this.renderer.bindTexture(this.getArmorResource(itemarmor, flag));
+
+            if (!Config.isCustomItems() || !CustomItems.bindCustomArmorTexture(itemstack, flag ? 2 : 1, (String)null))
+            {
+                if (Reflector.ForgeHooksClient_getArmorTexture.exists())
+                {
+                    this.renderer.bindTexture(this.getArmorResource(entitylivingbaseIn, itemstack, flag ? 2 : 1, (String)null));
+                }
+                else
+                {
+                    this.renderer.bindTexture(this.getArmorResource(itemarmor, flag));
+                }
+            }
 
             float armorAlpha = this.alpha;
             if (this.renderer.currentOpacityEvent != null)
@@ -74,6 +97,43 @@ public abstract class LayerArmorBase<T extends ModelBase> implements LayerRender
                 GlStateManager.alphaFunc(516, 0.003921569F);
             }
 
+            if (Reflector.ForgeHooksClient_getArmorTexture.exists())
+            {
+                int j = itemarmor.getColor(itemstack);
+
+                if (j != -1)
+                {
+                    float f3 = (float)(j >> 16 & 255) / 255.0F;
+                    float f4 = (float)(j >> 8 & 255) / 255.0F;
+                    float f5 = (float)(j & 255) / 255.0F;
+                    GlStateManager.color(this.colorR * f3, this.colorG * f4, this.colorB * f5, armorAlpha);
+                    t.render(entitylivingbaseIn, p_177182_2_, p_177182_3_, p_177182_5_, p_177182_6_, p_177182_7_, scale);
+
+                    if (!Config.isCustomItems() || !CustomItems.bindCustomArmorTexture(itemstack, flag ? 2 : 1, "overlay"))
+                    {
+                        this.renderer.bindTexture(this.getArmorResource(entitylivingbaseIn, itemstack, flag ? 2 : 1, "overlay"));
+                    }
+                }
+
+                GlStateManager.color(this.colorR, this.colorG, this.colorB, armorAlpha);
+                t.render(entitylivingbaseIn, p_177182_2_, p_177182_3_, p_177182_5_, p_177182_6_, p_177182_7_, scale);
+
+                if (!this.skipRenderGlint && itemstack.isItemEnchanted() && (!Config.isCustomItems() || !CustomItems.renderCustomArmorEffect(entitylivingbaseIn, itemstack, t, p_177182_2_, p_177182_3_, partialTicks, p_177182_5_, p_177182_6_, p_177182_7_, scale)))
+                {
+                    this.renderGlint(entitylivingbaseIn, t, p_177182_2_, p_177182_3_, partialTicks, p_177182_5_, p_177182_6_, p_177182_7_, scale);
+                }
+
+                if (translucentArmor)
+                {
+                    GlStateManager.disableBlend();
+                    GlStateManager.alphaFunc(516, 0.1F);
+                    GlStateManager.depthMask(true);
+                    GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+                }
+
+                return;
+            }
+
             switch (itemarmor.getArmorMaterial())
             {
                 case LEATHER:
@@ -83,7 +143,11 @@ public abstract class LayerArmorBase<T extends ModelBase> implements LayerRender
                     float f2 = (float)(i & 255) / 255.0F;
                     GlStateManager.color(this.colorR * f, this.colorG * f1, this.colorB * f2, armorAlpha);
                     t.render(entitylivingbaseIn, p_177182_2_, p_177182_3_, p_177182_5_, p_177182_6_, p_177182_7_, scale);
-                    this.renderer.bindTexture(this.getArmorResource(itemarmor, flag, "overlay"));
+
+                    if (!Config.isCustomItems() || !CustomItems.bindCustomArmorTexture(itemstack, flag ? 2 : 1, "overlay"))
+                    {
+                        this.renderer.bindTexture(this.getArmorResource(itemarmor, flag, "overlay"));
+                    }
                 case CHAIN:
                 case IRON:
                 case GOLD:
@@ -92,7 +156,7 @@ public abstract class LayerArmorBase<T extends ModelBase> implements LayerRender
                     t.render(entitylivingbaseIn, p_177182_2_, p_177182_3_, p_177182_5_, p_177182_6_, p_177182_7_, scale);
                 default:
 
-                    if (!this.skipRenderGlint && itemstack.isItemEnchanted())
+                    if (!this.skipRenderGlint && itemstack.isItemEnchanted() && (!Config.isCustomItems() || !CustomItems.renderCustomArmorEffect(entitylivingbaseIn, itemstack, t, p_177182_2_, p_177182_3_, partialTicks, p_177182_5_, p_177182_6_, p_177182_7_, scale)))
                     {
                         this.renderGlint(entitylivingbaseIn, t, p_177182_2_, p_177182_3_, partialTicks, p_177182_5_, p_177182_6_, p_177182_7_, scale);
                     }
@@ -125,37 +189,54 @@ public abstract class LayerArmorBase<T extends ModelBase> implements LayerRender
 
     private void renderGlint(EntityLivingBase entitylivingbaseIn, T modelbaseIn, float p_177183_3_, float p_177183_4_, float partialTicks, float p_177183_6_, float p_177183_7_, float p_177183_8_, float scale)
     {
-        float f = (float)entitylivingbaseIn.ticksExisted + partialTicks;
-        this.renderer.bindTexture(ENCHANTED_ITEM_GLINT_RES);
-        GlStateManager.enableBlend();
-        GlStateManager.depthFunc(514);
-        GlStateManager.depthMask(false);
-        float f1 = 0.5F;
-        GlStateManager.color(f1, f1, f1, 1.0F);
-
-        for (int i = 0; i < 2; ++i)
+        if (!Config.isCustomItems() || CustomItems.isUseGlint())
         {
-            GlStateManager.disableLighting();
-            GlStateManager.blendFunc(768, 1);
-            float f2 = 0.76F;
-            GlStateManager.color(0.5F * f2, 0.25F * f2, 0.8F * f2, 1.0F);
-            GlStateManager.matrixMode(5890);
-            GlStateManager.loadIdentity();
-            float f3 = 0.33333334F;
-            GlStateManager.scale(f3, f3, f3);
-            GlStateManager.rotate(30.0F - (float)i * 60.0F, 0.0F, 0.0F, 1.0F);
-            GlStateManager.translate(0.0F, f * (0.001F + (float)i * 0.003F) * 20.0F, 0.0F);
-            GlStateManager.matrixMode(5888);
-            modelbaseIn.render(entitylivingbaseIn, p_177183_3_, p_177183_4_, p_177183_6_, p_177183_7_, p_177183_8_, scale);
-        }
+            if (!Config.isShaders() || !Shaders.isShadowPass)
+            {
+                float f = (float)entitylivingbaseIn.ticksExisted + partialTicks;
+                this.renderer.bindTexture(ENCHANTED_ITEM_GLINT_RES);
 
-        GlStateManager.matrixMode(5890);
-        GlStateManager.loadIdentity();
-        GlStateManager.matrixMode(5888);
-        GlStateManager.enableLighting();
-        GlStateManager.depthMask(true);
-        GlStateManager.depthFunc(515);
-        GlStateManager.disableBlend();
+                if (Config.isShaders())
+                {
+                    ShadersRender.renderEnchantedGlintBegin();
+                }
+
+                GlStateManager.enableBlend();
+                GlStateManager.depthFunc(514);
+                GlStateManager.depthMask(false);
+                float f1 = 0.5F;
+                GlStateManager.color(f1, f1, f1, 1.0F);
+
+                for (int i = 0; i < 2; ++i)
+                {
+                    GlStateManager.disableLighting();
+                    GlStateManager.blendFunc(768, 1);
+                    float f2 = 0.76F;
+                    GlStateManager.color(0.5F * f2, 0.25F * f2, 0.8F * f2, 1.0F);
+                    GlStateManager.matrixMode(5890);
+                    GlStateManager.loadIdentity();
+                    float f3 = 0.33333334F;
+                    GlStateManager.scale(f3, f3, f3);
+                    GlStateManager.rotate(30.0F - (float)i * 60.0F, 0.0F, 0.0F, 1.0F);
+                    GlStateManager.translate(0.0F, f * (0.001F + (float)i * 0.003F) * 20.0F, 0.0F);
+                    GlStateManager.matrixMode(5888);
+                    modelbaseIn.render(entitylivingbaseIn, p_177183_3_, p_177183_4_, p_177183_6_, p_177183_7_, p_177183_8_, scale);
+                }
+
+                GlStateManager.matrixMode(5890);
+                GlStateManager.loadIdentity();
+                GlStateManager.matrixMode(5888);
+                GlStateManager.enableLighting();
+                GlStateManager.depthMask(true);
+                GlStateManager.depthFunc(515);
+                GlStateManager.disableBlend();
+
+                if (Config.isShaders())
+                {
+                    ShadersRender.renderEnchantedGlintEnd();
+                }
+            }
+        }
     }
 
     private ResourceLocation getArmorResource(ItemArmor p_177181_1_, boolean p_177181_2_)
@@ -180,4 +261,35 @@ public abstract class LayerArmorBase<T extends ModelBase> implements LayerRender
     protected abstract void initArmor();
 
     protected abstract void setModelPartVisible(T model, int armorSlot);
+
+    protected ModelBase getArmorModelHook(EntityLivingBase entity, ItemStack itemStack, int slot, ModelBase model)
+    {
+        return model;
+    }
+
+    public ResourceLocation getArmorResource(Entity entity, ItemStack stack, int slot, String type)
+    {
+        ItemArmor itemarmor = (ItemArmor)stack.getItem();
+        String s = itemarmor.getArmorMaterial().getName();
+        String s1 = "minecraft";
+        int i = s.indexOf(58);
+
+        if (i != -1)
+        {
+            s1 = s.substring(0, i);
+            s = s.substring(i + 1);
+        }
+
+        String s2 = String.format("%s:textures/models/armor/%s_layer_%d%s.png", new Object[] {s1, s, Integer.valueOf(slot == 2 ? 2 : 1), type == null ? "" : String.format("_%s", new Object[]{type})});
+        s2 = Reflector.callString(Reflector.ForgeHooksClient_getArmorTexture, new Object[] {entity, stack, s2, Integer.valueOf(slot), type});
+        ResourceLocation resourcelocation = (ResourceLocation)ARMOR_TEXTURE_RES_MAP.get(s2);
+
+        if (resourcelocation == null)
+        {
+            resourcelocation = new ResourceLocation(s2);
+            ARMOR_TEXTURE_RES_MAP.put(s2, resourcelocation);
+        }
+
+        return resourcelocation;
+    }
 }

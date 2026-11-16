@@ -274,6 +274,12 @@ public class GuiContainerCreative extends InventoryEffectRenderer
             this.searchField.setTextColor(16777215);
             int i = selectedTabIndex;
             selectedTabIndex = -1;
+
+            if (i >= CreativeTabs.creativeTabArray.size() || i < 0)
+            {
+                i = 0;
+            }
+
             this.setCurrentCreativeTab(CreativeTabs.creativeTabArray.get(i));
             this.field_147059_E = new CreativeCrafting(this.mc);
             this.mc.thePlayer.inventoryContainer.onCraftGuiOpened(this.field_147059_E);
@@ -440,6 +446,17 @@ public class GuiContainerCreative extends InventoryEffectRenderer
 
     private void setCurrentCreativeTab(CreativeTabs p_147050_1_)
     {
+        if (this.forkField201 && p_147050_1_ == CreativeTabs.tabInventory)
+        {
+            if (selectedTabIndex == -1)
+            {
+                selectedTabIndex = 0;
+                this.setCurrentCreativeTab(CreativeTabs.tabBlock);
+            }
+
+            return;
+        }
+
         int i = selectedTabIndex;
         selectedTabIndex = p_147050_1_.getTabIndex();
         GuiContainerCreative.ContainerCreative guicontainercreative$containercreative = (GuiContainerCreative.ContainerCreative)this.inventorySlots;
@@ -693,7 +710,11 @@ public class GuiContainerCreative extends InventoryEffectRenderer
         int j = 28 * i;
         int k = 0;
 
-        if (i == 5)
+        if (i == 6)
+        {
+            j = 140;
+        }
+        else if (i == 5)
         {
             j = this.xSize - 28 + 2;
         }
@@ -720,7 +741,11 @@ public class GuiContainerCreative extends InventoryEffectRenderer
         int j = 28 * i;
         int k = 0;
 
-        if (i == 5)
+        if (i == 6)
+        {
+            j = 140;
+        }
+        else if (i == 5)
         {
             j = this.xSize - 28 + 2;
         }
@@ -769,9 +794,10 @@ public class GuiContainerCreative extends InventoryEffectRenderer
         {
             l = this.guiLeft + this.xSize - 28;
         }
-        else if (i > 0)
+        else if (i == 6)
         {
-            l += i;
+            j = 140;
+            l = this.guiLeft + 140;
         }
 
         if (flag1)
@@ -785,6 +811,12 @@ public class GuiContainerCreative extends InventoryEffectRenderer
         }
 
         GlStateManager.disableLighting();
+
+        if (this.forkField201 && p_147051_1_ == CreativeTabs.tabInventory)
+        {
+            GlStateManager.color(0.5F, 0.5F, 0.5F, 1.0F);
+        }
+
         this.drawTexturedModalRect(l, i1, j, k, 28, j1);
         this.zLevel = 100.0F;
         this.itemRender.zLevel = 100.0F;

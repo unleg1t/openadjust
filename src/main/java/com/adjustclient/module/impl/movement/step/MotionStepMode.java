@@ -176,7 +176,7 @@ public class MotionStepMode extends StepMode {
                     if (player.motionY > 0.3D) return null;
                 } else if (airTicks == 3) {
                     if (player.posY != targetY) return null;
-                    player.motionY = (double) -0.0784F; // qword_1466AA410 = -0.0784000015258789 (widened float)
+                    player.motionY = (double) -0.0784F;
                     double direction = Math.toRadians(movementYaw);
                     player.motionX = -Math.sin(direction) * speed;
                     player.motionZ = Math.cos(direction) * speed;

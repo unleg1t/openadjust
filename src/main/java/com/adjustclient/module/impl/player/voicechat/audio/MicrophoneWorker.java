@@ -41,7 +41,10 @@ public final class MicrophoneWorker extends AudioWorker implements MinecraftInst
     public void sendFrame(byte[] packet, int sequence) {
         Session session = VoiceChatModule.INSTANCE.getSessionManager().session;
         if (session == null) session = mc.getSession();
-        streams.accept(session.getProfile().getId(), packet, (long) sequence);
+        java.util.UUID localId = com.adjustclient.service.session.SessionService.resolveSessionUuid(session);
+        if (localId != null) {
+            streams.accept(localId, packet, (long) sequence);
+        }
         if (sessionManager.client.udpClient == null
                 || !sessionManager.client.udpClient.open.get()
                 || !sessionManager.handler.authenticated
@@ -124,7 +127,8 @@ public final class MicrophoneWorker extends AudioWorker implements MinecraftInst
     public boolean shouldTransmit() {
         Channel channel = controller.getCurrentChannel();
         Session session = sessionManager.session;
-        if (session != null && channel != null && !channel.properties.canTalk(session.getProfile().getId())) return true;
+        java.util.UUID localId = com.adjustclient.service.session.SessionService.resolveSessionUuid(session);
+        if (localId != null && channel != null && !channel.properties.canTalk(localId)) return true;
         return switch (VoiceChatModule.INSTANCE.settings.inputActivation.getValue()) {
             case PUSH -> { previousActive = false; yield VoiceChatModule.INSTANCE.settings.pushToTalk.isDown(); }
             case DETECT -> {
@@ -154,18 +158,23 @@ public final class MicrophoneWorker extends AudioWorker implements MinecraftInst
     }
 
     public void initialize() {
+        denoiser = new Denoiser();
         try {
-            denoiser = new Denoiser();
             denoiser.denoiser = new de.maxhenkel.rnnoise4j.Denoiser();
-        } catch (java.io.IOException | de.maxhenkel.rnnoise4j.UnknownPlatformException exception) {
+        } catch (Throwable exception) {
             Logger.log(LogLevel.ERROR, true, "Couldn't create denoiser {}", exception);
         }
         OpusDecoderConfig config = new OpusDecoderConfig();
         config.frameSize = 960; config.sampleRate = 48000; config.channels = 1;
         config.bitrate = 48000; config.maxFrameSize = 57600; config.maxPacketSize = 38280;
-        OpusCodec codec = new OpusCodec(config);
-        encoder = new OpusEncoderHandle();
-        encoder.codec = codec;
+        try {
+            OpusCodec codec = new OpusCodec(config);
+            encoder = new OpusEncoderHandle();
+            encoder.codec = codec;
+        } catch (Throwable exception) {
+            Logger.log(LogLevel.ERROR, true, "Couldn't create Opus encoder {}", exception);
+            return;
+        }
         synchronized (this) {
             if (loopFuture != null && !loopFuture.isDone() && isEncoderOpen()) return;
             if (loopFuture != null) loopFuture.cancel(true);

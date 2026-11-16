@@ -38,7 +38,7 @@ public final class PlacementPredictor {
     }
 
     public Integer predict(EntityPlayer player, Vec2f rotation) {
-        this.lastResult = null;                                         // *(this + 8) = 0
+        this.lastResult = null;
         PlacementFinder geometry = this.module.placementFinder;
         ScaffoldSettings settings = this.module.settings;
         RotationSolver solver = geometry.partner;                        // the geometry helper's partner solver
@@ -72,12 +72,12 @@ public final class PlacementPredictor {
                 geometry.yaw = RotationUtil.getYawBetween(second, first).x;
 
                 NoAscendMode noAscendMode = settings.noAscendMode.getValue();
-                double heightAbove = current.posY - (double) this.module.baseY;      // v389
-                boolean lowOnly;          // v388: only support positions at floor(posY) - 1 are considered
-                boolean noAscendActive;   // v387
-                boolean airborneOk;       // v386
-                boolean buffering;        // v385
-                boolean downward;         // v384
+                double heightAbove = current.posY - (double) this.module.baseY;
+                boolean lowOnly;          // only support positions at floor(posY) - 1 are considered
+                boolean noAscendActive;
+                boolean airborneOk;
+                boolean buffering;
+                boolean downward;
                 if (this.module.towering) {
                     lowOnly = settings.mode.getValue() instanceof HypixelScaffoldMode;   // Hypixel mode
                     noAscendActive = false;
@@ -127,10 +127,10 @@ public final class PlacementPredictor {
                 }
 
                 // ---- candidate blocks around/below the player
-                Vec3 position = new Vec3(current.posX, downward ? (double) this.module.baseY : current.posY, current.posZ); // v335
-                BlockPos playerBlock = new BlockPos(position);                            // v334
+                Vec3 position = new Vec3(current.posX, downward ? (double) this.module.baseY : current.posY, current.posZ);
+                BlockPos playerBlock = new BlockPos(position);
                 AxisAlignedBB playerBox = WorldUtil.playerBoundsAt(position, 1.8F);
-                Set<BlockPos> supports = new LinkedHashSet<>();                           // v332: accepted neighbour positions
+                Set<BlockPos> supports = new LinkedHashSet<>();                           // accepted neighbour positions
                 PlacementTarget pendingTarget = this.module.lastPlacement;                      // last PlacementTarget (h)
                 BlockPos referencePos;
                 if (second.yCoord - first.yCoord >= -0.5) {
@@ -140,8 +140,8 @@ public final class PlacementPredictor {
                 } else {
                     referencePos = (double) pendingTarget.placedPos.getY() > first.yCoord ? null : pendingTarget.placedPos;
                 }
-                List<BlockPos> free = new ArrayList<>();           // v329
-                List<BlockPos> preferred = new ArrayList<>();      // v330: positions that get a distance bonus
+                List<BlockPos> free = new ArrayList<>();
+                List<BlockPos> preferred = new ArrayList<>();      // positions that get a distance bonus
 
                 // 8 x 3 x 8 box below the player: dx in [-4, 3], dy in [-3, -1], dz in [-4, 3]
                 for (int dx = -4; dx < 4; dx++) {
@@ -220,9 +220,9 @@ public final class PlacementPredictor {
                         .toList();
 
                 // ---- stable-yaw path: let the rotation solver look at the predicted path
-                if (settings.isStableYaw()                                       // p.g
-                        && MovementFixModule.INSTANCE.isEnabled()                         // another module (flags & 2)
-                        && settings.isRotationsEnabled()                         // p.d
+                if (settings.isStableYaw()
+                        && MovementFixModule.INSTANCE.isEnabled()
+                        && settings.isRotationsEnabled()
                         && MinecraftInstance.mc.thePlayer.onGround
                         && !MovementUtil.isJumping()
                         && !this.module.towering

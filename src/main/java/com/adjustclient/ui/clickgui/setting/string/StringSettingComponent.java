@@ -41,7 +41,7 @@ public final class StringSettingComponent extends SettingComponent<StringSetting
     @Override
     public void renderContent(com.adjustclient.event.Render2DEvent context, Vec2f mouse) {
         StringSetting setting = this.setting;
-        boolean allEmpty = true;                         // v71
+        boolean allEmpty = true;
         for (String line : setting.getValue()) {
             if (line.length() != 0) {
                 allEmpty = false;

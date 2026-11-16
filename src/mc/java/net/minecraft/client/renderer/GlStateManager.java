@@ -1,9 +1,12 @@
 package net.minecraft.client.renderer;
 
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import optifine.Config;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL13;
 
 @SideOnly(Side.CLIENT)
 public class GlStateManager
@@ -23,33 +26,30 @@ public class GlStateManager
     private static GlStateManager.StencilState stencilState = new GlStateManager.StencilState();
     private static GlStateManager.BooleanState normalizeState = new GlStateManager.BooleanState(2977);
     private static int activeTextureUnit = 0;
-    private static GlStateManager.TextureState[] textureState = new GlStateManager.TextureState[8];
+    private static GlStateManager.TextureState[] textureState = new GlStateManager.TextureState[32];
     private static int activeShadeModel = 7425;
     private static GlStateManager.BooleanState rescaleNormalState = new GlStateManager.BooleanState(32826);
     private static GlStateManager.ColorMask colorMaskState = new GlStateManager.ColorMask();
     private static GlStateManager.Color colorState = new GlStateManager.Color();
+    public static boolean clearEnabled = true;
     private static final java.util.ArrayDeque<AttribSnapshot> ATTRIB_STACK = new java.util.ArrayDeque<>(8);
 
     private static final class AttribSnapshot
     {
         final boolean alphaTest = alphaState.alphaTest.currentState;
-        final int alphaFunc = alphaState.func;
-        final float alphaRef = alphaState.ref;
         final boolean lighting = lightingState.currentState;
         final boolean[] lights = new boolean[lightState.length];
         final boolean colorMaterial = colorMaterialState.colorMaterial.currentState;
+        final int colorMaterialFace = colorMaterialState.face;
+        final int colorMaterialMode = colorMaterialState.mode;
+        final int shadeModel = activeShadeModel;
         final boolean blend = blendState.blend.currentState;
-        final int srcFactor = blendState.srcFactor;
-        final int dstFactor = blendState.dstFactor;
-        final int srcFactorAlpha = blendState.srcFactorAlpha;
-        final int dstFactorAlpha = blendState.dstFactorAlpha;
         final boolean depthTest = depthState.depthTest.currentState;
         final boolean fog = fogState.fog.currentState;
         final boolean cullFace = cullState.cullFace.currentState;
         final boolean polygonOffsetFill = polygonOffsetState.polygonOffsetFill.currentState;
         final boolean polygonOffsetLine = polygonOffsetState.polygonOffsetLine.currentState;
         final boolean colorLogicOp = colorLogicState.colorLogicOp.currentState;
-        final int logicOpcode = colorLogicState.opcode;
         final boolean texGenS = texGenState.s.textureGen.currentState;
         final boolean texGenT = texGenState.t.textureGen.currentState;
         final boolean texGenR = texGenState.r.textureGen.currentState;
@@ -57,14 +57,6 @@ public class GlStateManager
         final boolean normalize = normalizeState.currentState;
         final boolean rescaleNormal = rescaleNormalState.currentState;
         final boolean[] texture2D = new boolean[textureState.length];
-        final boolean maskR = colorMaskState.red;
-        final boolean maskG = colorMaskState.green;
-        final boolean maskB = colorMaskState.blue;
-        final boolean maskA = colorMaskState.alpha;
-        final float clearR = clearState.color.red;
-        final float clearG = clearState.color.green;
-        final float clearB = clearState.color.blue;
-        final float clearA = clearState.color.alpha;
 
         AttribSnapshot()
         {
@@ -81,26 +73,22 @@ public class GlStateManager
         void restore()
         {
             alphaState.alphaTest.currentState = this.alphaTest;
-            alphaState.func = this.alphaFunc;
-            alphaState.ref = this.alphaRef;
             lightingState.currentState = this.lighting;
             for (int i = 0; i < lightState.length; ++i)
             {
                 lightState[i].currentState = this.lights[i];
             }
             colorMaterialState.colorMaterial.currentState = this.colorMaterial;
+            colorMaterialState.face = this.colorMaterialFace;
+            colorMaterialState.mode = this.colorMaterialMode;
+            activeShadeModel = this.shadeModel;
             blendState.blend.currentState = this.blend;
-            blendState.srcFactor = this.srcFactor;
-            blendState.dstFactor = this.dstFactor;
-            blendState.srcFactorAlpha = this.srcFactorAlpha;
-            blendState.dstFactorAlpha = this.dstFactorAlpha;
             depthState.depthTest.currentState = this.depthTest;
             fogState.fog.currentState = this.fog;
             cullState.cullFace.currentState = this.cullFace;
             polygonOffsetState.polygonOffsetFill.currentState = this.polygonOffsetFill;
             polygonOffsetState.polygonOffsetLine.currentState = this.polygonOffsetLine;
             colorLogicState.colorLogicOp.currentState = this.colorLogicOp;
-            colorLogicState.opcode = this.logicOpcode;
             texGenState.s.textureGen.currentState = this.texGenS;
             texGenState.t.textureGen.currentState = this.texGenT;
             texGenState.r.textureGen.currentState = this.texGenR;
@@ -111,14 +99,6 @@ public class GlStateManager
             {
                 textureState[i].texture2DState.currentState = this.texture2D[i];
             }
-            colorMaskState.red = this.maskR;
-            colorMaskState.green = this.maskG;
-            colorMaskState.blue = this.maskB;
-            colorMaskState.alpha = this.maskA;
-            clearState.color.red = this.clearR;
-            clearState.color.green = this.clearG;
-            clearState.color.blue = this.clearB;
-            clearState.color.alpha = this.clearA;
         }
     }
 
@@ -431,13 +411,16 @@ public class GlStateManager
 
     public static void deleteTexture(int texture)
     {
-        GL11.glDeleteTextures(texture);
-
-        for (GlStateManager.TextureState glstatemanager$texturestate : textureState)
+        if (texture != 0)
         {
-            if (glstatemanager$texturestate.textureName == texture)
+            GL11.glDeleteTextures(texture);
+
+            for (GlStateManager.TextureState glstatemanager$texturestate : textureState)
             {
-                glstatemanager$texturestate.textureName = -1;
+                if (glstatemanager$texturestate.textureName == texture)
+                {
+                    glstatemanager$texturestate.textureName = 0;
+                }
             }
         }
     }
@@ -449,6 +432,11 @@ public class GlStateManager
             textureState[activeTextureUnit].textureName = texture;
             GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture);
         }
+    }
+
+    public static void bindCurrentTexture()
+    {
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureState[activeTextureUnit].textureName);
     }
 
     public static void enableNormalize()
@@ -520,7 +508,10 @@ public class GlStateManager
 
     public static void clear(int mask)
     {
-        GL11.glClear(mask);
+        if (clearEnabled)
+        {
+            GL11.glClear(mask);
+        }
     }
 
     public static void matrixMode(int mode)
@@ -610,6 +601,58 @@ public class GlStateManager
         GL11.glCallList(list);
     }
 
+    public static int getActiveTextureUnit()
+    {
+        return OpenGlHelper.defaultTexUnit + activeTextureUnit;
+    }
+
+    public static int getBoundTexture()
+    {
+        return textureState[activeTextureUnit].textureName;
+    }
+
+    public static void checkBoundTexture()
+    {
+        if (Config.isMinecraftThread())
+        {
+            int i = GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
+            int j = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
+            int k = getActiveTextureUnit();
+            int l = getBoundTexture();
+
+            if (l > 0)
+            {
+                if (i != k || j != l)
+                {
+                    Config.dbg("checkTexture: act: " + k + ", glAct: " + i + ", tex: " + l + ", glTex: " + j);
+                }
+            }
+        }
+    }
+
+    public static void deleteTextures(IntBuffer p_deleteTextures_0_)
+    {
+        p_deleteTextures_0_.rewind();
+
+        while (p_deleteTextures_0_.position() < p_deleteTextures_0_.limit())
+        {
+            int i = p_deleteTextures_0_.get();
+            deleteTexture(i);
+        }
+
+        p_deleteTextures_0_.rewind();
+    }
+
+    public static boolean isFogEnabled()
+    {
+        return fogState.fog.currentState;
+    }
+
+    public static void setFogEnabled(boolean state)
+    {
+        fogState.fog.setState(state);
+    }
+
     static
     {
         for (int i = 0; i < 8; ++i)
@@ -617,7 +660,7 @@ public class GlStateManager
             lightState[i] = new GlStateManager.BooleanState(16384 + i);
         }
 
-        for (int j = 0; j < 8; ++j)
+        for (int j = 0; j < textureState.length; ++j)
         {
             textureState[j] = new GlStateManager.TextureState();
         }

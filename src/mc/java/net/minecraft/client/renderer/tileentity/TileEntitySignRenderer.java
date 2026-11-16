@@ -16,6 +16,8 @@ import net.minecraft.util.IChatComponent;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import optifine.Config;
+import optifine.CustomColors;
 import org.lwjgl.opengl.GL11;
 
 @SideOnly(Side.CLIENT)
@@ -90,12 +92,17 @@ public class TileEntitySignRenderer extends TileEntitySpecialRenderer<TileEntity
         GlStateManager.depthMask(false);
         int i = 0;
 
-        if (XRayModule.active)
+        if (Config.isCustomColors())
         {
-            i |= (XRayModule.getAlpha() & 255) << 24;
+            i = CustomColors.getSignTextColor(i);
         }
 
-        if (destroyStage < 0)
+        if (XRayModule.active)
+        {
+            i = (i & 16777215) | ((XRayModule.getAlpha() & 255) << 24);
+        }
+
+        if (destroyStage < 0 && (Config.zoomMode || x * x + y * y + z * z <= 256.0D))
         {
             StreamerModule streamer = StreamerModule.INSTANCE != null ? StreamerModule.INSTANCE : (Adjust.INSTANCE != null && Adjust.INSTANCE.moduleManager != null ? Adjust.INSTANCE.moduleManager.getModule(StreamerModule.class) : null);
 

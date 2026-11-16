@@ -3174,6 +3174,11 @@ public class Minecraft implements IThreadListener, IPlayerUsage
         {
             public String call()
             {
+                if (!Minecraft.this.isCallingFromMinecraftThread() || org.lwjgl.glfw.GLFW.glfwGetCurrentContext() == 0L)
+                {
+                    return "N/A (no current OpenGL context on thread " + Thread.currentThread().getName() + ")";
+                }
+
                 return GL11.glGetString(GL11.GL_RENDERER) + " GL version " + GL11.glGetString(GL11.GL_VERSION) + ", " + GL11.glGetString(GL11.GL_VENDOR);
             }
         });

@@ -4,13 +4,15 @@ import com.google.common.collect.Maps;
 import java.util.Map;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.MathHelper;
+import net.minecraftforge.client.model.ITransformation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import optifine.Reflector;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 
 @SideOnly(Side.CLIENT)
-public enum ModelRotation
+public enum ModelRotation implements ITransformation
 {
     X0_Y0(0, 0),
     X0_Y90(0, 90),
@@ -107,6 +109,21 @@ public enum ModelRotation
     public static ModelRotation getModelRotation(int p_177524_0_, int p_177524_1_)
     {
         return (ModelRotation)mapRotations.get(Integer.valueOf(combineXY(MathHelper.normalizeAngle(p_177524_0_, 360), MathHelper.normalizeAngle(p_177524_1_, 360))));
+    }
+
+    public Object getMatrix()
+    {
+        return Reflector.ForgeHooksClient_getMatrix.exists() ? Reflector.call(Reflector.ForgeHooksClient_getMatrix, new Object[] {this}) : this.matrix4d;
+    }
+
+    public EnumFacing rotate(EnumFacing p_rotate_1_)
+    {
+        return this.rotateFace(p_rotate_1_);
+    }
+
+    public int rotate(EnumFacing p_rotate_1_, int p_rotate_2_)
+    {
+        return this.rotateVertex(p_rotate_1_, p_rotate_2_);
     }
 
     static

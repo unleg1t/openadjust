@@ -15,6 +15,7 @@ import net.minecraft.client.resources.data.IMetadataSerializer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import optifine.ReflectorForge;
 
 @SideOnly(Side.CLIENT)
 public class DefaultResourcePack implements IResourcePack
@@ -58,7 +59,9 @@ public class DefaultResourcePack implements IResourcePack
 
     private InputStream getResourceStream(ResourceLocation location)
     {
-        return DefaultResourcePack.class.getResourceAsStream("/assets/" + location.getResourceDomain() + "/" + location.getResourcePath());
+        String s = "/assets/" + location.getResourceDomain() + "/" + location.getResourcePath();
+        InputStream inputstream = ReflectorForge.getOptiFineResourceStream(s);
+        return inputstream != null ? inputstream : DefaultResourcePack.class.getResourceAsStream(s);
     }
 
     public boolean resourceExists(ResourceLocation location)

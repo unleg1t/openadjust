@@ -9,7 +9,7 @@ public abstract class AudioWorker implements Listener {
     public final ExecutorService executor;
     public final ConcurrentLinkedQueue<Runnable> tasks = new ConcurrentLinkedQueue<>();
     public final com.adjustclient.audio.device.DeviceType type;
-    public Future<?> loopFuture;
+    public volatile Future<?> loopFuture;
     public final VoiceAudioManager manager;
 
     protected AudioWorker(VoiceAudioManager manager) {
@@ -42,9 +42,12 @@ public abstract class AudioWorker implements Listener {
 
     public void runLoop() {
         try {
+            synchronized (this) {
+                // Ensure loopFuture assignment in start()/initialize() is visible before checking loop condition.
+            }
             if (VoiceChatController.INSTANCE != null && VoiceChatModule.INSTANCE.isEnabled())
                 VoiceChatController.INSTANCE.findAuthenticatedSender();
-            while (loopFuture != null && !loopFuture.isDone()) {
+            while (loopFuture != null && !loopFuture.isDone() && !Thread.currentThread().isInterrupted()) {
                 if (this instanceof MicrophoneWorker && !((MicrophoneWorker) this).isEncoderOpen()) break;
                 long interval = this instanceof MicrophoneWorker
                         ? (manager.captureDevice == null ? 500L : 5L)

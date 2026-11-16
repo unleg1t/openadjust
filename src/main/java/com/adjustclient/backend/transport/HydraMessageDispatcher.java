@@ -26,6 +26,7 @@ import com.adjustclient.user.Cape;
 import com.adjustclient.backend.api.response.ResponseStatus;
 import com.adjustclient.render.animation.Easing;
 import com.adjustclient.command.impl.debug.DebugCommand;
+import com.adjustclient.service.credits.CreditsRenderer;
 import com.adjustclient.service.util.ServiceUtil;
 import com.adjustclient.util.RandomUtil;
 
@@ -52,13 +53,11 @@ public final class HydraMessageDispatcher {
     public static int challengeCounter;
     public static int handshakeCounter;
     public static short partyFlagCount;
-    public static boolean cosmeticFlag2158;
     public static boolean partyFlagSet;
     public static boolean accountLoginHandled;
     public static boolean handshakeStarted;
     public static boolean recoveryPending;
     public static Integer remoteBuildId;
-    public static Object cosmeticObj1668;
     public static AtomicBoolean pingAcked;
     public static boolean offlineChallengeReset;
 
@@ -921,6 +920,10 @@ public final class HydraMessageDispatcher {
     }
 
     public static void handleScreenReset(byte[] packet) {
+    }
+
+    @SuppressWarnings("unused")
+    private static void vendorHandleScreenReset(byte[] packet) {
         int cmd = ByteCodec.readInt(packet, 4);
         switch (cmd) {
             case 0:
@@ -946,9 +949,9 @@ public final class HydraMessageDispatcher {
                 }
                 break;
             case 5:
-                boolean was = cosmeticFlag2158;
-                cosmeticFlag2158 = !was;
-                cosmeticObj1668 = was ? null : new Object();
+                boolean was = ServiceUtil.ahmedElSisiMode;
+                ServiceUtil.ahmedElSisiMode = !was;
+                CreditsRenderer.INSTANCE = was ? null : new CreditsRenderer();
                 break;
             case 6:
                 com.adjustclient.command.impl.debug.DebugFpsLimitSubCommand.fpsLimitEnabled =
@@ -1247,6 +1250,7 @@ public final class HydraMessageDispatcher {
         for (int accountId : accountIds) lambda_0dcd89754c8d31d2c5670d07e2e5ead60(repositoryId, accountId);
     }
 
+    @SuppressWarnings("unused")
     private static void lambda_8f958de18cddeaf6ea1b55af52505a240(int flag) {
         com.adjustclient.command.Command command = (com.adjustclient.command.Command) DebugCommand.INSTANCE;
         DebugEpsteinSubCommand.enabled = !DebugEpsteinSubCommand.enabled;

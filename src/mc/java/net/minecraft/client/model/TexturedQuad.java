@@ -6,6 +6,8 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.Vec3;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import optifine.Config;
+import shadersmod.client.SVertexFormat;
 
 @SideOnly(Side.CLIENT)
 public class TexturedQuad
@@ -59,7 +61,14 @@ public class TexturedQuad
             f2 = -f2;
         }
 
-        renderer.begin(7, DefaultVertexFormats.OLDMODEL_POSITION_TEX_NORMAL);
+        if (Config.isShaders())
+        {
+            renderer.begin(7, SVertexFormat.defVertexFormatTextured);
+        }
+        else
+        {
+            renderer.begin(7, DefaultVertexFormats.OLDMODEL_POSITION_TEX_NORMAL);
+        }
 
         for (int i = 0; i < 4; ++i)
         {

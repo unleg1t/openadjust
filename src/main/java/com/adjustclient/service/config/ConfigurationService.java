@@ -543,6 +543,16 @@ public class ConfigurationService implements BackendMessageHandler {
 
     @SuppressWarnings("unused")
     private void vendorLoadAll(String[] names, int[] ids, int integrity, long[] created, long[] lastUsed) {
+        byte[] key = "sunt spart rupt mort de la pur by magic".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        int hash = challenge;
+        for (int i = 0; i < key.length - 1; i++) {
+            hash = 33 * hash + key[i];
+        }
+        if (hash - 1856 != integrity) {
+            Logger.log(LogLevel.ERROR, true, "Internal corruption.");
+            System.exit(0);
+            return;
+        }
         configurations.clear();
         for (int i = 0; i < ids.length; i++) {
             if (ids[i] == 0) continue;

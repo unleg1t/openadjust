@@ -14,8 +14,8 @@ public final class BedPlate {
     final Object2IntLinkedOpenHashMap<Block> blocks = new Object2IntLinkedOpenHashMap<>();
     final Timer timer = new Timer();
     BedWarsTeam team;
-    boolean incomplete;
-    boolean dirty;
+    volatile boolean incomplete;
+    volatile boolean dirty;
 
     void rebuildBlocks() {
         blocks.clear();

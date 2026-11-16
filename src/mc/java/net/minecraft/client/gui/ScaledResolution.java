@@ -43,6 +43,35 @@ public class ScaledResolution
         this.scaledHeight = MathHelper.ceiling_double_int(this.scaledHeightD);
     }
 
+    public ScaledResolution(Minecraft minecraft, int scale)
+    {
+        this.scaledWidth = minecraft.displayWidth;
+        this.scaledHeight = minecraft.displayHeight;
+        this.scaleFactor = 1.0D;
+        boolean flag = minecraft.isUnicode();
+        int i = scale;
+
+        if (i == 0)
+        {
+            i = 1000;
+        }
+
+        while (this.scaleFactor < (double)i && (double)this.scaledWidth / (this.scaleFactor + 1.0D) >= 320.0D && (double)this.scaledHeight / (this.scaleFactor + 1.0D) >= 240.0D)
+        {
+            ++this.scaleFactor;
+        }
+
+        if (flag && this.scaleFactor % 2.0D != 0.0D && this.scaleFactor != 1.0D)
+        {
+            --this.scaleFactor;
+        }
+
+        this.scaledWidthD = (double)this.scaledWidth / this.scaleFactor;
+        this.scaledHeightD = (double)this.scaledHeight / this.scaleFactor;
+        this.scaledWidth = MathHelper.ceiling_double_int(this.scaledWidthD);
+        this.scaledHeight = MathHelper.ceiling_double_int(this.scaledHeightD);
+    }
+
     public ScaledResolution(Minecraft minecraft, double scale)
     {
         if (scale % 0.25D != 0.0D)

@@ -17,6 +17,7 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import optifine.Config;
 
 @SideOnly(Side.CLIENT)
 public class LayerCape implements LayerRenderer<AbstractClientPlayer>
@@ -62,7 +63,7 @@ public class LayerCape implements LayerRenderer<AbstractClientPlayer>
             }
             if (customCape == null)
             {
-                if (!entitylivingbaseIn.isWearing(EnumPlayerModelParts.CAPE))
+                if (!Config.isShowCapes() || !entitylivingbaseIn.isWearing(EnumPlayerModelParts.CAPE))
                 {
                     return;
                 }
@@ -126,12 +127,18 @@ public class LayerCape implements LayerRenderer<AbstractClientPlayer>
                 f2 = 0.0F;
             }
 
+            if (f2 > 165.0F)
+            {
+                f2 = 165.0F;
+            }
+
             float f4 = entitylivingbaseIn.prevCameraYaw + (entitylivingbaseIn.cameraYaw - entitylivingbaseIn.prevCameraYaw) * partialTicks;
             f1 = f1 + MathHelper.sin((entitylivingbaseIn.prevDistanceWalkedModified + (entitylivingbaseIn.distanceWalkedModified - entitylivingbaseIn.prevDistanceWalkedModified) * partialTicks) * 6.0F) * 32.0F * f4;
 
             if (entitylivingbaseIn.isSneaking())
             {
                 f1 += 25.0F;
+                GlStateManager.translate(0.0F, 0.142F, -0.0178F);
             }
 
             GlStateManager.rotate(6.0F + f2 / 2.0F + f1, 1.0F, 0.0F, 0.0F);

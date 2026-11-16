@@ -577,7 +577,7 @@ public final class PlayerEntry implements Comparable<PlayerEntry> {
      */
     public void updateEntity(String name, ScorePlayerTeam team) {
         HypixelGameState gameState = Adjust.gameStateTracker.state;
-        boolean checkGame = gameState.startTimer != null && (gameState.game.flags & 4) == 0;      // v259[0]
+        boolean checkGame = gameState.startTimer != null && (gameState.game.flags & 4) == 0;
         this.updateStatus(name);
         if (this.progress == null) {
             this.updateProgress();
@@ -801,7 +801,7 @@ public final class PlayerEntry implements Comparable<PlayerEntry> {
     }
 
     /**
-     * Anti-Sniper blacklist answer: for a blacklisted player the player type becomes 7750075 (unless already 7750487) and, if the HUD
+     * Anti-Sniper blacklist answer: marks a blacklisted player accordingly and, if the HUD
      * notifications are enabled and the game is not in its "in game" state, a "Warning" notification
      * "Player <name> is blacklisted by AntiSniper API." is added (200 ms fade-in, three colour animations).
      */

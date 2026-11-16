@@ -1,6 +1,7 @@
 package net.minecraft.client.model;
 
 import com.google.common.collect.Lists;
+import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.GlStateManager;
@@ -8,6 +9,7 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import optifine.ModelSprite;
 import org.lwjgl.opengl.GL11;
 
 @SideOnly(Side.CLIENT)
@@ -35,9 +37,14 @@ public class ModelRenderer
     public float offsetX;
     public float offsetY;
     public float offsetZ;
+    public List spriteList;
+    public boolean mirrorV;
+    float savedScale;
 
     public ModelRenderer(ModelBase model, String boxNameIn)
     {
+        this.spriteList = new ArrayList();
+        this.mirrorV = false;
         this.textureWidth = 64.0F;
         this.textureHeight = 32.0F;
         this.showModel = true;
@@ -268,13 +275,24 @@ public class ModelRenderer
 
     private void compileDisplayList(float scale)
     {
-        this.displayList = GLAllocation.generateDisplayLists(1);
+        if (this.displayList == 0)
+        {
+            this.savedScale = scale;
+            this.displayList = GLAllocation.generateDisplayLists(1);
+        }
+
         GL11.glNewList(this.displayList, GL11.GL_COMPILE);
         WorldRenderer worldrenderer = Tessellator.getInstance().getWorldRenderer();
 
         for (int i = 0; i < this.cubeList.size(); ++i)
         {
             ((ModelBox)this.cubeList.get(i)).render(worldrenderer, scale);
+        }
+
+        for (int j = 0; j < this.spriteList.size(); ++j)
+        {
+            ModelSprite modelsprite = (ModelSprite)this.spriteList.get(j);
+            modelsprite.render(Tessellator.getInstance(), scale);
         }
 
         GL11.glEndList();
@@ -286,5 +304,29 @@ public class ModelRenderer
         this.textureWidth = (float)textureWidthIn;
         this.textureHeight = (float)textureHeightIn;
         return this;
+    }
+
+    public void addSprite(float p_addSprite_1_, float p_addSprite_2_, float p_addSprite_3_, int p_addSprite_4_, int p_addSprite_5_, int p_addSprite_6_, float p_addSprite_7_)
+    {
+        this.spriteList.add(new ModelSprite(this, this.textureOffsetX, this.textureOffsetY, p_addSprite_1_, p_addSprite_2_, p_addSprite_3_, p_addSprite_4_, p_addSprite_5_, p_addSprite_6_, p_addSprite_7_));
+    }
+
+    public boolean getCompiled()
+    {
+        return this.compiled;
+    }
+
+    public int getDisplayList()
+    {
+        return this.displayList;
+    }
+
+    public void resetDisplayList()
+    {
+        if (this.compiled)
+        {
+            this.compiled = false;
+            this.compileDisplayList(this.savedScale);
+        }
     }
 }

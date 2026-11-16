@@ -16,6 +16,9 @@ import net.minecraft.util.ReportedException;
 import net.minecraft.world.gen.layer.IntCache;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import optifine.CrashReportCpu;
+import optifine.CrashReporter;
+import optifine.Reflector;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
@@ -31,6 +34,7 @@ public class CrashReport
     private File crashReportFile;
     private boolean firstCategoryInCrashReport = true;
     private StackTraceElement[] stacktrace = new StackTraceElement[0];
+    private boolean reported = false;
 
     public CrashReport(String descriptionIn, Throwable causeThrowable)
     {
@@ -55,6 +59,7 @@ public class CrashReport
                 return System.getProperty("os.name") + " (" + System.getProperty("os.arch") + ") version " + System.getProperty("os.version");
             }
         });
+        this.theReportCategory.addCrashSectionCallable("CPU", new CrashReportCpu());
         this.theReportCategory.addCrashSectionCallable("Java Version", new Callable<String>()
         {
             public String call()
@@ -115,6 +120,12 @@ public class CrashReport
                 return IntCache.getCacheSizes();
             }
         });
+
+        if (Reflector.FMLCommonHandler_enhanceCrashReport.exists())
+        {
+            Object object = Reflector.call(Reflector.FMLCommonHandler_instance, new Object[0]);
+            Reflector.callString(object, Reflector.FMLCommonHandler_enhanceCrashReport, new Object[] {this, this.theReportCategory});
+        }
     }
 
     public String getDescription()
@@ -201,8 +212,16 @@ public class CrashReport
 
     public String getCompleteReport()
     {
+        if (!this.reported)
+        {
+            this.reported = true;
+            CrashReporter.onCrashReport(this, this.theReportCategory);
+        }
+
         StringBuilder stringbuilder = new StringBuilder();
         stringbuilder.append("---- Minecraft Crash Report ----\n");
+        Reflector.call(Reflector.BlamingTransformer_onCrash, new Object[] {stringbuilder});
+        Reflector.call(Reflector.CoreModManager_onCrash, new Object[] {stringbuilder});
         stringbuilder.append("// ");
         stringbuilder.append(getWittyComment());
         stringbuilder.append("\n\n");

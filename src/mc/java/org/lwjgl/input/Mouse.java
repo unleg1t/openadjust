@@ -158,12 +158,14 @@ public final class Mouse {
                 // LWJGL 2 keeps the virtual cursor inside the window while grabbed; deltas stay raw.
                 x = clampX(x + deltaX);
                 y = clampY(y + deltaY);
+                dx += deltaX;
+                dy += deltaY;
             } else {
                 x = clampX(rawX);
                 y = clampY(rawY);
+                dx = 0;
+                dy = 0;
             }
-            dx += deltaX;
-            dy += deltaY;
             if (deltaX != 0 || deltaY != 0) {
                 eventQueue.addLast(new MouseEvent(-1, false, deltaX, deltaY, 0, x, y, System.nanoTime()));
             }
@@ -361,12 +363,20 @@ public final class Mouse {
     }
 
     public static int getDX() {
+        if (!isGrabbed) {
+            dx = 0;
+            return 0;
+        }
         int ret = dx;
         dx = 0;
         return ret;
     }
 
     public static int getDY() {
+        if (!isGrabbed) {
+            dy = 0;
+            return 0;
+        }
         int ret = dy;
         dy = 0;
         return ret;
@@ -434,7 +444,7 @@ public final class Mouse {
         dx = 0;
         dy = 0;
         ignoreNextCursorDelta = true;
-        if (window != 0L) {
+        if (window != 0L && !isGrabbed) {
             double glfwX = x / Display.getScaleX();
             double glfwY = (Display.getHeight() - 1 - y) / Display.getScaleY();
             GLFW.glfwSetCursorPos(window, glfwX, glfwY);

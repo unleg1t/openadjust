@@ -11,6 +11,7 @@ import com.adjustclient.util.anticheat.player.PlayerTracker;
 import com.adjustclient.util.anticheat.blocker.*;
 import com.adjustclient.util.anticheat.model.*;
 import com.adjustclient.module.impl.movement.scaffold.HotbarBlockTracker;
+import com.adjustclient.service.credits.CreditsRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.*;
 import net.minecraft.entity.*;
@@ -341,7 +342,23 @@ public final class ServerTracker implements Listener, MinecraftInstance, Rotatio
             binding.pressed = pressed;
         }
     }
+    @EventHandler public void onRender2D(Render2DEvent event) {
+        if (CreditsRenderer.INSTANCE != null) {
+            CreditsRenderer.INSTANCE.render(event);
+        }
+    }
+    @EventHandler public void onGameEnd(HypixelGameEndedEvent event) {
+        if (CreditsRenderer.INSTANCE != null && event.state.lobby != null && !event.state.lobby) {
+            CreditsRenderer.INSTANCE.gamesPlayed++;
+        }
+    }
     @EventHandler public void onTabListUpdate(PlayerKillEvent event) {
+        if (CreditsRenderer.INSTANCE != null && event.isLocalPlayer()) {
+            CreditsRenderer.INSTANCE.kills++;
+            if (RandomUtil.RANDOM.nextDouble() > 0.67) {
+                CreditsRenderer.INSTANCE.bonusKills++;
+            }
+        }
     }
     @EventHandler public void onWorldReset(com.adjustclient.event.WorldResetEvent event) { clearWorldState(); }
     public void clearWorldState() {

@@ -175,7 +175,7 @@ public final class RepositoryMembersScreen extends GuiScreen {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        this.drawDefaultBackground();                                    // GuiScreen.b
+        this.drawDefaultBackground();
         this.drawCenteredString(this.fontRendererObj, isOwner() ? "Manage repository" : "Viewing", this.width / 2, 17, 0xFFFFFF);
         // "<name> <colour>(<n> accounts)" at half scale, centred, y = 28.5
         ChatColor colour = ChatColor.GRAY;

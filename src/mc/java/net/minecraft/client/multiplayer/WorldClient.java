@@ -39,6 +39,11 @@ import net.minecraft.world.storage.SaveHandlerMP;
 import net.minecraft.world.storage.WorldInfo;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import optifine.BlockPosM;
+import optifine.Config;
+import optifine.DynamicLights;
+import optifine.PlayerControllerOF;
+import optifine.Reflector;
 
 @SideOnly(Side.CLIENT)
 public class WorldClient extends World
@@ -49,18 +54,26 @@ public class WorldClient extends World
     private final Set<Entity> entitySpawnQueue = Sets.<Entity>newHashSet();
     private final Minecraft mc = Minecraft.getMinecraft();
     private final Set<ChunkCoordIntPair> previousActiveChunkSet = Sets.<ChunkCoordIntPair>newHashSet();
+    private BlockPosM randomTickPosM = new BlockPosM(0, 0, 0, 3);
+    private boolean playerUpdate = false;
 
     public WorldClient(NetHandlerPlayClient netHandler, WorldSettings settings, int dimension, EnumDifficulty difficulty, Profiler profilerIn)
     {
         super(new SaveHandlerMP(), new WorldInfo(settings, "MpServer"), WorldProvider.getProviderForDimension(dimension), profilerIn, true);
         this.sendQueue = netHandler;
         this.getWorldInfo().setDifficulty(difficulty);
-        this.setSpawnPoint(new BlockPos(8, 64, 8));
         this.provider.registerWorld(this);
+        this.setSpawnPoint(new BlockPos(8, 64, 8));
         this.chunkProvider = this.createChunkProvider();
         this.mapStorage = new SaveDataMemoryStorage();
         this.calculateInitialSkylight();
         this.calculateInitialWeather();
+        Reflector.postForgeBusEvent(Reflector.WorldEvent_Load_Constructor, new Object[] {this});
+
+        if (this.mc.playerController != null && this.mc.playerController.getClass() == PlayerControllerMP.class)
+        {
+            this.mc.playerController = new PlayerControllerOF(this.mc, netHandler);
+        }
     }
 
     public void tick()
@@ -184,6 +197,11 @@ public class WorldClient extends World
         {
             this.entitySpawnQueue.remove(entityIn);
         }
+
+        if (Config.isDynamicLights() && this.mc.renderGlobal != null)
+        {
+            DynamicLights.entityAdded(entityIn, this.mc.renderGlobal);
+        }
     }
 
     public void onEntityRemoved(Entity entityIn)
@@ -202,6 +220,11 @@ public class WorldClient extends World
             {
                 this.entityList.remove(entityIn);
             }
+        }
+
+        if (Config.isDynamicLights() && this.mc.renderGlobal != null)
+        {
+            DynamicLights.entityRemoved(entityIn, this.mc.renderGlobal);
         }
     }
 
@@ -273,16 +296,16 @@ public class WorldClient extends World
         Random random = new Random();
         ItemStack itemstack = this.mc.thePlayer.getHeldItem();
         boolean flag = this.mc.playerController.getCurrentGameType() == WorldSettings.GameType.CREATIVE && itemstack != null && Block.getBlockFromItem(itemstack.getItem()) == Blocks.barrier;
-        BlockPos.MutableBlockPos blockpos$mutableblockpos = new BlockPos.MutableBlockPos();
+        BlockPosM blockposm = this.randomTickPosM;
 
         for (int j = 0; j < 1000; ++j)
         {
             int k = posX + this.rand.nextInt(i) - this.rand.nextInt(i);
             int l = posY + this.rand.nextInt(i) - this.rand.nextInt(i);
             int i1 = posZ + this.rand.nextInt(i) - this.rand.nextInt(i);
-            blockpos$mutableblockpos.set(k, l, i1);
-            IBlockState iblockstate = this.getBlockState(blockpos$mutableblockpos);
-            iblockstate.getBlock().randomDisplayTick(this, blockpos$mutableblockpos, iblockstate, random);
+            blockposm.setXyz(k, l, i1);
+            IBlockState iblockstate = this.getBlockState(blockposm);
+            iblockstate.getBlock().randomDisplayTick(this, blockposm, iblockstate, random);
 
             if (flag && iblockstate.getBlock() == Blocks.barrier)
             {
@@ -423,5 +446,43 @@ public class WorldClient extends World
         }
 
         super.setWorldTime(time);
+    }
+
+    public int getCombinedLight(BlockPos pos, int lightValue)
+    {
+        int i = super.getCombinedLight(pos, lightValue);
+
+        if (Config.isDynamicLights())
+        {
+            i = DynamicLights.getCombinedLight(pos, i);
+        }
+
+        return i;
+    }
+
+    public boolean setBlockState(BlockPos pos, IBlockState newState, int flags)
+    {
+        this.playerUpdate = this.isPlayerActing();
+        boolean flag = super.setBlockState(pos, newState, flags);
+        this.playerUpdate = false;
+        return flag;
+    }
+
+    private boolean isPlayerActing()
+    {
+        if (this.mc.playerController instanceof PlayerControllerOF)
+        {
+            PlayerControllerOF playercontrollerof = (PlayerControllerOF)this.mc.playerController;
+            return playercontrollerof.isActing();
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public boolean isPlayerUpdate()
+    {
+        return this.playerUpdate;
     }
 }

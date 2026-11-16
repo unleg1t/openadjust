@@ -124,7 +124,7 @@ public final class EventTimers {
             this.height = rows * ROW_HEIGHT;
             this.lastShown = null;
             for (int i = 0; i < rows; i++) {
-                BedWarsTimerProtocol.TimerMessage event = events.get(i);             // type id 6462361
+                BedWarsTimerProtocol.TimerMessage event = events.get(i);
                 long remaining = 50L * event.time - (System.currentTimeMillis() - event.updatedAt);
                 TimerEntry entry = new TimerEntry();
                 entry.name = event.name;
@@ -233,7 +233,7 @@ public final class EventTimers {
             this.height = n * ROW_HEIGHT;
             this.lastShown = null;
             for (int i = 0; i < n; i++) {
-                EventTimerEntry event = this.apiEvents.get(i);           // type id 6441736
+                EventTimerEntry event = this.apiEvents.get(i);
                 TimerEntry entry = new TimerEntry();
                 entry.name = event.event;
                 entry.icon = PIT_ICONS.getOrDefault(event.event, new ItemStack(Item.getItemFromBlock(Blocks.barrier)));

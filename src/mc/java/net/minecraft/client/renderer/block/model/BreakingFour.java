@@ -27,7 +27,8 @@ public class BreakingFour extends BakedQuad
 
     private void remapVert(int vertex)
     {
-        int i = 7 * vertex;
+        int stride = this.vertexData.length / 4;
+        int i = stride * vertex;
         float f = Float.intBitsToFloat(this.vertexData[i]);
         float f1 = Float.intBitsToFloat(this.vertexData[i + 1]);
         float f2 = Float.intBitsToFloat(this.vertexData[i + 2]);

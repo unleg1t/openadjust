@@ -76,10 +76,18 @@ public abstract class AdjustScreen {
         boolean pressed = Mouse.getEventButtonState();
         int wheel = Mouse.getEventDWheel();
         if (wheel != 0) mouseScrolled(new Vec2f(mouseX, mouseY), button, pressed, wheel, wheel < 0 ? 1.0F : -1.0F);
-        if (button != -1 && !handleInput(button, pressed).cancelled) mouseClicked(new Vec2f(mouseX, mouseY), button, pressed);
+        if (button != -1 && !handleInput(button, pressed).cancelled) {
+            ScaledResolution resolution = window instanceof ScaledResolution
+                    ? (ScaledResolution) window
+                    : new ScaledResolution(Minecraft.getMinecraft(), HUDModule.getClickGuiScale());
+            mouseClicked(new Vec2f(mouseX, mouseY), button, pressed, resolution);
+        }
     }
     public boolean keyTyped(char character, int key) { return false; }
     public boolean mouseClicked(Vec2f mouse, int button, boolean pressed) { return false; }
+    public boolean mouseClicked(Vec2f mouse, int button, boolean pressed, ScaledResolution window) {
+        return mouseClicked(mouse, button, pressed);
+    }
     public void render(Object queue, Vec2f mouse, ScaledResolution window) { }
     public void updateScreen() { }
     public void onOpen() { }
