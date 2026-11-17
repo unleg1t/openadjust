@@ -32,7 +32,7 @@ public final class VoiceChatClient implements VoicePacketListener {
     @FunctionalInterface public interface PacketFactory {
         ServerboundVoicePacket create(VoiceServer server, byte[] secret, Object field3, String response);
     }
-    public static PacketFactory factory14056fd40 = (server, secret, field3, response) -> {
+    public static PacketFactory loginPacketFactory = (server, secret, field3, response) -> {
         var packet = new com.adjustclient.module.impl.player.voicechat.protocol.packet.serverbound.ServerboundStringPacket();
         packet.mode = server;
         packet.data = secret;
@@ -117,8 +117,8 @@ public final class VoiceChatClient implements VoicePacketListener {
                     return;
                 }
                 udpClient.start();
-                if (factory14056fd40 != null) {
-                    ServerboundVoicePacket login = factory14056fd40.create(server, secret, null, response.string);
+                if (loginPacketFactory != null) {
+                    ServerboundVoicePacket login = loginPacketFactory.create(server, secret, null, response.string);
                     for (int i = 0; i < 5; i++) udpClient.sendPacket(login, udpClient.connection, null);
                 }
             } catch (Exception exception) {

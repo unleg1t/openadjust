@@ -37,7 +37,7 @@ public final class PixelPartyModule extends Module {
     }
 
     public void onInput() {
-        if (isEnabled() && active && !InventoryStateTracker.inServerGui && !InventoryStateTracker.inServerInventory) mc.gameSettings.keyBindForward.pressed = true;
+        if (isEnabled() && active && !InventoryStateTracker.isInServersideGui()) mc.gameSettings.keyBindForward.pressed = true;
     }
 
     @EventHandler public void updateTarget(com.adjustclient.event.PreClientTickEvent event) {
@@ -55,7 +55,7 @@ public final class PixelPartyModule extends Module {
             active = true;
             rotation = RotationUtil.getRotations(new Vec3(target.getX() + 0.5, target.getY() + 0.5, target.getZ() + 0.5)).x;
         }
-        if (rotation == null || InventoryStateTracker.inServerGui || InventoryStateTracker.inServerInventory) return;
+        if (rotation == null || InventoryStateTracker.isInServersideGui()) return;
         Vec2f current = RenderRotationTracker.INSTANCE.rotation;
         RotationHandler.rotate(InstantRotationModel.INSTANCE, rotation,
                 current == null ? mc.thePlayer.rotationPitch : current.y);
@@ -63,7 +63,7 @@ public final class PixelPartyModule extends Module {
     }
 
     @EventHandler public void onMovementInput(MovementInputEvent event) {
-        if (!isEnabled() || !active || InventoryStateTracker.inServerGui || InventoryStateTracker.inServerInventory) return;
+        if (!isEnabled() || !active || InventoryStateTracker.isInServersideGui()) return;
         event.back = false; event.forward = true; event.left = false; event.right = false; event.jump = false;
         event.sneak = ServerTracker.INSTANCE.field198 && !ServerTracker.INSTANCE.field197;
         if (target == null || !mc.thePlayer.onGround) return;

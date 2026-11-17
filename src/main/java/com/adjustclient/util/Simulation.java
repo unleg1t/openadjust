@@ -1,8 +1,7 @@
 package com.adjustclient.util;
 
-import com.adjustclient.module.impl.movement.speed.NcpSpeedState;
 import com.adjustclient.module.impl.movement.speed.SpeedModule;
-import com.adjustclient.module.impl.movement.speed.VanillaSpeedState;
+import com.adjustclient.module.impl.movement.speed.SpeedState;
 import com.adjustclient.rotation.handler.RenderRotationTracker;
 import com.adjustclient.util.rotation.RotationHolder;
 import java.util.ArrayList;
@@ -34,10 +33,10 @@ public final class Simulation extends EntitySimulation implements RotationHolder
         SpeedModule speed = SpeedModule.INSTANCE;
         if (!speed.isEnabled()) return this;
         player.speedMode = speed.mode.getValue();
-        Object original = speed.state;
-        if (original instanceof NcpSpeedState)
-            player.speedState = ((NcpSpeedState)original).copy(player);
-        else player.speedState = ((VanillaSpeedState)original).copy(player);
+        SpeedState original = speed.state;
+        if (original != null) {
+            player.speedState = original.copy(player);
+        }
         return this;
     }
 
@@ -124,5 +123,6 @@ public final class Simulation extends EntitySimulation implements RotationHolder
         player.moveForward = source.moveForward;
         player.moveStrafing = source.moveStrafing;
         player.field692 = null;
+        player.lastDistance = source.lastDistance;
     }
 }

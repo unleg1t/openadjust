@@ -6,7 +6,7 @@ import com.adjustclient.util.BiFunction2;
 import net.minecraft.client.Minecraft;
 
 public enum RowTint {
-    NONE, SUSPICIOUS, HACKING, BLACKLISTED, WHITELISTED, TARGETED, VANISHED, STAFF;
+    NONE, SUSPICIOUS, HACKING, BLACKLISTED, WHITELISTED, TARGETED, VANISHED, STAFF, REAL_PLAYER;
 
     public BiFunction2<Object, ? super PlayerEntry> tint;
     public BiFunction2<Object, ? super PlayerEntry> secondaryTint;
@@ -40,6 +40,8 @@ public enum RowTint {
 
     static final BiFunction2<Object, Object> LAMBDA_D33C = (base, entry) -> 0x32FF6363;
 
+    static final BiFunction2<Object, Object> LAMBDA_REAL_PLAYER = (base, entry) -> 0x32BE9155;
+
     static {
         NONE.tint = LAMBDA_373A;
         SUSPICIOUS.tint = LAMBDA_C1AC;
@@ -49,6 +51,7 @@ public enum RowTint {
         TARGETED.tint = LAMBDA_6E79;
         VANISHED.tint = LAMBDA_D023;
         STAFF.tint = LAMBDA_5AA8;
+        REAL_PLAYER.tint = LAMBDA_REAL_PLAYER;
     }
 
 }

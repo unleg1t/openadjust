@@ -1,13 +1,22 @@
 package com.adjustclient.module.impl.movement.speed;
 
 import com.adjustclient.Adjust;
-import com.adjustclient.anticheat.feature.Feature;
-import com.adjustclient.event.*;
+import com.adjustclient.event.CancellablePlayerUpdateEvent;
+import com.adjustclient.event.DirectionalPacketEvent;
+import com.adjustclient.event.EventHandler;
+import com.adjustclient.event.IncomingVelocityEvent;
+import com.adjustclient.event.MotionEvent;
+import com.adjustclient.event.MoveEvent;
+import com.adjustclient.event.MoveFlyingEvent;
+import com.adjustclient.event.MoveHeadingEvent;
+import com.adjustclient.event.MovementInputEvent;
+import com.adjustclient.event.ViewBobbingEvent;
 import com.adjustclient.module.Category;
 import com.adjustclient.module.Module;
 import com.adjustclient.module.impl.movement.step.StepModule;
 import com.adjustclient.setting.ModeSetting;
 import com.adjustclient.util.MovementUtil;
+import com.adjustclient.util.Timer;
 import net.minecraft.entity.Entity;
 import net.minecraft.network.play.server.S01PacketJoinGame;
 import net.minecraft.network.play.server.S12PacketEntityVelocity;
@@ -25,7 +34,8 @@ public final class SpeedModule extends Module {
         notifyToggle = false;
         VanillaSpeedMode vanilla = new VanillaSpeedMode(this);
         NcpSpeedMode ncp = new NcpSpeedMode(this);
-        mode = new ModeSetting<>(this, "Mode", vanilla, vanilla, ncp);
+        RewoundSpeedMode rewound = new RewoundSpeedMode(this);
+        mode = new ModeSetting<>(this, "Mode", vanilla, vanilla, ncp, rewound);
         mode.addListener(() -> resetState());
         settings.remove(mode);
         settings.add(0, mode);
@@ -36,31 +46,30 @@ public final class SpeedModule extends Module {
         initialize(mode.getValue());
     }
 
-    @EventHandler public void onUpdate(CancellablePlayerUpdateEvent event) {
+    @EventHandler
+    public void onUpdate(CancellablePlayerUpdateEvent event) {
         if (event.isCancelled() || !isEnabled()) return;
         SpeedMode<?> selected = mode.getValue();
         if (selected instanceof NcpSpeedMode && ((NcpSpeedMode) selected).keepMovement) toggle(false);
         if (!mode.getValue().feature.isAllowed()) toggle(false);
     }
 
-    @EventHandler public void onMotion(MotionEvent event) {
+    @EventHandler
+    public void onMotion(MotionEvent event) {
         if (!isEnabled()) return;
-        if (event.pre) {
-            Entity entity = state.entity;
-        }
-        if (mode.getValue() instanceof NcpSpeedMode) {
-            NcpSpeedState ncp = (NcpSpeedState) state;
-            ncp.lastDistance = Math.hypot(ncp.entity.posX - ncp.entity.prevPosX,
-                    ncp.entity.posZ - ncp.entity.prevPosZ);
+        if (event.pre && state != null && state.entity != null) {
+            mode.getValue();
         }
     }
 
-    @EventHandler public void onHeading(MoveHeadingEvent event) {
-        if (!isEnabled() || state.entity == null) return;
+    @EventHandler
+    public void onHeading(MoveHeadingEvent event) {
+        if (!isEnabled() || state == null || state.entity == null) return;
         mode.getValue();
     }
 
-    @EventHandler public void onMoveFlying(MoveFlyingEvent event) {
+    @EventHandler
+    public void onMoveFlying(MoveFlyingEvent event) {
         if (!isEnabled()) return;
         Entity entity = state.entity;
         if (entity == null) return;
@@ -70,11 +79,13 @@ public final class SpeedModule extends Module {
             SpeedMode<?> selected = mode.getValue();
             if (selected instanceof VanillaSpeedMode) ((VanillaSpeedMode) selected).updateMovement((VanillaSpeedState) state);
             else if (selected instanceof NcpSpeedMode) ((NcpSpeedMode) selected).update((NcpSpeedState) state);
+            else if (selected instanceof RewoundSpeedMode) ((RewoundSpeedMode) selected).update((RewoundSpeedState) state);
         }
         if (motionX != entity.motionX || motionZ != entity.motionZ) event.cancelled = true;
     }
 
-    @EventHandler public void onMovementInput(MovementInputEvent event) {
+    @EventHandler
+    public void onMovementInput(MovementInputEvent event) {
         if (!isEnabled()) return;
         if (event.jump && mc.cameraOverride == null && !mc.thePlayer.capabilities.isFlying
                 && (!mc.thePlayer.capabilities.allowFlying || mc.thePlayer.onGround)
@@ -83,17 +94,46 @@ public final class SpeedModule extends Module {
             event.sneak = false;
     }
 
-    @Override public boolean canToggle(boolean enabling) {
+    @EventHandler
+    public void onViewBobbing(ViewBobbingEvent event) {
+        if (!isEnabled() || state == null) return;
+        SpeedMode<?> selected = mode.getValue();
+        if (selected instanceof RewoundSpeedMode) {
+            ((RewoundSpeedMode) selected).onViewBobbing();
+        }
+    }
+
+    @Override
+    public boolean canToggle(boolean enabling) {
         return !enabling || mode.getValue().feature.isAllowed();
     }
 
-    @EventHandler public void onMoveFlyingPost(MoveFlyingEvent event) {
+    @EventHandler
+    public void onMoveFlyingPost(MoveFlyingEvent event) {
         if (!isEnabled() || state == null || !(mode.getValue() instanceof NcpSpeedMode)) return;
         if (event.pre && !StepModule.INSTANCE.isStepping())
             event.specialInputScaling = true;
     }
 
-    @EventHandler public void onVelocity(IncomingVelocityEvent event) {
+    @EventHandler(priority = 100)
+    public void onVelocityPre(IncomingVelocityEvent event) {
+        if (event.isCancelled() || !isEnabled() || state == null
+                || !(event.packet instanceof S12PacketEntityVelocity)) return;
+        S12PacketEntityVelocity packet = (S12PacketEntityVelocity) event.packet;
+        SpeedMode<?> selected = mode.getValue();
+        if (selected instanceof NcpSpeedMode) {
+            if (packet.getEntityID() == state.entity.getEntityId()) {
+                ((NcpSpeedMode) selected).onVelocity((NcpSpeedState) state, event, packet);
+            }
+        } else if (selected instanceof RewoundSpeedMode) {
+            if (packet.getEntityID() == state.entity.getEntityId()) {
+                ((RewoundSpeedState) state).damageTimer = new Timer();
+            }
+        }
+    }
+
+    @EventHandler
+    public void onVelocity(IncomingVelocityEvent event) {
         if (event.isCancelled() || !isEnabled() || state == null || !(mode.getValue() instanceof NcpSpeedMode)
                 || !(event.packet instanceof S12PacketEntityVelocity)) return;
         S12PacketEntityVelocity packet = (S12PacketEntityVelocity) event.packet;
@@ -103,7 +143,8 @@ public final class SpeedModule extends Module {
         }
     }
 
-    @Override public void toggle(boolean enabling) {
+    @Override
+    public void toggle(boolean enabling) {
         if (enabling && mc.thePlayer == null) enabling = false;
         if (!enabling && isEnabled() && mc.thePlayer != null && mode.getValue() instanceof NcpSpeedMode
                 && !((NcpSpeedMode) mode.getValue()).canRun((NcpSpeedState) state)) return;
@@ -125,24 +166,36 @@ public final class SpeedModule extends Module {
         if (notifyToggle) Adjust.INSTANCE.fileSystem.markDirty();
     }
 
-    @Override public void onEnable() { resetState(); }
+    @Override
+    public void onEnable() {
+        resetState();
+    }
 
-    @Override public void onDisable() { clearState(); }
+    @Override
+    public void onDisable() {
+        clearState();
+    }
 
-    @Override public String getSuffix() { return mode.getValue().getName(); }
+    @Override
+    public String getSuffix() {
+        return mode.getValue().getName();
+    }
 
-    @EventHandler public void onMove(MoveEvent event) {
-        if (!isEnabled() || state.entity == null) return;
+    @EventHandler
+    public void onMove(MoveEvent event) {
+        if (!isEnabled() || state == null || state.entity == null) return;
         mode.getValue();
     }
 
-    @EventHandler public void onPacket(DirectionalPacketEvent event) {
+    @EventHandler
+    public void onPacket(DirectionalPacketEvent event) {
         if (event.isCancelled() || !isEnabled() || state == null) return;
         if (!event.outgoing && event.packet instanceof S01PacketJoinGame) toggle(false);
         else mode.getValue();
     }
 
-    @Override public void setEnabled(boolean enabling, boolean notify) {
+    @Override
+    public void setEnabled(boolean enabling, boolean notify) {
         if (!enabling && isEnabled() && mc.thePlayer != null && mode.getValue() instanceof NcpSpeedMode
                 && !((NcpSpeedMode) mode.getValue()).checkMovement((NcpSpeedState) state)) return;
         if (isEnabled() == enabling) return;
@@ -174,6 +227,8 @@ public final class SpeedModule extends Module {
             ncpState.jumpTicks = ncp.jumpTicks.getInt();
         } else if (selected instanceof VanillaSpeedMode) {
             ((VanillaSpeedMode) selected).initialize((VanillaSpeedState) state);
+        } else if (selected instanceof RewoundSpeedMode) {
+            ((RewoundSpeedMode) selected).reset((RewoundSpeedState) state);
         }
     }
 
@@ -182,6 +237,7 @@ public final class SpeedModule extends Module {
         SpeedMode<?> selected = mode.getValue();
         if (selected instanceof NcpSpeedMode) ((NcpSpeedMode) selected).reset((NcpSpeedState) state);
         else if (selected instanceof VanillaSpeedMode) ((VanillaSpeedMode) selected).limitSpeed((VanillaSpeedState) state);
+        else if (selected instanceof RewoundSpeedMode) ((RewoundSpeedMode) selected).reset((RewoundSpeedState) state);
         state = null;
     }
 }

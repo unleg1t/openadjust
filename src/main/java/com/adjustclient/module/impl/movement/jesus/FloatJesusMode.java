@@ -3,7 +3,6 @@ package com.adjustclient.module.impl.movement.jesus;
 import com.adjustclient.Adjust;
 import com.adjustclient.event.EventHandler;
 import com.adjustclient.event.MotionEvent;
-import com.adjustclient.util.ChatUtil;
 import com.adjustclient.util.MovementUtil;
 
 public final class FloatJesusMode extends JesusMode {
@@ -15,6 +14,12 @@ public final class FloatJesusMode extends JesusMode {
 
     public FloatJesusMode(JesusModule module) {
         super(module, "Float");
+    }
+
+    @Override
+    public void onDisable() {
+        waterTicks = 0;
+        ascentTicks = 0;
     }
 
     @EventHandler
@@ -40,7 +45,6 @@ public final class FloatJesusMode extends JesusMode {
                         vertical = 0.4000000059604645;
                     }
                 }
-                ChatUtil.sendClientMessage(ascentTicks + " ; " + waterTicks);
                 waterTicks++;
                 dryTicks = 0;
             } else {
@@ -54,7 +58,6 @@ public final class FloatJesusMode extends JesusMode {
             } else if ((int) mc.thePlayer.posY + 0.6 > mc.thePlayer.posY) {
                 mc.thePlayer.motionY = 0.03;
             }
-            if (mc.thePlayer.isCollidedHorizontally) ChatUtil.sendClientMessage("collide");
             surfaceY = (int) mc.thePlayer.posY;
         }
         if (dryTicks < 2 && surfaceY != 0.0) mc.thePlayer.posY = (int) surfaceY + 1.0;

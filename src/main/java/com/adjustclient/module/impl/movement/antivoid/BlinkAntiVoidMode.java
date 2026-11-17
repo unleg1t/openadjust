@@ -37,9 +37,23 @@ public final class BlinkAntiVoidMode extends AntiVoidMode {
         flagAsLastOption.setDescription("In the case that changing your motion will not work, attempt to flag the anti-cheat for a setback.");
     }
 
+    @Override public void onEnable() {
+        safeState = null;
+        releasePackets();
+    }
+
+    @Override public void onDisable() {
+        safeState = null;
+        releasePackets();
+        flagTimer = null;
+        pendingMotion = null;
+        freezeTicks = 0;
+        flagCooldownTicks = 0;
+    }
+
     @EventHandler(priority = 1) public void onMovementInput(MovementInputEvent event) {
         if (!isActive()) return;
-        if (freezeTicks >= 1 && !InventoryStateTracker.inServerGui && !InventoryStateTracker.inServerInventory) {
+        if (freezeTicks >= 1 && !InventoryStateTracker.isInServersideGui()) {
             event.forward = false;
             event.back = false;
             event.left = false;
@@ -225,15 +239,6 @@ public final class BlinkAntiVoidMode extends AntiVoidMode {
         Simulation simulation = new Simulation();
         for (Vec3 candidate : candidates) if (reachesGround(simulation, position, candidate)) return candidate;
         return null;
-    }
-
-    private boolean isSafeEnvironment(EntityPlayer player) {
-        if (player.onGround && player.isSneaking()) return true;
-        net.minecraft.block.Block block = player.worldObj.getBlockState(new BlockPos(player.posX,
-                player.getEntityBoundingBox().minY, player.posZ)).getBlock();
-        if ((block == Blocks.ladder || block == Blocks.vine)
-                && (player instanceof SimulationPlayer || !((net.minecraft.client.entity.AbstractClientPlayer) player).isSpectator())) return true;
-        return player.inWater || player.ridingEntity != null || player.noClip;
     }
 
     private boolean isFallingIntoVoid() {

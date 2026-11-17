@@ -34,12 +34,12 @@ public interface IChatComponent extends Iterable<IChatComponent>
     @SideOnly(Side.CLIENT)
     String getFormattedText();
 
-    default String forkMethod14492ae00()
+    default String getPlainComponentText()
     {
         return this.getUnformattedText();
     }
 
-    default String forkMethod14492b400()
+    default String getStyledComponentText()
     {
         return this.getFormattedText();
     }

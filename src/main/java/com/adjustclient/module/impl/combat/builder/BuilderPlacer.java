@@ -270,7 +270,6 @@ public final class BuilderPlacer implements Listener, MinecraftInstance {
     public boolean isEnabled() {
         if (!owner.isEnabled()) return false;
         if (ScaffoldModule.INSTANCE.isEnabled()
-                && ScaffoldModule.INSTANCE.placeReady != null
                 && ScaffoldModule.INSTANCE.placeReady) return false;
         return GameStateUtil.isActive();
     }

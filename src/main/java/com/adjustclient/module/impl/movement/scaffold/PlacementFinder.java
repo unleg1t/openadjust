@@ -1,10 +1,17 @@
 package com.adjustclient.module.impl.movement.scaffold;
 
+import com.adjustclient.rotation.handler.RotationHandler;
 import com.adjustclient.util.BlockPlacement;
 import com.adjustclient.util.BlockUtil;
 import com.adjustclient.util.MinecraftInstance;
 import com.adjustclient.util.MovementUtil;
 import com.adjustclient.util.Vec2f;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
+import java.util.function.ToDoubleFunction;
+import java.util.function.UnaryOperator;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -18,13 +25,6 @@ import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.function.ToDoubleFunction;
-import java.util.function.UnaryOperator;
-import com.adjustclient.rotation.handler.RotationHandler;
-
 public final class PlacementFinder implements MinecraftInstance {
 
     private final ScaffoldModule module;
@@ -37,15 +37,9 @@ public final class PlacementFinder implements MinecraftInstance {
     }
 
     public boolean isStableYawActive() {
-        return this.module.settings.isStableYaw() && this.partner.yawOffset != null;   // s+12 is a java.lang.Float
+        return this.module.settings.isStableYaw() && this.partner.yawOffset != null;
     }
 
-    /**
-     * All rotations from which the block at {@code pos} can be placed against one of its neighbours.
-     * Returns an empty list if an entity blocks the position or there already is a collision box.
-     *
-     * @param entity the player (passed through to {@link #sampleFace} for the eye position)
-     */
     public List<RotationCandidate> findPlacementCandidates(Entity entity, BlockPos pos) {
         World world = Minecraft.getMinecraft().theWorld;
         AxisAlignedBB box = new AxisAlignedBB(pos.getX(), pos.getY(), pos.getZ(),
@@ -85,13 +79,12 @@ public final class PlacementFinder implements MinecraftInstance {
 
         BlockPos target = previous.placedPos;
         if (this.isStableYawActive() && mc.thePlayer.onGround && !MovementUtil.isJumping()
-                && !this.module.towering && !this.module.noAscendActive) {
+                && !this.module.settings.mode.getValue().towering && !this.module.noAscendActive) {
             PlacementTarget result = this.partner.solve(mc.thePlayer, List.of(target), current, false, 0, filter);
             if (result != null) {
                 return result;
             }
-            result = this.partner.solve(mc.thePlayer, List.of(target), current, true, 0, filter);
-            return result;   // null if both fail
+            return this.partner.solve(mc.thePlayer, List.of(target), current, true, 0, filter);
         }
 
         BlockPlacement placement = this.findBestPlacement(mc.thePlayer, target, current, filter);
@@ -102,25 +95,19 @@ public final class PlacementFinder implements MinecraftInstance {
                 placement.angles, previous.yaw);
     }
 
-    /**
-     * Distance from {@code from} to the centre of {@code pos}, with the centre shifted 0.2 blocks in the direction of
-     * {@link #yaw}: {@code new Vec3(x + 0.5, y + 0.5, z + 0.5).addVector(-sin(yaw) * 0.2, 0.0, cos(yaw) * 0.2)}.
-     *
-     * @param horizontalOnly ignore the y difference
-     */
     public double distanceTo(Vec3 from, BlockPos pos, boolean horizontalOnly) {
         Vec3 centre = new Vec3(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
-        double radians = Math.toRadians(this.yaw);   // yaw * 0.017453292519943295
+        double radians = Math.toRadians(this.yaw);
         Vec3 shifted = centre.addVector(-Math.sin(radians) * 0.2, 0.0, Math.cos(radians) * 0.2);
         if (!horizontalOnly) {
-            return shifted.distanceTo(from);          // from.x - shifted.x, ...
+            return shifted.distanceTo(from);
         }
         double dx = from.xCoord - shifted.xCoord;
         double dz = from.zCoord - shifted.zCoord;
         return MathHelper.sqrt_double(dx * dx + dz * dz);
     }
 
-    public BlockPlacement raycastPlacement(Entity entity, Vec2f rotation, java.util.Collection<BlockPos> targets,
+    public BlockPlacement raycastPlacement(Entity entity, Vec2f rotation, Collection<BlockPos> targets,
                                            UnaryOperator<Vec2f> rotationFn) {
         Vec2f rot = rotationFn == null ? rotation : rotationFn.apply(rotation);
 
@@ -147,7 +134,7 @@ public final class PlacementFinder implements MinecraftInstance {
 
         float reach = mc.playerController.getBlockReachDistance();
 
-        Vec3 eyes = entity.getPositionEyes(1.0F);                            // posX, posY + getEyeHeight() (sleeping 0.2, sneaking -0.08), posZ
+        Vec3 eyes = entity.getPositionEyes(1.0F);
         Vec3 look = entity.getVectorForRotation(pitch, yaw);
         Vec3 end = eyes.addVector(look.xCoord * reach, look.yCoord * reach, look.zCoord * reach);
         MovingObjectPosition mop = mc.theWorld.rayTraceBlocks(eyes, end, false, false, true);
@@ -175,15 +162,6 @@ public final class PlacementFinder implements MinecraftInstance {
         return placement;
     }
 
-    /**
-     * Samples an 8x8 grid on the face of {@code box} (the collision box of a neighbour of the target block) that touches
-     * the target, skips the points around the face centre, and creates one {@link RotationCandidate} per point
-     * (relative hit vector, block position of {@code box}, rotation from the player's eyes to the point).
-     *
-     * @param entity the player (eye position)
-     * @param facing direction from the target block to the neighbour (the face used is {@code facing.getOpposite()})
-     * @param box    collision box of the neighbour
-     */
     private List<RotationCandidate> sampleFace(Entity entity, Block block, AxisAlignedBB box, EnumFacing facing) {
         double minX = box.minX;
         double minY = box.minY;
@@ -197,7 +175,6 @@ public final class PlacementFinder implements MinecraftInstance {
 
         EnumFacing side = facing.getOpposite();
 
-        // per axis: sampled range [lo, hi] inside the face; the axis of the face plane is fixed at the plane coordinate
         double xHi = (maxX - minX) * random1 + minX;
         double xLo = 1.0 - random1 + minX;
         boolean xFixed = false;
@@ -246,11 +223,10 @@ public final class PlacementFinder implements MinecraftInstance {
         double centreY = (maxY + minY) / 2.0;
         double centreZ = (maxZ + minZ) / 2.0;
 
-        // block position of the neighbour = floor(box.min)
         BlockPos blockPos = new BlockPos(MathHelper.floor_double(minX), MathHelper.floor_double(minY),
                 MathHelper.floor_double(minZ));
 
-        Vec3 eyes = entity.getPositionEyes(1.0F);   // Vec3(posX, posY + getEyeHeight(), posZ), -0.0 normalised by the Vec3 constructor
+        Vec3 eyes = entity.getPositionEyes(1.0F);
 
         List<RotationCandidate> result = new ArrayList<>();
         for (int i = 0; i < xSteps; i++) {
@@ -284,22 +260,13 @@ public final class PlacementFinder implements MinecraftInstance {
                     double pitchDegrees = Math.atan2(dy, horizontal) * 180.0 / Math.PI;
 
                     Vec3 hitVec = new Vec3(x - (double) blockPos.getX(), y - (double) blockPos.getY(), z - (double) blockPos.getZ());
-                    result.add(new RotationCandidate(hitVec, blockPos, new Vec2f((float) yawDegrees, (float) -pitchDegrees), block));
+                    result.add(new RotationCandidate(hitVec, blockPos, new Vec2f(yawDegrees, (float) -pitchDegrees), block));
                 }
             }
         }
         return result;
     }
 
-    /**
-     * Finds the placement against the neighbours of {@code target} that needs the smallest rotation change.
-     *
-     * @param entity     the player
-     * @param target     position of the block that has to appear
-     * @param current    current rotation (x = yaw, y = pitch): the candidates are sorted by their distance to it
-     * @param rotationFn optional rotation transform, see {@link #raycastPlacement}
-     * @return the first candidate rotation that hits through {@link #raycastPlacement}, or {@code null}
-     */
     public BlockPlacement findBestPlacement(Entity entity, BlockPos target, final Vec2f current,
                                             UnaryOperator<Vec2f> rotationFn) {
         List<RotationCandidate> candidates = this.findPlacementCandidates(entity, target);
@@ -318,14 +285,11 @@ public final class PlacementFinder implements MinecraftInstance {
         return null;
     }
 
-    /**
-     * Raycast checks are needed if Rotations > Raycast is enabled, or the selected mode is Hypixel.
-     */
     public boolean useRaycast() {
         if (this.module.settings.isRaycast()) {
             return true;
         }
-        return this.module.settings.mode.getValue() instanceof HypixelScaffoldMode;
+        return this.module.settings.mode.getValue().forceRaycast();
     }
 
     public ToDoubleFunction<BlockPos> distanceFunction(final Vec3 eyes) {

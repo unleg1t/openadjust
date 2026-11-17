@@ -22,7 +22,7 @@ public final class NcpNoSlowMode extends NoSlowMode {
     @EventHandler(priority = 72)
     public void onControllerUpdate(IngameActionEvent event) {
         if (!isActive() || event.suppressActions || mc.thePlayer.ridingEntity != null) return;
-        if (InventoryStateTracker.inServerGui || InventoryStateTracker.inServerInventory) return;
+        if (InventoryStateTracker.isInServersideGui()) return;
         if (module.getItemType(false) != NoSlowItemType.SWORD) return;
         if (!Adjust.mouseClickHelper.right.isClicked(false)) return;
         beginHold();

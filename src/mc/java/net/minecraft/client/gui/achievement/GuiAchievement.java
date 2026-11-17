@@ -75,6 +75,11 @@ public class GuiAchievement extends Gui
     {
         if (this.theAchievement != null && this.notificationTime != 0L && Minecraft.getMinecraft().thePlayer != null)
         {
+            if (com.adjustclient.module.impl.render.tweaks.TweaksModule.INSTANCE != null && com.adjustclient.module.impl.render.tweaks.TweaksModule.INSTANCE.noRender.hideAchievements())
+            {
+                return;
+            }
+
             double d0 = (double)(Minecraft.getSystemTime() - this.notificationTime) / 3000.0D;
 
             if (!this.permanentNotification)

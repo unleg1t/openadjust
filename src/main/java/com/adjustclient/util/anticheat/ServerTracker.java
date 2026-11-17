@@ -33,7 +33,7 @@ import com.adjustclient.event.ScreenEventPhase;
 
 public final class ServerTracker implements Listener, MinecraftInstance, RotationHolder {
     public static ServerTracker INSTANCE = new ServerTracker();
-    public static Adjust referenceSlot2460;
+    public static Adjust clientInstance;
     public EntityTracker entityTracker;
     public PlayerTracker playerTracker;
     public C13PacketPlayerAbilities lastInput;
@@ -230,6 +230,16 @@ public final class ServerTracker implements Listener, MinecraftInstance, Rotatio
         }
     }
     public void onMotion(C03PacketPlayer packet) {
+        if (serverState != null && serverState.antiCheatModel != null) {
+            if (serverState.antiCheatModel.serverType == com.adjustclient.server.ServerType.HYPIXEL
+                    && Adjust.gameStateTracker != null
+                    && Adjust.gameStateTracker.state instanceof com.adjustclient.hypixel.game.pit.PitGameState pitState) {
+                pitState.onPlayerMove(packet);
+            } else if (serverState.antiCheatModel.serverType == com.adjustclient.server.ServerType.REWOUND
+                    && Adjust.rewoundGameTracker != null) {
+                Adjust.rewoundGameTracker.state.onPlayerMove(packet);
+            }
+        }
         if (packet.isOnGround()) velocity = 0;
         if (packet.isMoving()) {
             previousPosition = position;
@@ -405,12 +415,12 @@ public final class ServerTracker implements Listener, MinecraftInstance, Rotatio
             attackedLivingEntity = null;
             attackedEntity = null;
             usedItemSinceMovement = false;
-            if (referenceSlot2460 != null
-                    && referenceSlot2460.accountManager != null
-                    && referenceSlot2460.accountManager.isSessionAccountSelected()
+            if (clientInstance != null
+                    && clientInstance.accountManager != null
+                    && clientInstance.accountManager.isSessionAccountSelected()
                     && serverState != null
                     && serverState.antiCheatModel instanceof WatchdogModel watchdog) {
-                var account = referenceSlot2460.accountManager.selectedAccount;
+                var account = clientInstance.accountManager.selectedAccount;
                 account.bans.setExpiry(watchdog.serverType, 0L, true);
                 account.syncBans();
             }

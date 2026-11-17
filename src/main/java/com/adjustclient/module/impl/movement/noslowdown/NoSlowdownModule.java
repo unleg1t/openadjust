@@ -24,10 +24,11 @@ public final class NoSlowdownModule extends Module {
         VanillaNoSlowMode vanilla = new VanillaNoSlowMode(this, Features.NO_SLOW_VANILLA);
         CustomNoSlowMode custom = new CustomNoSlowMode(this);
         HypixelNoSlowMode hypixel = new HypixelNoSlowMode(this, Features.NO_SLOW_HYPIXEL);
+        RewoundNoSlowMode rewound = new RewoundNoSlowMode(this, Features.NO_SLOW_REWOUND);
         SwapNoSlowMode swap = new SwapNoSlowMode(this);
         LegitNoSlowMode legit = new LegitNoSlowMode(this, Features.NO_SLOW_LEGIT);
         NcpNoSlowMode ncp = new NcpNoSlowMode(this, Features.NO_SLOW_NCP);
-        mode = new ModeSetting<>(this, "Mode", vanilla, vanilla, custom, hypixel, swap, legit, ncp);
+        mode = new ModeSetting<>(this, "Mode", vanilla, vanilla, custom, hypixel, rewound, swap, legit, ncp);
         clickWhileUsing.hideIf = () -> !mode.getValue().removesSlowdown();
         mode.addListener((oldValue, newValue) -> {
             NoSlowMode oldMode = (NoSlowMode) oldValue;
@@ -63,7 +64,7 @@ public final class NoSlowdownModule extends Module {
     public void onClick(IngameActionEvent event) {
         if (!isEnabled()) return;
         if (mc.thePlayer.isUsingItem() && clickWhileUsing.isEnabled()) {
-            mc.forkMethod143900500(Adjust.mouseClickHelper, event.actionStage, false);
+            mc.processMouseClickHelper(Adjust.mouseClickHelper, event.actionStage, false);
         }
     }
 

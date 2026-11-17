@@ -1,6 +1,6 @@
 # OpenAdjust
 
-A complete Java source restoration of the **Adjust Client** for **Minecraft 1.8.9** — based on **Adjust (`October 16th` build, changelog version `96`)**, with all `100` modules and `29` commands running standalone offline on Java 21 + LWJGL 3.3.3.
+A complete Java source restoration of the **Adjust Client** for **Minecraft 1.8.9** — based on **Adjust (`November 8th` build, changelog version `99`)**, with all `102` modules and `29` commands running standalone offline on Java 21 + LWJGL 3.3.3.
 
 *This text is here as a placeholder commit so this repo doesn't get taken down if upstream gets DMCA'd.*<br/>
 *If you have an issue with this being up, DM me on Discord: unleg1tt, and I'll take down, please don't DMCA my account* :sob:

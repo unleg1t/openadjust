@@ -19,7 +19,6 @@ import net.minecraft.entity.item.EntityArmorStand;
 import net.minecraft.network.Packet;
 import net.minecraft.network.play.server.*;
 import net.minecraft.util.ChatColor;
-import com.adjustclient.module.impl.player.zombies.ZombiesModule;
 import com.adjustclient.util.anticheat.ServerTracker;
 
 public final class ZombiesGameState extends HypixelGameState implements TeamGame {
@@ -65,7 +64,6 @@ public final class ZombiesGameState extends HypixelGameState implements TeamGame
         };
     }
     public static void onSpecialBoss() {
-        if ((ZombiesModule.INSTANCE.flags & 2) != 0) ZombiesModule.INSTANCE.onOldOneSpawn();
     }
     public void onPowerUp(ZombiesPowerUp powerUp) {
         int[][] schedules = switch (powerUp) {
@@ -85,14 +83,6 @@ public final class ZombiesGameState extends HypixelGameState implements TeamGame
                 break;
             }
         }
-        if ((ZombiesModule.INSTANCE.flags & 2) == 0 || mc.thePlayer == null) return;
-        com.adjustclient.ui.hud.notification.NotificationBuilder builder = new com.adjustclient.ui.hud.notification.NotificationBuilder();
-        builder.title = ZombiesModule.INSTANCE.name;
-        builder.parts = new ArrayList<>();
-        builder.actions = new ArrayList<>();
-        builder.lifetimeSteps = Math.max(22, (int)(powerUp.displayName.length() * 1.3200001F) + 38);
-        builder.addText("A ", 0xFFBEBCBD).addText(powerUp.displayName, powerUp.getColor())
-            .addText(" Power-Up has spawned.", 0xFFBEBCBD).show();
     }
     public void acceptLocation(LocrawResponse response) {
         if (response.map == null) return;

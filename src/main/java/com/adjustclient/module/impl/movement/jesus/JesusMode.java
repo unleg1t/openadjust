@@ -21,4 +21,10 @@ public abstract class JesusMode implements Listener, MinecraftInstance, ModeOpti
     public boolean isActive() {
         return module.isEnabled() && module.mode.getValue() == this;
     }
+
+    public void onEnable() {
+    }
+
+    public void onDisable() {
+    }
 }

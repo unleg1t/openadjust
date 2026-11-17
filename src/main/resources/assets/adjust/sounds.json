@@ -44,6 +44,12 @@
       "bedwars/highstats"
     ]
   },
+  "bedwars.banned": {
+    "category": "master",
+    "sounds": [
+      "bedwars/banned"
+    ]
+  },
   "party.message": {
     "category": "master",
     "sounds": [

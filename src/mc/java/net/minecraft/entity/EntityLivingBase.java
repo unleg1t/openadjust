@@ -1871,7 +1871,7 @@ public abstract class EntityLivingBase extends Entity
                     onGround = eligibilityEvent.onGround;
                 }
 
-                if (onGround && jumpTicks < 1 && (!this.isUser() || !JumpEvent.isJumpCancelled()))
+                if (onGround && jumpTicks < 1 && (!this.isUser() || (!JumpEvent.isJumpCancelled() && !com.adjustclient.util.MovementUtil.isAutoJumping())))
                 {
                     this.jump();
                     this.jumpTicks = 10;

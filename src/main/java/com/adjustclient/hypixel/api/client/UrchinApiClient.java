@@ -29,7 +29,7 @@ public final class UrchinApiClient extends ApiClient {
             }
             return new Gson().fromJson(response.body(), CubelifyResponse.class);
         } catch (IOException | InterruptedException e) {
-            if (Logger.debug) Logger.log(LogLevel.ERROR, true, "Failed to request Seraph API ({}): {}", new Object[]{uuid, e});
+            if (Logger.debug) Logger.log(LogLevel.ERROR, true, "Failed to request Urchin API ({}): {}", new Object[]{uuid, e});
             return null;
         }
     }

@@ -17,6 +17,7 @@ public final class ScaffoldSettings {
 
     public static ScaffoldMode NORMAL;
     public static ScaffoldMode HYPIXEL;
+    public static ScaffoldMode REWOUND;
     public static ScaffoldMode NCP;
 
     public final ModeSetting<ScaffoldMode> mode;
@@ -58,17 +59,20 @@ public final class ScaffoldSettings {
         HYPIXEL.module = module;
         HYPIXEL.name = "Hypixel";
         HYPIXEL.capabilities = 14;
+        REWOUND = new RewoundScaffoldMode();
+        REWOUND.module = module;
+        REWOUND.name = "Rewound";
+        REWOUND.capabilities = 62;
         NCP = new NcpScaffoldMode();
         NCP.module = module;
         NCP.name = "NCP";
         NCP.capabilities = 62;
 
-        this.mode = new ModeSetting<>(module, "Mode", NORMAL, NORMAL, HYPIXEL, NCP);
-        this.mode.addListener(() -> module.onModeChange());
+        this.mode = new ModeSetting<>(module, "Mode", NORMAL, NORMAL, HYPIXEL, REWOUND, NCP);
+        this.mode.addListener((previous, next) -> module.onModeChange((ScaffoldMode) previous));
 
         this.cps = new CpsSettings(module, 9, 13);
 
-        // ---- Rotations
         ExpandSetting rotations = new ExpandSetting(module, "Rotations");
         rotations.setActiveSupplier(this::isRotationsEnabled);
         this.rotationsEnabled = new BooleanSetting(rotations, "Enabled", true, "Yes", "No");
@@ -79,7 +83,6 @@ public final class ScaffoldSettings {
         this.raycast = new BooleanSetting(rotations, "Raycast", true)
                 .description("Makes sure your final rotations still hit the block before placing.");
 
-        // ---- Addons
         ExpandSetting addons = new ExpandSetting(module, "Addons");
         ExpandSetting clientside = new ExpandSetting(addons, "Clientside");
         clientside.setActiveSupplier(() -> this.isClientsideSwap() || this.isClientsideSwing());
@@ -92,7 +95,8 @@ public final class ScaffoldSettings {
         this.waitForClick = new BooleanSetting(addons, "Wait for click", false)
                 .description("Wait for a fake click on the existing block.");
         this.extend = new NumberSetting(addons, "Extend", 0, 0, 3, 1,
-                () -> (((ScaffoldMode) this.mode.getValue()).capabilities & 0x20) == 0);
+                () -> (((ScaffoldMode) this.mode.getValue()).capabilities & 0x20) == 0
+                        || this.mode.getValue() instanceof RewoundScaffoldMode);
         this.autoStasis = new BooleanSetting(addons, "Auto stasis", false)
                 .description("Automatically toggles Stasis if a block fails to place.");
 
@@ -133,16 +137,11 @@ public final class ScaffoldSettings {
                 () -> (((ScaffoldMode) this.mode.getValue()).capabilities & 0x10) == 0,
                 java.util.List.of(TowerMovement.NORMAL, TowerMovement.STOP, TowerMovement.CENTER));
 
-        // ---- Render
         ExpandSetting render = new ExpandSetting(module, "Render");
         this.blockCountHud = new BlockCountHud(module, render);
         this.blockPlacements = new BooleanSetting(render, "Block placements", false);
     }
 
-    /**
-     * No ascend is currently active (keeps the player from going up). {@code force} is OR-ed in.
-     * Without a bind, it is active while jump is not held; Speed being enabled also activates it.
-     */
     public boolean isNoAscendActive(boolean force) {
         if (!this.isNoAscend()) {
             return false;
@@ -161,6 +160,9 @@ public final class ScaffoldSettings {
         if ((((ScaffoldMode) this.mode.getValue()).capabilities & 0x20) == 0) {
             return 0;
         }
+        if (this.mode.getValue() instanceof RewoundScaffoldMode) {
+            return this.isTower() && this.isTowerKeyDown() ? 2 : 1;
+        }
         return this.extend.getValue().intValue();
     }
 
@@ -176,7 +178,6 @@ public final class ScaffoldSettings {
         return this.towerEnabled.isEnabled() && (((ScaffoldMode) this.mode.getValue()).capabilities & 0x8) != 0;
     }
 
-    /** Tower key: the Tower bind if one is set, otherwise the jump key. */
     public boolean isTowerKeyDown() {
         if (this.towerBind.getKeys().isEmpty()) {
             return Minecraft.getMinecraft().gameSettings.keyBindJump.pressed;

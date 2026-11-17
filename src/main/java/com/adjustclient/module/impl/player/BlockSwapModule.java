@@ -53,7 +53,7 @@ public final class BlockSwapModule extends Module implements MinecraftInstance {
     }
 
     public void onTick() {
-        if (!isEnabled() || mc.thePlayer == null || InventoryStateTracker.inServerGui || InventoryStateTracker.inServerInventory) return;
+        if (!isEnabled() || mc.thePlayer == null || InventoryStateTracker.isInServersideGui()) return;
         if (!Adjust.mouseClickHelper.right.isClicked(false)) {
             lastItem = null;
             lastSlot = -1;

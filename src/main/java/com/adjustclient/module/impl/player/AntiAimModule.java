@@ -34,9 +34,9 @@ public final class AntiAimModule extends Module {
         spinSpeed = new NumberSetting(this, "Spin Speed", 10.0F, 1.0F, 180.0F, 0.5F,
                 () -> yaw.getValue() != YawMode.SPIN && pitch.getValue() != PitchMode.SPIN);
         disableOn = new ExpandSetting(this, "Disable on");
-        disableOn.enabledPredicate = new DisableOnCondition(this);
         disableOnRotations = new BooleanSetting(disableOn, "Rotations", true);
         disableOnRotations.setDescription("Prevents replacing rotations from other modules.");
+        disableOn.enabledPredicate = new DisableOnCondition(this);
         spinYaw = RandomUtil.nextFloat(4.0F, 150.0F);
         spinPitch = RandomUtil.nextFloat(4.0F, 150.0F);
     }
@@ -51,7 +51,7 @@ public final class AntiAimModule extends Module {
     }
 
     @EventHandler(priority = 500) public void onDeferredRotation(PreClientTickEvent event) {
-        if (isEnabled() && disableOnRotations.isEnabled()) applyRotation();
+        if (isEnabled() && mc.thePlayer != null && disableOnRotations.isEnabled()) applyRotation();
     }
 
     public void applyRotation() {
@@ -103,7 +103,7 @@ public final class AntiAimModule extends Module {
     static class DisableOnCondition implements BooleanSupplier {
         final AntiAimModule owner;
         DisableOnCondition(AntiAimModule owner) { this.owner = owner; }
-        public boolean getAsBoolean() { return owner.disableOnRotations.isEnabled(); }
+        public boolean getAsBoolean() { return owner.disableOnRotations != null && owner.disableOnRotations.isEnabled(); }
     }
 
     public enum PitchMode implements ModeOption {

@@ -13,8 +13,6 @@ public class StatValue<T extends Number> {
         this.text = text;
         float ratio = (float) value.intValue() / 400.0F;
         float t = MathHelper.clamp_float(ratio, 0.0F, 1.0F);
-        // Color(int r, int g, int b, int a) with the value range test of java.awt.Color (java_awt_Color_testColorValueRange)
-        // interpolation weights: u = 1 - t; r = 255*t + 150*u, g = b = 85*t + 150*u, a = 240*t + 240*u (= 240)
         float u = 1.0F - t;
         int r = (int) (t * 255.0F + u * 150.0F);
         int g = (int) (t * 85.0F + u * 150.0F);

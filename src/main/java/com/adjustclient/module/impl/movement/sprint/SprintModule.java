@@ -2,30 +2,33 @@ package com.adjustclient.module.impl.movement.sprint;
 
 import com.adjustclient.anticheat.feature.Features;
 import com.adjustclient.event.AttackSlowdownEvent;
-import com.adjustclient.event.CancellablePlayerUpdateEvent;
 import com.adjustclient.event.EventHandler;
+import com.adjustclient.event.ItemSlowdownEvent;
 import com.adjustclient.event.MotionEvent;
 import com.adjustclient.event.MoveFlyingEvent;
-import com.adjustclient.event.DirectionalPacketEvent;
+import com.adjustclient.event.SprintEligibilityEvent;
 import com.adjustclient.event.SprintEvent;
 import com.adjustclient.event.SprintState;
-import com.adjustclient.event.SprintEligibilityEvent;
 import com.adjustclient.module.Category;
 import com.adjustclient.module.Module;
 import com.adjustclient.setting.BooleanSetting;
 import com.adjustclient.setting.ExpandSetting;
 import com.adjustclient.setting.ModeSetting;
 import com.adjustclient.util.MovementUtil;
+import com.adjustclient.util.Simulation;
+import com.adjustclient.util.SimulationPlayer;
 import com.adjustclient.util.WorldUtil;
+import com.adjustclient.util.anticheat.ServerTracker;
 import java.util.Objects;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.network.play.server.S12PacketEntityVelocity;
-import net.minecraft.util.MathHelper;
 
 public final class SprintModule extends Module {
     public static SprintModule INSTANCE;
     public static SprintModule INSTANCE_ALT;
+    private static int cachedResetTick = -1;
+    private static Boolean cachedResetResult;
+
     public final ModeSetting<SprintServerState> serverState;
     public final ExpandSetting omnidirectional;
     public final BooleanSetting omnidirectionalEnabled;
@@ -39,9 +42,8 @@ public final class SprintModule extends Module {
     public final ExpandSetting ignore;
     public final BooleanSetting ignoreBlindness;
     public final BooleanSetting ignoreHunger;
+    public final BooleanSetting ignoreUsingItem;
     public final RotateOmniSprintMode rotateMode;
-    public float velocityYaw;
-    public int velocityTicks;
 
     public SprintModule() {
         super("Sprint", Category.MOVEMENT);
@@ -64,7 +66,7 @@ public final class SprintModule extends Module {
         keepSprintEnabled = new BooleanSetting(keepSprint, "Enabled", false, "Yes", "No");
         keepSprint.enabledPredicate = () -> keepSprintEnabled.isEnabled();
         VanillaKeepSprintMode vanilla = new VanillaKeepSprintMode(this, keepSprint);
-        HypixelKeepSprintMode hypixel = new HypixelKeepSprintMode(this);
+        HypixelKeepSprintMode hypixel = new HypixelKeepSprintMode(this, keepSprint);
         keepSprintMode = new ModeSetting<>(keepSprint, "Mode", vanilla, vanilla, hypixel);
         keepSprintMode.addListener((oldValue, newValue) -> {
             if (isEnabled() && oldValue != newValue) {
@@ -80,6 +82,7 @@ public final class SprintModule extends Module {
         ignore.enabledPredicate = new StrafeCondition(this);
         ignoreBlindness = new BooleanSetting(ignore, "Blindness", false);
         ignoreHunger = new BooleanSetting(ignore, "Hunger", false);
+        ignoreUsingItem = new BooleanSetting(ignore, "Using item", false);
         keepSprint.getSettings().remove(keepSprintMode);
         keepSprint.getSettings().add(1, keepSprintMode);
         omnidirectional.getSettings().remove(omnidirectionalMode);
@@ -101,83 +104,107 @@ public final class SprintModule extends Module {
         INSTANCE_ALT = this;
     }
 
-    @EventHandler public void onUpdate(CancellablePlayerUpdateEvent event) {
-        if (event.isCancelled() || !isEnabled()) return;
-        if (velocityTicks >= 1) velocityTicks--;
-    }
-
-    @EventHandler(priority = -1) public void onAttackSlowdown(AttackSlowdownEvent event) {
-        if (isEnabled() && isVelocitySprintResetActive()) event.factor = 0.6D;
+    public static boolean shouldResetSprint() {
+        if (mc.thePlayer == null) return false;
+        if (cachedResetTick == mc.thePlayer.ticksExisted && cachedResetResult != null) {
+            return cachedResetResult;
+        }
+        cachedResetTick = mc.thePlayer.ticksExisted;
+        cachedResetResult = Boolean.TRUE;
+        if (ServerTracker.INSTANCE.field116.hasElapsed(500L)) {
+            cachedResetResult = Boolean.FALSE;
+            return false;
+        }
+        double withAttack = simulateBackwardSpeed(true);
+        double withoutAttack = simulateBackwardSpeed(false);
+        boolean result = withoutAttack > withAttack;
+        cachedResetResult = result;
+        return result;
     }
 
     public boolean isVelocitySprintResetActive() {
-        return keepSprintEnabled.isEnabled() && isSprintResetEnabled() && velocityTicks >= 1;
+        return keepSprintEnabled.isEnabled() && isSprintResetEnabled() && shouldResetSprint();
     }
 
-    @EventHandler public void onSprint(SprintEvent event) {
-        if (isEnabled() && event.state == SprintState.BLINDNESS && ignoreBlindness.isEnabled()) event.cancelled = true;
+    public boolean isSprintResetEnabled() {
+        KeepSprintMode mode = keepSprintMode.getValue();
+        return mode instanceof HypixelKeepSprintMode || ((VanillaKeepSprintMode) mode).sprintReset.isEnabled();
     }
 
-    @EventHandler(priority = 10) public void onSprintEligibility(SprintEligibilityEvent event) {
+    private static double simulateBackwardSpeed(boolean attack) {
+        Simulation simulation = new Simulation(mc.thePlayer);
+        SimulationPlayer player = simulation.player;
+        if (attack) {
+            AttackSlowdownEvent event = new AttackSlowdownEvent(0.6D);
+            if (VanillaKeepSprintMode.INSTANCE != null && VanillaKeepSprintMode.INSTANCE.isActive()) {
+                VanillaKeepSprintMode.INSTANCE.onAttackSlowdown(event);
+            }
+            player.motionX *= event.factor;
+            player.motionZ *= event.factor;
+            player.setSprinting(false);
+            player.sprintingTicksLeft = 0;
+        }
+        player.tick();
+        double radians = mc.thePlayer.rotationYaw * 0.0174532925199433D;
+        return player.motionX * Math.sin(radians) - Math.cos(radians) * player.motionZ;
+    }
+
+    @EventHandler
+    public void onSprint(SprintEvent event) {
+        if (isEnabled() && event.state == SprintState.BLINDNESS && ignoreBlindness.isEnabled()) {
+            event.cancelled = true;
+        }
+    }
+
+    @EventHandler(priority = 10)
+    public void onSprintEligibility(SprintEligibilityEvent event) {
         if (!isEnabled()) return;
         mc.gameSettings.keyBindSprint.pressed = true;
         if (ignoreHunger.isEnabled()) event.sprintEligible = true;
     }
 
-    @EventHandler(priority = 1) public void onMotion(MotionEvent event) {
-        if (!isEnabled() || !event.pre) return;
-        switch (serverState.getValue()) {
-            case BLOCKED: event.sprinting = false; break;
-            case VALID_ONLY: if (!WorldUtil.canSprint(false)) event.sprinting = false; break;
-            default: break;
+    @EventHandler
+    public void onItemSlowdown(ItemSlowdownEvent event) {
+        if (isEnabled() && ignoreUsingItem.isEnabled()) {
+            event.allowSprinting = true;
         }
     }
 
-    @EventHandler public void onMoveFlyingReset(MoveFlyingEvent event) {
-        if (!isEnabled() || event.pre || !isVelocitySprintResetActive()) return;
-        double x = mc.thePlayer.motionX == -0.0D ? 0.0D : mc.thePlayer.motionX;
-        double z = mc.thePlayer.motionZ == -0.0D ? 0.0D : mc.thePlayer.motionZ;
-        float yaw = (float) (Math.atan2(-x, z) * 57.29577951308232D);
-        if (Math.abs(MathHelper.wrapAngleTo180_float(yaw - velocityYaw)) >= 120.0F) velocityTicks = 0;
+    @EventHandler(priority = 1)
+    public void onMotion(MotionEvent event) {
+        if (!isEnabled() || !event.pre) return;
+        switch (serverState.getValue()) {
+            case BLOCKED:
+                event.sprinting = false;
+                break;
+            case VALID_ONLY:
+                if (!WorldUtil.canSprint(false)) event.sprinting = false;
+                break;
+            default:
+                break;
+        }
     }
 
-    @EventHandler(priority = -1) public void onMoveFlying(MoveFlyingEvent event) {
+    @EventHandler(priority = -1)
+    public void onMoveFlying(MoveFlyingEvent event) {
         if (!isEnabled() || event.pre || !strafeEnabled.isEnabled()) return;
         if (!Features.SPRINT_STRAFE.isAllowed()) return;
         if (strafeGroundOnly.isEnabled() && !mc.thePlayer.onGround) return;
         if (MovementUtil.isMoving()) MovementUtil.setSpeed(MovementUtil.getSpeed());
     }
 
-    @Override public void onEnable() {
+    @Override
+    public void onEnable() {
         keepSprintMode.getValue().onEnable();
         omnidirectionalMode.getValue().onEnable();
     }
 
-    @Override public void onDisable() {
+    @Override
+    public void onDisable() {
         KeyBinding key = mc.gameSettings.keyBindSprint;
         key.pressed = GameSettings.isKeyDown(key);
         if (!key.pressed) key.pressTime = 0;
         keepSprintMode.getValue().onDisable();
         omnidirectionalMode.getValue().onDisable();
-        velocityTicks = 0;
-    }
-
-    @EventHandler public void onPacket(DirectionalPacketEvent event) {
-        if (event.isCancelled() || !isEnabled() || !keepSprintEnabled.isEnabled() || !isSprintResetEnabled() || event.outgoing || mc.thePlayer == null) return;
-        if (!(event.packet instanceof S12PacketEntityVelocity)) return;
-        S12PacketEntityVelocity packet = (S12PacketEntityVelocity) event.packet;
-        if (packet.getEntityID() != mc.thePlayer.getEntityId()) return;
-        int x = packet.getMotionX(), y = packet.getMotionY(), z = packet.getMotionZ();
-        if (x == 0 && y == 0 && z == 0) return;
-        velocityTicks = 10;
-        double motionX = x / 8000.0D, motionZ = z / 8000.0D;
-        if (motionX == -0.0D) motionX = 0.0D;
-        if (motionZ == -0.0D) motionZ = 0.0D;
-        velocityYaw = (float) (Math.atan2(-motionX, motionZ) * 57.29577951308232D);
-    }
-
-    public boolean isSprintResetEnabled() {
-        KeepSprintMode mode = keepSprintMode.getValue();
-        return mode instanceof HypixelKeepSprintMode || ((VanillaKeepSprintMode) mode).sprintReset.isEnabled();
     }
 }

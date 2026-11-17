@@ -29,7 +29,7 @@ import com.adjustclient.tag.PlayerTag;
 
 public final class CommandManager extends Manager<CommandBase> implements Listener, MinecraftInstance {
     public static CommandManager INSTANCE;
-    public static int keySlot1cc8;
+    public static int commandKeyState;
     public Object field16;
 
     public CommandManager() {

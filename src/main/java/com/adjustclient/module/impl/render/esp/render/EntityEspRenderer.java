@@ -21,7 +21,7 @@ import static com.adjustclient.render.font.image.NvgDraw.fillRect;
 
 public class EntityEspRenderer extends CulledEspRenderer {
     private static ResourceLocation warningTexture;
-    public static int primitiveSlot1334;
+    public static int espRenderPassCounter;
     public com.adjustclient.module.impl.render.esp.settings.EspTheme generalSettings;
     public com.adjustclient.module.impl.render.esp.settings.EntityEspSettings modeSetting;
     public com.adjustclient.module.impl.render.esp.ESPModule boxSetting;

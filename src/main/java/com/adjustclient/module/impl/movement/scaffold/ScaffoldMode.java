@@ -1,6 +1,8 @@
 package com.adjustclient.module.impl.movement.scaffold;
 
 import com.adjustclient.event.Listener;
+import com.adjustclient.rotation.InstantRotationModel;
+import com.adjustclient.rotation.RotationModel;
 import com.adjustclient.setting.ModeOption;
 import com.adjustclient.util.MinecraftInstance;
 
@@ -9,15 +11,13 @@ public abstract class ScaffoldMode implements Listener, MinecraftInstance, ModeO
     public ScaffoldModule module;
     protected String name;
     protected int capabilities;
+    public boolean towering;
 
     @Override
     public String getName() {
         return this.name;
     }
 
-    /**
-     * True while Scaffold is enabled and this mode is the selected one (the mode's event handlers only act then).
-     */
     public boolean isActive() {
         ScaffoldModule module = this.module;
         if (!module.isEnabled()) {
@@ -26,24 +26,66 @@ public abstract class ScaffoldMode implements Listener, MinecraftInstance, ModeO
         return module.settings.mode.getValue() == this;
     }
 
-    /**
-     * Whether placing at height {@code y} is impossible because it is above the build limit of the world / minigame.
-     * Normal and NCP use the world height (256), Hypixel uses the limit of the current Hypixel game.
-     */
-    public abstract boolean isAboveBuildLimit(int y);
+    public void reset() {
+        this.towering = false;
+    }
 
-    /**
-     * Called for every placement Scaffold is about to execute (see {@code ScaffoldModule.handlePlacement}).
-     * Normal remembers whether the player is towering ({@code facing == UP}); Hypixel and NCP do their per-mode work in
-     * their event handlers instead.
-     */
+    public boolean isAboveBuildLimit(int y) {
+        return y >= mc.theWorld.getHeight();
+    }
+
     public abstract void onPlace(PlacementTarget placement);
 
-    /**
-     * Whether sprinting is allowed while Scaffold is active in this mode (Allow sprint addon).
-     */
     public abstract boolean canSprint();
 
-    public abstract boolean e();
+    public void onPostRotation() {
+    }
 
+    public boolean canPlaceInGame() {
+        return true;
+    }
+
+    public boolean e() {
+        return false;
+    }
+
+    public boolean canNoAscend() {
+        return true;
+    }
+
+    public boolean canAutoJump() {
+        return mc.thePlayer.onGround && mc.thePlayer.onGroundTicks >= 1;
+    }
+
+    public boolean allowForwardTurn() {
+        return true;
+    }
+
+    public boolean shouldLookForward() {
+        return false;
+    }
+
+    public RotationModel getForwardRotationModel() {
+        return InstantRotationModel.INSTANCE;
+    }
+
+    public RotationModel getPlaceRotationModel() {
+        return null;
+    }
+
+    public boolean canSnap() {
+        return true;
+    }
+
+    public boolean useFastRotations() {
+        return false;
+    }
+
+    public boolean forceRaycast() {
+        return false;
+    }
+
+    public boolean isTowerLowOnly() {
+        return false;
+    }
 }

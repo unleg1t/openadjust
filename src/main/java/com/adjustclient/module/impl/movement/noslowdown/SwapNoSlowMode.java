@@ -45,7 +45,7 @@ public final class SwapNoSlowMode extends NoSlowMode {
         if (!isActive()) return;
         blocking = false;
         if (!event.suppressActions && mc.thePlayer.ridingEntity == null
-                && !InventoryStateTracker.inServerGui && !InventoryStateTracker.inServerInventory) {
+                && !InventoryStateTracker.isInServersideGui()) {
             NoSlowItemType itemType = module.getItemType(true);
             if (itemType != null && (!swordsOnly.isEnabled() || itemType == NoSlowItemType.SWORD)
                     && Adjust.mouseClickHelper.right.isClicked(false)) {

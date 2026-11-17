@@ -11,9 +11,11 @@ import net.minecraft.block.Block;
 import net.minecraft.nbt.JsonToNBT;
 import net.minecraft.nbt.NBTException;
 import com.adjustclient.hypixel.HypixelGame;
+import com.adjustclient.game.rewound.RewoundGame;
 import com.adjustclient.hypixel.game.murdermystery.MurderMysteryGameState;
 import com.adjustclient.server.ServerType;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.entity.*;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.passive.EntityVillager;
@@ -71,12 +73,19 @@ public final class WorldUtil {
         if (!TeamsDetectionModule.INSTANCE.isEnabled()) return false;
         Minecraft mc = Minecraft.getMinecraft();
         ScorePlayerTeam own = (ScorePlayerTeam) mc.thePlayer.getTeam();
+        if (own == null) {
+            NetworkPlayerInfo info = mc.thePlayer.sendQueue.getPlayerInfo(mc.thePlayer.getUniqueID());
+            own = info == null ? null : mc.theWorld.getScoreboard().getPlayersTeam(info.getGameProfile().getName());
+        }
         if (own == null) return false;
         ScorePlayerTeam other = mc.theWorld.getScoreboard().getPlayersTeam(entity.getName());
         if (other == null) return false;
         boolean hypixel = ServerTracker.INSTANCE.serverState != null
                 && ServerTracker.INSTANCE.serverState.antiCheatModel != null
                 && ServerTracker.INSTANCE.serverState.antiCheatModel.serverType == ServerType.HYPIXEL;
+        boolean rewound = ServerTracker.INSTANCE.serverState != null
+                && ServerTracker.INSTANCE.serverState.antiCheatModel != null
+                && ServerTracker.INSTANCE.serverState.antiCheatModel.serverType == ServerType.REWOUND;
         if (hypixel) {
             var state = Adjust.gameStateTracker.state;
             if (state.startTimer == null || state.game == HypixelGame.HOUSING) return false;
@@ -85,10 +94,12 @@ public final class WorldUtil {
             if (own.getColorPrefix().equals(other.getColorPrefix())
                     && Boolean.FALSE.equals(state.lobby) && state.game != HypixelGame.THE_HYPIXEL_PIT) return true;
         }
+        if (rewound && own.getColorPrefix().equals(other.getColorPrefix())
+                && Adjust.rewoundGameTracker.state.game != RewoundGame.PIT) return true;
         if (!own.getAllowFriendlyFire() && own == other) return true;
         char color = lastFormattingCode(own.getColorPrefix());
         boolean same = color == lastFormattingCode(other.getColorPrefix());
-        if (hypixel && color != ChatColor.RED.getFormattingCode())
+        if ((hypixel || rewound) && color != ChatColor.RED.getFormattingCode())
             same = color == ChatColor.BLUE.getFormattingCode() && same;
         return same;
     }
@@ -300,13 +311,13 @@ public final class WorldUtil {
     }
     public static boolean canSprint(boolean ignoreRequirements) {
         Minecraft mc = Minecraft.getMinecraft();
-        if (InventoryStateTracker.inServerGui || InventoryStateTracker.inServerInventory || !isMovingTowards(mc.thePlayer.rotationYaw)) return false;
+        if (InventoryStateTracker.isInServersideGui() || !isMovingTowards(mc.thePlayer.rotationYaw)) return false;
         if (ignoreRequirements) return true;
         return (mc.thePlayer.getFoodStats().getFoodLevel() >= 7 || mc.thePlayer.capabilities.allowFlying)
                 && mc.thePlayer.moveForward >= 0.8F && !mc.thePlayer.isUsingItem()
                 && !mc.thePlayer.isPotionActive(net.minecraft.potion.Potion.blindness)
                 && (!mc.thePlayer.isSneaking() || mc.thePlayer.isPlayerSleeping())
-                && !InventoryStateTracker.inServerGui && !InventoryStateTracker.inServerInventory;
+                && !InventoryStateTracker.isInServersideGui();
     }
     public static String lookupUsername(String uuid) throws java.io.IOException {
         String json = org.apache.commons.io.IOUtils.toString(
@@ -348,7 +359,11 @@ public final class WorldUtil {
     }
     public static void clearMouseOver() {
         Minecraft mc = Minecraft.getMinecraft();
-        mc.objectMouseOver.typeOfHit = MovingObjectPosition.MovingObjectType.MISS;
+        if (mc.objectMouseOver == null) {
+            mc.objectMouseOver = new MovingObjectPosition(MovingObjectPosition.MovingObjectType.MISS, new Vec3(0.0D, 0.0D, 0.0D), EnumFacing.UP, BlockPos.ORIGIN);
+        } else {
+            mc.objectMouseOver.typeOfHit = MovingObjectPosition.MovingObjectType.MISS;
+        }
         mc.pointedEntity = null;
         ServerTracker.INSTANCE.mouseOverOverridden = true;
     }
@@ -378,6 +393,14 @@ public final class WorldUtil {
                 && Boolean.FALSE.equals(Adjust.gameStateTracker.state.lobby))) {
             String suffix = team.getColorSuffix();
             if (suffix != null && !suffix.isEmpty()) value = suffix;
+        }
+        if (value != null
+                && ServerTracker.INSTANCE.serverState != null
+                && ServerTracker.INSTANCE.serverState.antiCheatModel != null
+                && ServerTracker.INSTANCE.serverState.antiCheatModel.serverType == ServerType.REWOUND
+                && Adjust.rewoundGameTracker.state.game == RewoundGame.PIT
+                && value.startsWith("§c* ")) {
+            value = value.substring(4);
         }
         return value == null ? null : net.minecraft.client.gui.FontRenderer.getFormatFromString(value);
     }

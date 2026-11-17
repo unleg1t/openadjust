@@ -5,7 +5,9 @@ import com.adjustclient.module.impl.render.hud.playerlist.column.ColumnToggles;
 import com.adjustclient.module.impl.render.hud.playerlist.column.PlayerListColumn;
 import com.adjustclient.Adjust;
 import com.adjustclient.bind.Bind;
+import com.adjustclient.game.rewound.RewoundGameState;
 import com.adjustclient.hypixel.HypixelGame;
+import com.adjustclient.module.impl.player.autorewound.AutoRewoundModule;
 import com.adjustclient.module.impl.render.hud.HUDModule;
 import com.adjustclient.render.animation.Animation;
 import com.adjustclient.render.font.Fonts;
@@ -88,10 +90,6 @@ public final class PlayerList {
     public boolean needsRebuild;
     public boolean apiColumnsActive;
 
-    /**
-     * Builds the settings group and all its children in the order of modules_ingame.json.
-     * (HUDModule: {@code this.playerList = new PlayerList()}.)
-     */
     public PlayerList() {
         HUDModule hud = HUDModule.INSTANCE_ALT;
 
@@ -305,6 +303,14 @@ public final class PlayerList {
                 }
             }
             entry.update(onHypixel);
+            if (AutoRewoundModule.INSTANCE != null
+                    && AutoRewoundModule.INSTANCE.shouldHideBots()
+                    && !entry.rewoundRealPlayer) {
+                if (this.hoverCard != null && this.hoverCard.entry == entry) {
+                    this.hoverCard = null;
+                }
+                continue;
+            }
             list.add(entry);
         }
         java.util.Collections.sort((List) list);
@@ -316,6 +322,11 @@ public final class PlayerList {
     private static boolean isOnHypixel() {
         com.adjustclient.util.anticheat.blocker.BlockerState serverInfo = ServerTracker.INSTANCE.serverState;
         return serverInfo != null && serverInfo.antiCheatModel != null && serverInfo.antiCheatModel.serverType == ServerType.HYPIXEL;
+    }
+
+    private static boolean isOnRewound() {
+        com.adjustclient.util.anticheat.blocker.BlockerState serverInfo = ServerTracker.INSTANCE.serverState;
+        return serverInfo != null && serverInfo.antiCheatModel != null && serverInfo.antiCheatModel.serverType == ServerType.REWOUND;
     }
 
     /**
@@ -337,7 +348,7 @@ public final class PlayerList {
         } else {
             if (this.needsSort) {
                 synchronized (this.lock) {
-                    this.entries.sort(null);                                      // ArrayList.sortRange: natural order
+                    this.entries.sort(null);
                 }
                 this.needsSort = false;
             }
@@ -472,6 +483,41 @@ public final class PlayerList {
                 columns.add(PlayerListColumn.PING);
                 columns.add(PlayerListColumn.ONLINE_TIME);
                 this.apiColumnsActive = true;
+            }
+        } else if (isOnRewound() && Boolean.FALSE.equals(Adjust.rewoundGameTracker.state.lobby)) {
+            RewoundGameState rewoundState = Adjust.rewoundGameTracker.state;
+            boolean inGame = rewoundState.startTimer != null;
+            if (rewoundState.game != null) {
+                switch (PlayerListSwitchMap.REWOUND_GAME[rewoundState.game.ordinal()]) {
+                case 1:      // SKYWARS
+                case 4:      // SURVIVAL_GAMES
+                    if (inGame) {
+                        columns.add(PlayerListColumn.HP);
+                        columns.add(PlayerListColumn.KILLS);
+                    }
+                    break;
+                case 2:      // DUELS
+                    if (inGame) {
+                        columns.add(PlayerListColumn.HP);
+                    }
+                    break;
+                case 3:      // BEDWARS
+                    if (inGame) {
+                        columns.add(PlayerListColumn.HP);
+                        columns.add(PlayerListColumn.KD);
+                    }
+                    break;
+                case 5:      // PIT
+                    columns.add(PlayerListColumn.HP);
+                    columns.add(PlayerListColumn.BOUNTY);
+                    columns.add(PlayerListColumn.ENCHANTS);
+                    break;
+                case 6:      // REPLAY
+                    break;
+                default:
+                    columns.add(PlayerListColumn.HP);
+                    break;
+                }
             }
         } else {
             columns.add(PlayerListColumn.HP);
@@ -646,7 +692,7 @@ public final class PlayerList {
         } else {
             RenderUtil.cursor = 221188;
             if (card == null) {
-                card = new HoverCardState(hovered);            // h_wfvy8632ELIj0mVshmHpLF(a3)
+                card = new HoverCardState(hovered);
                 this.hoverCard = card;
             }
             if (!card.pinned) {
@@ -664,7 +710,7 @@ public final class PlayerList {
         }
         // the card follows the mouse as long as it is not pinned (and a screen is open)
         if (mc.currentScreen != null && !card.pinned) {
-            card.position = new Vec2f(mouseX, mouseY);       // e_9aiC0Wy7yOItE8tU3FOSP8(f1, f2)
+            card.position = new Vec2f(mouseX, mouseY);
         }
         PlayerEntry shown = card.entry;
         boolean notHovered = hovered == null || shown != hovered;
@@ -740,7 +786,7 @@ public final class PlayerList {
                 card.hoverTimer = null;
             } else if (card.pinned && mc.currentScreen != null && listed) {
                 if (card.hoverTimer == null) {
-                    card.hoverTimer = new Timer();               // t_t6K0WjsV8c62HMO4uWbKgD
+                    card.hoverTimer = new Timer();
                 }
                 float visibleTarget = card.hoverTimer.lastMs + 1200L <= System.currentTimeMillis() ? 0.0F : 1.0F;
                 card.pinFade.update(0.0F);

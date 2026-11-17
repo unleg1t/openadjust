@@ -85,12 +85,13 @@ public final class BulkCheckThread extends Thread {
                 } else if (this.screen.mode == ImportMode.REFRESH) {
                     MicrosoftRefreshTokenAccount refreshAccount = new MicrosoftRefreshTokenAccount(entry.data, true, false);
                     result = refreshAccount.login();
+                    entry.data = refreshAccount.getRefreshToken();
                     type = AccountType.BROWSER;
                     account = refreshAccount;
                     try {
                         serializedData = refreshAccount.serialize();
                     } catch (Exception e) {
-                        Logger.log(LogLevel.ERROR, true, "Could not save account '{}' type data due to: {}", entry.name, e);
+                        Logger.log(LogLevel.ERROR, true, "Could not save refresh token account '{}' type data due to: {}", entry.name, e);
                         serializedData = new byte[0];
                     }
                 } else {

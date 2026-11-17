@@ -1,12 +1,18 @@
 package com.adjustclient.module.impl.movement.scaffold;
 
+import com.adjustclient.Adjust;
+import com.adjustclient.hypixel.HypixelGameState;
+import com.adjustclient.hypixel.game.bedwars.BedWarsGameState;
+import com.adjustclient.module.impl.movement.MovementFixModule;
 import com.adjustclient.util.BlockPlacement;
 import com.adjustclient.util.BlockUtil;
 import com.adjustclient.util.MinecraftInstance;
 import com.adjustclient.util.MovementUtil;
 import com.adjustclient.util.PositionSnapshot;
+import com.adjustclient.util.RotationUtil;
 import com.adjustclient.util.Simulation;
 import com.adjustclient.util.Vec2f;
+import com.adjustclient.util.WorldUtil;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
@@ -18,20 +24,13 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
-import com.adjustclient.Adjust;
-import com.adjustclient.module.impl.movement.MovementFixModule;
-import com.adjustclient.module.impl.movement.speed.SpeedModule;
-import com.adjustclient.util.RotationUtil;
-import com.adjustclient.util.WorldUtil;
 
 public final class PlacementPredictor {
 
     private final ScaffoldModule module;
-    /** Placement accepted by the last successful {@link #predict} call. */
     public PlacementTarget lastResult;
-    private int field12;
-    private int field16;
 
     public PlacementPredictor(ScaffoldModule module) {
         this.module = module;
@@ -41,7 +40,7 @@ public final class PlacementPredictor {
         this.lastResult = null;
         PlacementFinder geometry = this.module.placementFinder;
         ScaffoldSettings settings = this.module.settings;
-        RotationSolver solver = geometry.partner;                        // the geometry helper's partner solver
+        RotationSolver solver = geometry.partner;
 
         for (int pass = 0; pass < 2; pass++) {
             boolean secondPass = pass != 0;
@@ -49,7 +48,6 @@ public final class PlacementPredictor {
             master.includeSpeedModule();
 
             for (int tick = 0; tick < 5; tick++) {
-                // the player as it will be 'tick' ticks from now
                 EntityPlayer current;
                 if (tick == 0) {
                     current = player;
@@ -72,14 +70,15 @@ public final class PlacementPredictor {
                 geometry.yaw = RotationUtil.getYawBetween(second, first).x;
 
                 NoAscendMode noAscendMode = settings.noAscendMode.getValue();
+                ScaffoldMode currentMode = settings.mode.getValue();
                 double heightAbove = current.posY - (double) this.module.baseY;
-                boolean lowOnly;          // only support positions at floor(posY) - 1 are considered
+                boolean lowOnly;
                 boolean noAscendActive;
                 boolean airborneOk;
                 boolean buffering;
                 boolean downward;
-                if (this.module.towering) {
-                    lowOnly = settings.mode.getValue() instanceof HypixelScaffoldMode;   // Hypixel mode
+                if (currentMode.towering) {
+                    lowOnly = currentMode.isTowerLowOnly();
                     noAscendActive = false;
                     airborneOk = false;
                     buffering = false;
@@ -99,10 +98,10 @@ public final class PlacementPredictor {
                 } else if (!this.module.isAboveBuildLimit(current)) {
                     boolean falling;
                     switch (NoAscendSwitchMap.$SwitchMap$NoAscendMode[noAscendMode.ordinal()]) {
-                        case 1:   // FLAT
+                        case 1:
                             falling = false;
                             break;
-                        case 2:   // BUFFER
+                        case 2:
                             falling = current.fallDistance > 0.0F;
                             break;
                         default:
@@ -126,12 +125,11 @@ public final class PlacementPredictor {
                     downward = false;
                 }
 
-                // ---- candidate blocks around/below the player
                 Vec3 position = new Vec3(current.posX, downward ? (double) this.module.baseY : current.posY, current.posZ);
                 BlockPos playerBlock = new BlockPos(position);
                 AxisAlignedBB playerBox = WorldUtil.playerBoundsAt(position, 1.8F);
-                Set<BlockPos> supports = new LinkedHashSet<>();                           // accepted neighbour positions
-                PlacementTarget pendingTarget = this.module.lastPlacement;                      // last PlacementTarget (h)
+                Set<BlockPos> supports = new LinkedHashSet<>();
+                PlacementTarget pendingTarget = this.module.lastPlacement;
                 BlockPos referencePos;
                 if (second.yCoord - first.yCoord >= -0.5) {
                     referencePos = null;
@@ -141,9 +139,8 @@ public final class PlacementPredictor {
                     referencePos = (double) pendingTarget.placedPos.getY() > first.yCoord ? null : pendingTarget.placedPos;
                 }
                 List<BlockPos> free = new ArrayList<>();
-                List<BlockPos> preferred = new ArrayList<>();      // positions that get a distance bonus
+                List<BlockPos> preferred = new ArrayList<>();
 
-                // 8 x 3 x 8 box below the player: dx in [-4, 3], dy in [-3, -1], dz in [-4, 3]
                 for (int dx = -4; dx < 4; dx++) {
                     for (int dy = -3; dy < 0; dy++) {
                         for (int dz = -4; dz < 4; dz++) {
@@ -159,9 +156,7 @@ public final class PlacementPredictor {
                                     continue;
                                 }
                                 if (facing == EnumFacing.UP) {
-                                    // the first predicted position must be airborne and the neighbour must lie in the
-                                    // block column of the player
-                                    if (path.get(0).onGround) {          // ArrayList.getFirst
+                                    if (path.get(0).onGround) {
                                         continue;
                                     }
                                     if (neighbour.getX() != playerBlock.getX() || neighbour.getZ() != playerBlock.getZ()) {
@@ -171,16 +166,13 @@ public final class PlacementPredictor {
                                         && MovementUtil.getSpeed() < 0.035 && current.motionY > -0.2) {
                                     continue;
                                 }
-                                // direction from the neighbour's centre to the simulated position
                                 double cx = neighbour.getX() + 0.5;
-                                double cy = neighbour.getY() + 0.5;
                                 double cz = neighbour.getZ() + 0.5;
                                 double ddx = position.xCoord - cx;
                                 double ddz = position.zCoord - cz;
-                                double horizontal = net.minecraft.util.MathHelper.sqrt_double((cx - position.xCoord) * (cx - position.xCoord)
+                                double horizontal = MathHelper.sqrt_double((cx - position.xCoord) * (cx - position.xCoord)
                                         + (cz - position.zCoord) * (cz - position.zCoord));
-                                float angle = (float) (Math.atan2(ddz, ddx) * 180.0 / Math.PI) - 90.0F;   // (the pitch atan2 result is unused)
-                                // pick the predicted position that corresponds to the horizontal distance to the neighbour
+                                float angle = (float) (Math.atan2(ddz, ddx) * 180.0 / Math.PI) - 90.0F;
                                 double factor = RotationUtil.isDiagonalYaw(angle) ? 1.5 : 1.0;
                                 int index = (int) (horizontal * factor + 0.7);
                                 index = Math.min(index, path.size() - 1);
@@ -190,15 +182,14 @@ public final class PlacementPredictor {
                                         continue;
                                     }
                                 }
-                                // the support cell must not intersect the player's box
                                 AxisAlignedBB cell = new AxisAlignedBB(neighbour.getX(), neighbour.getY(), neighbour.getZ(),
                                         neighbour.getX() + 1.0, neighbour.getY() + 1.0, neighbour.getZ() + 1.0);
                                 if (cell.intersectsWith(playerBox)) {
                                     continue;
                                 }
-                                com.adjustclient.hypixel.HypixelGameState handler = Adjust.gameStateTracker.state;
-                                if (handler instanceof com.adjustclient.hypixel.game.bedwars.BedWarsGameState
-                                        && ((com.adjustclient.hypixel.game.bedwars.BedWarsGameState) handler).knownPositions.contains(
+                                HypixelGameState handler = Adjust.gameStateTracker.state;
+                                if (handler instanceof BedWarsGameState
+                                        && ((BedWarsGameState) handler).knownPositions.contains(
                                                 new BlockPos(neighbour.getX(), neighbour.getY(), neighbour.getZ()))) {
                                     continue;
                                 }
@@ -219,23 +210,21 @@ public final class PlacementPredictor {
                                 geometry.preferredDistanceFunction(position, preferred)))
                         .toList();
 
-                // ---- stable-yaw path: let the rotation solver look at the predicted path
                 if (settings.isStableYaw()
                         && MovementFixModule.INSTANCE.isEnabled()
                         && settings.isRotationsEnabled()
                         && MinecraftInstance.mc.thePlayer.onGround
                         && !MovementUtil.isJumping()
-                        && !this.module.towering
+                        && !currentMode.towering
                         && !noAscendActive) {
                     PlacementTarget solved = solver.solveAlongPath(current, sorted, new ArrayList<Vec3>(path), rotation,
                             secondPass, tick);
                     if (solved == null) {
-                        continue; // next tick
+                        continue;
                     }
                     return this.accept(solved, tick);
                 }
 
-                // ---- per candidate: nearest first
                 solver.yawOffset = null;
                 OptionalDouble minimum = free.stream()
                         .mapToDouble(geometry.distanceFunction(position)).min();
@@ -256,10 +245,9 @@ public final class PlacementPredictor {
 
                     EnumFacing facing = target.facing;
                     boolean markPending = false;
-                    if (facing == EnumFacing.UP) {                              // UP
+                    if (facing == EnumFacing.UP) {
                         if (!buffering) {
-                            ScaffoldMode scaffoldMode = settings.mode.getValue();
-                            if (scaffoldMode.isAboveBuildLimit(pos.getY())) {
+                            if (currentMode.isAboveBuildLimit(pos.getY())) {
                                 continue;
                             }
                         }
@@ -296,7 +284,7 @@ public final class PlacementPredictor {
                     } else {
                         BlockPos below = new BlockPos(current.posX, (double) (this.module.baseY - 1), current.posZ);
                         IBlockState state = MinecraftInstance.mc.theWorld.getBlockState(below);
-                        if (!com.adjustclient.util.BlockUtil.canReplace(state.getBlock(), MinecraftInstance.mc.theWorld, below)) {
+                        if (!BlockUtil.canReplace(state.getBlock(), MinecraftInstance.mc.theWorld, below)) {
                             break;
                         }
                         if (lowOnly && current.L()) {
@@ -306,15 +294,6 @@ public final class PlacementPredictor {
 
                     if (markPending) {
                         this.module.field130 = true;
-                        boolean special = noAscendMode == NoAscendMode.BUFFER;
-                        if (special && !airborneOk && !SpeedModule.INSTANCE.isEnabled()) {
-                            // only every second prediction is accepted
-                            this.module.field116++;
-                            if (this.module.field116 >= 2) {
-                                this.module.field116 = 0;
-                                continue;
-                            }
-                        }
                     }
                     return this.accept(target, tick);
                 }

@@ -21,8 +21,13 @@ public final class VanillaKeepSprintMode extends KeepSprintMode {
                 () -> module.keepSprintMode.getValue() != this);
     }
 
-    @EventHandler public void onAttackSlowdown(AttackSlowdownEvent event) {
+    @EventHandler
+    public void onAttackSlowdown(AttackSlowdownEvent event) {
         if (!isActive()) return;
+        if (sprintReset.isEnabled() && SprintModule.shouldResetSprint()) {
+            event.factor = 0.6D;
+            return;
+        }
         event.factor = 1.0D - slowdown.getValue().doubleValue() / 100.0D;
     }
 }

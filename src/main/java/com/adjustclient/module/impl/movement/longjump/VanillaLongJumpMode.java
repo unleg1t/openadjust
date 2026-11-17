@@ -19,7 +19,7 @@ public final class VanillaLongJumpMode extends LongJumpMode {
             }
         } else if (mc.thePlayer.onGround) {
             mc.thePlayer.jump();
-            MovementUtil.setSpeed(0.0);
+            MovementUtil.setSpeed(1.0);
             jumped = true;
         }
     }

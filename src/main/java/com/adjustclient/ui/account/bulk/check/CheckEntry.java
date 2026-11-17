@@ -10,7 +10,7 @@ import net.minecraft.util.ChatColor;
 
 public final class CheckEntry implements MinecraftInstance, GuiListExtended.IGuiListEntry {
     public final String name;
-    public final String data;
+    public String data;
     public String status = "Unchecked";
     public final Animation highlight = new Animation(Easing.LINEAR, 100L);
     public boolean success;

@@ -126,6 +126,8 @@ public abstract class EntityPlayer extends EntityLivingBase
     public int itemInUseCount;
     public int onGroundTicks;
     public int offGroundTicks;
+    public double lastDistance;
+    public double lastGroundY;
     public boolean lastReportedOnGround;
     protected float speedOnGround = 0.1F;
     protected float speedInAir = 0.02F;
@@ -397,6 +399,10 @@ public abstract class EntityPlayer extends EntityLivingBase
             ++this.offGroundTicks;
             this.onGroundTicks = 0;
         }
+
+        double dx = this.posX - this.prevPosX;
+        double dz = this.posZ - this.prevPosZ;
+        this.lastDistance = Math.sqrt(dx * dx + dz * dz);
     }
 
     public void t()
@@ -643,6 +649,11 @@ public abstract class EntityPlayer extends EntityLivingBase
                     this.collideWithPlayer(entity);
                 }
             }
+        }
+
+        if (this.onGround)
+        {
+            this.lastGroundY = this.posY;
         }
     }
 

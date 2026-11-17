@@ -18,11 +18,6 @@ public final class PotionEntry {
     public boolean beneficial;
     public Object field32;
 
-    /**
-     * @param amplifier PotionEffect.getAmplifier()   (a2)
-     * @param duration  PotionEffect.getDuration()     (a3, ticks)
-     * @param maxed     PotionEffect.getIsPotionDurationMax()  (a4)
-     */
     public void update(int amplifier, int duration, boolean maxed) {
         if (duration >= 0x7FFF) {
             this.durationText = null;

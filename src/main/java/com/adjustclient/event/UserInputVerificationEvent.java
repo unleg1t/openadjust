@@ -1,6 +1,7 @@
 package com.adjustclient.event;
 
 public final class UserInputVerificationEvent extends Event {
+    public Boolean serverInventoryOpen;
     public boolean inputRequested;
     public boolean inputHandled;
 

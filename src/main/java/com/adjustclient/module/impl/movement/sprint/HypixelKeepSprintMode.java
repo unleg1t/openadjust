@@ -1,78 +1,128 @@
 package com.adjustclient.module.impl.movement.sprint;
 
 import com.adjustclient.Adjust;
+import com.adjustclient.event.AttackInputStageEvent;
 import com.adjustclient.event.EventHandler;
-import com.adjustclient.event.DirectionalPacketEvent;
 import com.adjustclient.event.SprintEligibilityEvent;
-import com.adjustclient.game.packet.PacketHold;
+import com.adjustclient.event.UserInputVerificationEvent;
+import com.adjustclient.module.impl.combat.displacement.DisplacementModule;
 import com.adjustclient.module.impl.combat.killaura.KillAuraModule;
 import com.adjustclient.module.impl.combat.killaura.target.TargetInfo;
-import com.adjustclient.module.impl.movement.noslowdown.HypixelNoSlowMode;
-import com.adjustclient.module.impl.movement.noslowdown.NoSlowdownModule;
+import com.adjustclient.server.ServerType;
+import com.adjustclient.service.util.ServiceUtil;
+import com.adjustclient.setting.BooleanSetting;
+import com.adjustclient.setting.ExpandSetting;
+import com.adjustclient.setting.SettingContainer;
 import com.adjustclient.util.MovementUtil;
-import net.minecraft.network.play.server.S12PacketEntityVelocity;
+import com.adjustclient.util.RotationUtil;
+import com.adjustclient.util.anticheat.ServerTracker;
+import net.minecraft.entity.Entity;
+import net.minecraft.util.MathHelper;
 
 public final class HypixelKeepSprintMode extends KeepSprintMode {
     public static HypixelKeepSprintMode INSTANCE;
-    public PacketHold hold;
-    public boolean allowSprint;
+    public final BooleanSetting targetMovingAway;
+    public final BooleanSetting targetLookingAway;
+    public boolean resetting;
 
-    public HypixelKeepSprintMode(SprintModule module) {
+    public HypixelKeepSprintMode(SprintModule module, SettingContainer parent) {
         super(module, "Hypixel");
         INSTANCE = this;
+        ExpandSetting disableOn = new ExpandSetting(parent, "Disable on");
+        disableOn.hideIf = () -> module.keepSprintMode.getValue() != this;
+        targetMovingAway = new BooleanSetting(disableOn, "Target moving away", false);
+        targetMovingAway.setDescription("Only activates when opponent is moving away from us.");
+        targetLookingAway = new BooleanSetting(disableOn, "Target looking away", false);
+        targetLookingAway.setDescription("Only activates when opponent is looking away from us.");
     }
 
-    @Override public void onDisable() {
-        releaseHold();
-        allowSprint = false;
-    }
-
-    @EventHandler public void onSprintEligibility(SprintEligibilityEvent event) {
-        if (!isActive()) return;
-        if (hold != null) { releaseHold(); return; }
-        if (mc.thePlayer.isUsingItem() && NoSlowdownModule.INSTANCE.isEnabled()
-                && NoSlowdownModule.INSTANCE.mode.getValue() instanceof HypixelNoSlowMode) return;
-        if (mc.thePlayer.onGround && MovementUtil.isJumping()) return;
-        KillAuraModule aura = KillAuraModule.INSTANCE;
-        if (!aura.isEnabled()) return;
-        if (module.isVelocitySprintResetActive()) {
-            allowSprint = true;
-            return;
-        }
-        TargetInfo target = aura.targetSelector.rotationTarget;
-        if (target != null && !target.entity.isDead() && aura.attack(target, true)) {
-            mc.thePlayer.setSprinting(false);
-            mc.thePlayer.sprintingTicksLeft = 0;
-            event.sprintEligible = false;
-        }
+    @Override
+    public void onDisable() {
+        resetting = false;
     }
 
     public boolean canAttack() {
-        if (!mc.thePlayer.isSprinting()) return true;
-        boolean result = allowSprint;
-        allowSprint = false;
-        return result;
+        return !resetting || !mc.thePlayer.isSprinting();
     }
 
-    public void releaseHold() {
-        if (hold == null) return;
-        Adjust.inboundPacketQueue.removeHold(hold);
-        hold = null;
+    @EventHandler
+    public void onAttackInput(AttackInputStageEvent event) {
+        if (!isActive() || !ServiceUtil.isActiveModel(ServerType.HYPIXEL)) return;
+        if (DisplacementModule.INSTANCE.isEnabled()
+                && (DisplacementModule.INSTANCE.displaced || DisplacementModule.INSTANCE.swapped)) {
+            resetting = false;
+            return;
+        }
+        if (resetting) {
+            Adjust.mouseClickHelper.left.disabled = true;
+            return;
+        }
+        if (!Adjust.mouseClickHelper.left.isPressed(false)) return;
+        if (mc.objectMouseOver == null || mc.objectMouseOver.entityHit == null) return;
+        if (mc.thePlayer.onGround && MovementUtil.isJumping()) return;
+        Entity hit = mc.objectMouseOver.entityHit;
+        if (targetMovingAway.isEnabled() && !isTargetMovingAway(hit)) return;
+        if (targetLookingAway.isEnabled() && isTargetLookingAtPlayer(hit)) return;
+        if (!mc.thePlayer.isSprinting() || SprintModule.shouldResetSprint()) return;
+        resetting = true;
+        Adjust.mouseClickHelper.left.disabled = true;
     }
 
-    @EventHandler public void onPacket(DirectionalPacketEvent event) {
-        if (event.isCancelled() || !isActive() || mc.thePlayer == null || event.outgoing) return;
-        if (event.packet instanceof S12PacketEntityVelocity
-                && ((S12PacketEntityVelocity) event.packet).getEntityID() == mc.thePlayer.getEntityId()) beginHoldForTarget();
-    }
-
-    public void beginHold() {
-        if (hold == null) hold = Adjust.inboundPacketQueue.addHold(null, false);
-    }
-
-    public void beginHoldForTarget() {
-        if (!module.isSprintResetEnabled()) return;
+    @EventHandler
+    public void onSprintEligibility(SprintEligibilityEvent event) {
+        if (!isActive() || !ServiceUtil.isActiveModel(ServerType.HYPIXEL)) return;
+        if (DisplacementModule.INSTANCE.isEnabled()
+                && (DisplacementModule.INSTANCE.displaced || DisplacementModule.INSTANCE.swapped)) {
+            resetting = false;
+            return;
+        }
+        if (mc.thePlayer.onGround && MovementUtil.isJumping()) return;
+        Entity target;
         KillAuraModule aura = KillAuraModule.INSTANCE;
-        if (aura.isEnabled() && aura.targetSelector.rotationTarget != null) beginHold();
+        if (aura.isEnabled()) {
+            TargetInfo rotationTarget = aura.targetSelector.rotationTarget;
+            if (rotationTarget == null || rotationTarget.entity.isDead() || !aura.attack(rotationTarget, true)) {
+                return;
+            }
+            target = rotationTarget.entity.getEntity();
+        } else {
+            if (mc.objectMouseOver == null || mc.objectMouseOver.entityHit == null) return;
+            target = mc.objectMouseOver.entityHit;
+        }
+        if (targetMovingAway.isEnabled() && !resetting && !isTargetMovingAway(target)) return;
+        if (targetLookingAway.isEnabled() && !resetting && isTargetLookingAtPlayer(target)) return;
+        if (ServerTracker.INSTANCE.attackedEntity != null && SprintModule.shouldResetSprint()) return;
+        mc.thePlayer.setSprinting(false);
+        mc.thePlayer.sprintingTicksLeft = 0;
+        event.sprintEligible = false;
+    }
+
+    @EventHandler
+    public void onInputVerification(UserInputVerificationEvent event) {
+        if (!isActive() || mc.thePlayer == null) return;
+        if (DisplacementModule.INSTANCE.isEnabled()
+                && (DisplacementModule.INSTANCE.displaced || DisplacementModule.INSTANCE.swapped)) {
+            resetting = false;
+            return;
+        }
+        if (!resetting || mc.thePlayer.isSprinting()) return;
+        resetting = false;
+        Adjust.mouseClickHelper.left.clicks = 1;
+        Adjust.mouseClickHelper.left.down = Boolean.TRUE;
+    }
+
+    public boolean isTargetMovingAway(Entity target) {
+        if (target.motionX == 0.0D && target.motionZ == 0.0D) return false;
+        double motionYaw = Math.toDegrees(Math.atan2(-target.motionX, target.motionZ));
+        if (motionYaw < 0.0D) motionYaw += 360.0D;
+        float towardPlayerYaw = RotationUtil.getYawBetween(
+                mc.thePlayer.getPositionEyes(1.0F), target.getPositionVector()).x;
+        return Math.abs(MathHelper.wrapAngleTo180_float((float) motionYaw - towardPlayerYaw)) > 90.0F;
+    }
+
+    public static boolean isTargetLookingAtPlayer(Entity target) {
+        float towardPlayerYaw = RotationUtil.getYawBetween(
+                mc.thePlayer.getPositionEyes(1.0F), target.getPositionVector()).x;
+        return Math.abs(MathHelper.wrapAngleTo180_float(target.rotationYaw - towardPlayerYaw)) <= 90.0F;
     }
 }

@@ -119,7 +119,7 @@ public final class FreecamCamera extends EntityLivingBase implements com.adjustc
             if (jump) simulation.motionY += verticalSpeed;
             if (simulation.onGround) simulation.capabilities.isFlying = false;
         }
-        if (com.adjustclient.util.SimulationPlayer.primitiveSlot20d1 == 2) {
+        if (com.adjustclient.util.SimulationPlayer.simulationModeState == 2) {
             simulation.updateArmSwingProgress();
             simulation.rotationYawHead = simulation.rotationYaw;
         }

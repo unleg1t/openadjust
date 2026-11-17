@@ -3,16 +3,19 @@ package com.adjustclient.module.impl.movement.antivoid;
 import com.adjustclient.Adjust;
 import com.adjustclient.module.Category;
 import com.adjustclient.module.Module;
-import com.adjustclient.setting.*;
-import com.adjustclient.util.*;
+import com.adjustclient.module.impl.movement.flight.FlightModule;
+import com.adjustclient.module.impl.movement.highjump.HighJumpModule;
+import com.adjustclient.module.impl.movement.longjump.LongJumpModule;
+import com.adjustclient.module.impl.movement.speed.SpeedModule;
+import com.adjustclient.setting.KeybindSetting;
+import com.adjustclient.setting.ModeSetting;
+import com.adjustclient.setting.NumberSetting;
+import com.adjustclient.util.Cooldown;
+import com.adjustclient.util.WorldUtil;
 import java.util.Arrays;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.Vec3;
-import static com.adjustclient.util.MinecraftInstance.mc;
-import com.adjustclient.module.impl.movement.flight.FlightModule;
-import com.adjustclient.module.impl.movement.speed.SpeedModule;
-import com.adjustclient.module.impl.movement.longjump.LongJumpModule;
 
 public final class AntiVoidModule extends Module {
     public static AntiVoidModule INSTANCE;
@@ -24,6 +27,7 @@ public final class AntiVoidModule extends Module {
     public final KeybindSetting disableBind;
     public BlinkAntiVoidMode blink;
     public final LegitAntiVoidMode legit;
+    public final PacketAntiVoidMode packet;
     public ModeSetting<AntiVoidMode> mode;
     public final Cooldown liquidCheckCooldown;
     public int field76;
@@ -31,7 +35,7 @@ public final class AntiVoidModule extends Module {
     public AntiVoidModule() {
         super("Anti Void", Category.MOVEMENT);
         INSTANCE = this;
-        fallDistance = new NumberSetting(this, "Fall Distance", 0.0D, 0.0D, 5.0D, 0.5D);
+        fallDistance = new NumberSetting(this, "Fall Distance", 0.0D, 0.0D, 10.0D, 0.5D);
         fallDistance.setDescription("Distance to fall until you get saved.");
         voidDistance = new NumberSetting(this, "Void Distance", 41.0D, 2.0D, 41.0D, 1.0D);
         voidDistOverrideKey = new KeybindSetting(this, "Void Dist. Override Key",
@@ -51,10 +55,11 @@ public final class AntiVoidModule extends Module {
         disableBind.setDescription("Anti Void will temporarily stop working when this key is held.");
         blink = new BlinkAntiVoidMode(this);
         legit = new LegitAntiVoidMode(this);
-        mode = new ModeSetting<>(this, "Mode", legit, Arrays.asList(legit, blink));
+        packet = new PacketAntiVoidMode(this);
+        mode = new ModeSetting<>(this, "Mode", legit, Arrays.asList(legit, blink, packet));
         liquidCheckCooldown = new Cooldown(0L);
         fallDistance.setHideIf(() -> {
-            return mode.getValue() != blink;
+            return mode.getValue() != blink && mode.getValue() != packet;
         });
         fallSimulations.setHideIf(() -> {
             return mode.getValue() != blink;
@@ -69,21 +74,8 @@ public final class AntiVoidModule extends Module {
         });
         fallDistance.formatter(NumberSetting.METERS);
         mode.addListener((oldMode, newMode) -> {
-            if (oldMode instanceof LegitAntiVoidMode) ((LegitAntiVoidMode) oldMode).timer.lastMs = 0L;
-            else if (oldMode instanceof BlinkAntiVoidMode) {
-                BlinkAntiVoidMode blink = (BlinkAntiVoidMode) oldMode;
-                blink.safeState = null;
-                blink.releasePackets();
-                blink.flagTimer = null;
-                blink.pendingMotion = null;
-                blink.freezeTicks = 0;
-                blink.flagCooldownTicks = 0;
-            }
-            if (newMode instanceof BlinkAntiVoidMode) {
-                BlinkAntiVoidMode blink = (BlinkAntiVoidMode) newMode;
-                blink.safeState = null;
-                blink.releasePackets();
-            } else ((LegitAntiVoidMode) newMode).safeSpot = null;
+            if (oldMode != null) ((AntiVoidMode) oldMode).onDisable();
+            if (newMode != null) ((AntiVoidMode) newMode).onEnable();
         });
         settings.remove(mode);
         settings.add(0, mode);
@@ -101,6 +93,9 @@ public final class AntiVoidModule extends Module {
         EntityPlayerSP player = mc.thePlayer;
         return player.isDead || player.getHealth() <= 0.0F || player.capabilities.isFlying || player.noClip
                 || Adjust.gameStateTracker.state.isSpecialState() != 0
+                || Boolean.TRUE.equals(Adjust.rewoundGameTracker.state.lobby)
+                || Adjust.rewoundGameTracker.state.allowFlying
+                || HighJumpModule.INSTANCE.isEnabled()
                 || LongJumpModule.INSTANCE.isEnabled() || FlightModule.INSTANCE.isEnabled()
                 || mode.getValue() instanceof LegitAntiVoidMode && SpeedModule.INSTANCE.isEnabled();
     }
@@ -125,27 +120,18 @@ public final class AntiVoidModule extends Module {
                 : WorldUtil.isColumnFreeOfLiquidAndClimbables(feet, bottom, halfWidth);
     }
 
-    @Override public void onEnable() {
-        AntiVoidMode selected = mode.getValue();
-        if (selected instanceof BlinkAntiVoidMode) {
-            BlinkAntiVoidMode blink = (BlinkAntiVoidMode) selected;
-            blink.safeState = null;
-            blink.releasePackets();
-        } else ((LegitAntiVoidMode) selected).safeSpot = null;
+    @Override
+    public void onEnable() {
+        mode.getValue().onEnable();
     }
 
-    @Override public void onDisable() {
-        AntiVoidMode selected = mode.getValue();
-        if (selected instanceof BlinkAntiVoidMode) {
-            BlinkAntiVoidMode blink = (BlinkAntiVoidMode) selected;
-            blink.safeState = null;
-            blink.releasePackets();
-            blink.flagTimer = null;
-            blink.pendingMotion = null;
-            blink.freezeTicks = 0;
-            blink.flagCooldownTicks = 0;
-        } else ((LegitAntiVoidMode) selected).timer.lastMs = 0L;
+    @Override
+    public void onDisable() {
+        mode.getValue().onDisable();
     }
 
-    @Override public String getSuffix() { return mode.getValue().getName(); }
+    @Override
+    public String getSuffix() {
+        return mode.getValue().getName();
+    }
 }

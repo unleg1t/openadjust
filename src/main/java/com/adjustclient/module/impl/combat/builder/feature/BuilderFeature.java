@@ -61,7 +61,6 @@ public abstract class BuilderFeature extends BuilderComponent {
     public static boolean canActivate() {
         if (mc.currentScreen != null) return false;
         if (ScaffoldModule.INSTANCE.isEnabled()
-                && ScaffoldModule.INSTANCE.placeReady != null
                 && ScaffoldModule.INSTANCE.placeReady) return false;
         return GameStateUtil.isActive();
     }

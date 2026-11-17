@@ -82,7 +82,7 @@ public final class LagBreakModule extends Module {
     }
 
     @EventHandler public void onAttack(AttackEntityEvent event) {
-        if (!isEnabled()) return;
+        if (!event.pre || !isEnabled()) return;
         var tracker = ServerTracker.INSTANCE.entityTracker;
         var entity = event.entity;
         TrackedLivingEntity tracked = tracker.get(entity.getEntityId(), TrackedLivingEntity.class);

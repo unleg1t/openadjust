@@ -10,6 +10,7 @@ public final class ClientUser implements MinecraftInstance {
     public String name;
     public Friend friend;
     public Cape cape;
+    public CustomCape customCape;
     public String displayName;
     public int color;
     public boolean useClientColor;

@@ -54,7 +54,7 @@ public class CommandSuggestions
         return Adjust.chatManager == null || Adjust.chatManager.selected == Adjust.chatManager.minecraftChannel;
     }
 
-    public void forkMethod14396d3a0()
+    public void resetSuggestionState()
     {
         this.completionCandidates.clear();
         this.suggestions.clear();
@@ -67,7 +67,7 @@ public class CommandSuggestions
 
     public void reset()
     {
-        this.forkMethod14396d3a0();
+        this.resetSuggestionState();
         this.lastInput = "";
         this.pendingPrefix = "";
         this.lastCursorPosition = 0;
@@ -88,7 +88,7 @@ public class CommandSuggestions
 
         if (!isMinecraftChannelSelected())
         {
-            this.forkMethod14396d3a0();
+            this.resetSuggestionState();
             return;
         }
 
@@ -99,7 +99,7 @@ public class CommandSuggestions
         {
             if (!isModernChatSuggestionsEnabled() || !this.userInteracted || !this.chatScreen.isCommandInput())
             {
-                this.forkMethod14396d3a0();
+                this.resetSuggestionState();
             }
         }
 
@@ -137,7 +137,7 @@ public class CommandSuggestions
 
         if (!this.hasNonWhitespace(text) || !isMinecraftChannelSelected() || !isModernChatSuggestionsEnabled())
         {
-            this.forkMethod14396d3a0();
+            this.resetSuggestionState();
             this.lastInput = text;
             this.lastCursorPosition = cursor;
             this.lastInputChangeTime = System.currentTimeMillis();
@@ -146,7 +146,7 @@ public class CommandSuggestions
 
         if (!this.chatScreen.isCommandInput())
         {
-            this.forkMethod14396d3a0();
+            this.resetSuggestionState();
             return;
         }
 
@@ -169,12 +169,12 @@ public class CommandSuggestions
             int cursor = this.chatScreen.inputField.getCursorPosition();
             if (this.updateWordContext(text, cursor))
             {
-                this.forkMethod14396d3a0();
+                this.resetSuggestionState();
             }
 
             if (keyCode != Keyboard.KEY_TAB)
             {
-                this.forkMethod14396d3a0();
+                this.resetSuggestionState();
                 return false;
             }
 
@@ -202,7 +202,7 @@ public class CommandSuggestions
         if (keyCode == Keyboard.KEY_ESCAPE && !this.suggestions.isEmpty())
         {
             this.userInteracted = false;
-            this.forkMethod14396d3a0();
+            this.resetSuggestionState();
             return true;
         }
 

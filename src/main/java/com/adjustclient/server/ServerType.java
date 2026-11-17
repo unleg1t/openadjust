@@ -9,7 +9,8 @@ public enum ServerType {
     _2B2T("2b2t", "2b2t.org", "", 215012044),
     MINEPLEX("Mineplex", "mineplex.com", "", 1053496398),
     ANTICHEAT_TEST("Anti-Cheat Test", "anticheat-test.com", "", 842858960),
-    LOYISA("Loyisa", "eu.loyisa.cn", "", 1395715795);
+    LOYISA("Loyisa", "eu.loyisa.cn", "", 1395715795),
+    REWOUND("Rewound", "play.rewound.cc", "textures/server/rewound.png", 552218335);
     public final String displayName;
     public final String domain;
     public final String icon;

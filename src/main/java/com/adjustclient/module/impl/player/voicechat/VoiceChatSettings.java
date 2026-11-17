@@ -4,8 +4,8 @@ import com.adjustclient.Adjust;
 import com.adjustclient.audio.device.DeviceType;
 import com.adjustclient.bind.Bind;
 import com.adjustclient.module.impl.player.voicechat.soundboard.ResourceSound;
-import com.adjustclient.module.impl.player.voicechat.soundboard.Soundboard;
 import com.adjustclient.module.impl.player.voicechat.soundboard.SineWaveSound;
+import com.adjustclient.module.impl.player.voicechat.soundboard.SquareWaveSound;
 import com.adjustclient.module.impl.render.hud.HUDModule;
 import com.adjustclient.property.KeybindManager;
 import com.adjustclient.render.font.AccentText;
@@ -74,39 +74,21 @@ public final class VoiceChatSettings {
         };
         displayAllPlayers = new BooleanSetting(hud, "Display All Players", false);
         ExpandSetting soundboard = new ExpandSetting(module, "Soundboard");
-        new ButtonSetting(soundboard, "Stop", () -> {
-            if (module.soundboard == null) module.soundboard = new Soundboard();
-            if (module.soundboard.currentSound != null) {
-                module.soundboard.currentSound = null;
-                NotificationBuilder notification = new NotificationBuilder();
-                notification.title = "Soundboard";
-                notification.parts = new ArrayList<>();
-                notification.actions = new ArrayList<>();
-                notification.addText("Soundboard has been stopped.", 0xFFBEBCBD).show();
-            }
-        });
-        new ButtonSetting(soundboard, "Thomas", () -> {
-            try {
-                if (module.soundboard == null) module.soundboard = new Soundboard();
-                module.soundboard.play(ResourceSound.load(new ResourceLocation("adjust", "sounds/soundboard/Thomas.ogg")));
-            } catch (Exception exception) {
-                NotificationBuilder notification = new NotificationBuilder();
-                notification.title = "Soundboard";
-                notification.parts = new ArrayList<>();
-                notification.actions = new ArrayList<>();
-                notification.addText("Failed to start soundboard: ", 0xFFBEBCBD).append(exception.getMessage()).show();
-            }
-        });
-        new ButtonSetting(soundboard, "Sign Wave", () -> {
-            if (module.soundboard == null) module.soundboard = new Soundboard();
-            module.soundboard.currentSound = SineWaveSound.INSTANCE;
-            NotificationBuilder notification = new NotificationBuilder();
-            notification.title = "Soundboard";
-            notification.parts = new ArrayList<>();
-            notification.actions = new ArrayList<>();
-            notification.addText("Now playing: ", 0xFFBEBCBD).append("Sign Wave").show();
-        });
+        new ButtonSetting(soundboard, "Stop", () -> module.getSoundboard().stop());
+        new ButtonSetting(soundboard, "Thomas", () -> playSound("Thomas.ogg"));
+        new ButtonSetting(soundboard, "Red Sun", () -> playSound("Red_Sun.ogg"));
+        new ButtonSetting(soundboard, "Sign Wave", () -> module.getSoundboard().play(SineWaveSound.INSTANCE));
+        new ButtonSetting(soundboard, "Square Wave", () -> module.getSoundboard().play(SquareWaveSound.INSTANCE));
         useBackupServer = new BooleanSetting(module, "Use backup server", false);
+    }
+
+    private void playSound(String fileName) {
+        try {
+            module.getSoundboard().play(ResourceSound.load(new ResourceLocation("adjust", "sounds/soundboard/" + fileName)));
+        } catch (Exception exception) {
+            NotificationBuilder notification = new NotificationBuilder("Soundboard");
+            notification.addText("Failed to start soundboard: ", 0xFFBEBCBD).append(exception.getMessage()).show();
+        }
     }
 
     public int c() { return proximity.getValue().intValue(); }

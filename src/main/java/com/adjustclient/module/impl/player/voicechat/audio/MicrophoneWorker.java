@@ -104,8 +104,7 @@ public final class MicrophoneWorker extends AudioWorker implements MinecraftInst
         boolean soundboard = false;
         int interval = System.getProperty("org.graalvm.nativeimage.imagecode") == null ? 20 : 15;
         if (soundboardTimer.hasElapsed(interval)) {
-            if (module.soundboard == null) module.soundboard = new com.adjustclient.module.impl.player.voicechat.soundboard.Soundboard();
-            short[] pcm = module.soundboard.nextFrame();
+            short[] pcm = module.getSoundboard().nextFrame();
             if (pcm != null) {
                 if (samples == null || samples.length != frameSize) {
                     samples = new short[frameSize]; previousSamples = new short[frameSize];

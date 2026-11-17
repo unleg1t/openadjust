@@ -509,7 +509,7 @@ public class PlayerControllerMP
 
     public void attackEntity(EntityPlayer playerIn, Entity targetEntity)
     {
-        EventBus.post(new AttackEntityEvent(targetEntity));
+        EventBus.post(new AttackEntityEvent(targetEntity, true));
         this.syncCurrentPlayItem();
         this.netClientHandler.addToSendQueue(new C02PacketUseEntity(targetEntity, C02PacketUseEntity.Action.ATTACK));
 
@@ -517,6 +517,8 @@ public class PlayerControllerMP
         {
             playerIn.attackTargetEntityWithCurrentItem(targetEntity);
         }
+
+        EventBus.post(new AttackEntityEvent(targetEntity, false));
     }
 
     public boolean interactWithEntitySendPacket(EntityPlayer playerIn, Entity targetEntity)

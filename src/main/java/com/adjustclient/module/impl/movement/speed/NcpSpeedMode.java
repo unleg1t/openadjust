@@ -1,6 +1,7 @@
 package com.adjustclient.module.impl.movement.speed;
 
 import com.adjustclient.Adjust;
+import com.adjustclient.anticheat.feature.Features;
 import com.adjustclient.event.IncomingVelocityEvent;
 import com.adjustclient.module.impl.movement.step.StepModule;
 import com.adjustclient.setting.BooleanSetting;
@@ -10,14 +11,20 @@ import com.adjustclient.util.MovementUtil;
 import com.adjustclient.util.Simulation;
 import com.adjustclient.util.SimulationPlayer;
 import com.adjustclient.util.WorldUtil;
+import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
-import net.minecraft.block.*;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockCarpet;
+import net.minecraft.block.BlockFence;
+import net.minecraft.block.BlockFenceGate;
+import net.minecraft.block.BlockSlab;
+import net.minecraft.block.BlockStairs;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.network.play.server.S12PacketEntityVelocity;
 import net.minecraft.potion.Potion;
-import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.Vec3;
@@ -29,8 +36,8 @@ public final class NcpSpeedMode extends SpeedMode<NcpSpeedState> {
     public boolean keepMovement;
 
     public NcpSpeedMode(SpeedModule module) {
-        super(module, com.adjustclient.anticheat.feature.Features.SPEED_NCP);
-        java.util.function.BooleanSupplier hidden = () -> module.mode.getValue() != this;
+        super(module, Features.SPEED_NCP);
+        BooleanSupplier hidden = () -> module.mode.getValue() != this;
         fast = new BooleanSetting(module, "Fast", false, hidden);
         fast.setDescription("Makes the speed faster, does not work on Updated-NCP.");
         fast.setDisplayName("ncpFast");
@@ -40,7 +47,8 @@ public final class NcpSpeedMode extends SpeedMode<NcpSpeedState> {
         jumpTicks.setDisplayName("ncpJumpTicks");
     }
 
-    @Override public void update(NcpSpeedState state) {
+    @Override
+    public void update(NcpSpeedState state) {
         EntityPlayer entity = (EntityPlayer) state.entity;
         if (MovementUtil.isMovementRestricted(entity) || StepModule.INSTANCE.isStepping()) {
             reset(state);
@@ -132,9 +140,14 @@ public final class NcpSpeedMode extends SpeedMode<NcpSpeedState> {
         state.pendingSpeed = null;
     }
 
-    @Override public String getName() { return "NCP"; }
+    @Override
+    public String getName() {
+        return "NCP";
+    }
 
-    public boolean canRun(NcpSpeedState state) { return checkMovement(state); }
+    public boolean canRun(NcpSpeedState state) {
+        return checkMovement(state);
+    }
 
     public boolean hasSupportAhead(Entity entity) {
         double distance = Math.max(0.5, Math.hypot(entity.motionX, entity.motionZ));
@@ -164,7 +177,9 @@ public final class NcpSpeedMode extends SpeedMode<NcpSpeedState> {
         double base = MovementUtil.getSpeedWithPotion(0.2873, 0.2);
         double initial = mc.thePlayer != null && mc.thePlayer.isPotionActive(Potion.moveSpeed) ? base * 1.18 - 0.01 : 0.329014;
         if (entity.offGroundTicks == 0) {
-            if (MovementUtil.isMoving()) {
+            if (MovementUtil.isAutoJumping()) {
+                state.speed = 0.0;
+            } else if (MovementUtil.isMoving()) {
                 if (!state.damaged) {
                     state.damaged = true;
                     state.speed = initial;
@@ -184,12 +199,13 @@ public final class NcpSpeedMode extends SpeedMode<NcpSpeedState> {
                 multiplier += 0.02;
             state.speed -= multiplier * (state.speed - base);
             state.damaged = false;
-        } else state.speed = state.lastDistance - state.lastDistance / 159.0;
+        } else {
+            state.speed = entity.lastDistance - entity.lastDistance / 159.0;
+        }
         state.speed = Math.max(state.speed, base);
         strafe(entity, state.speed);
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
     public void applyLowHop(NcpSpeedState state) {
         EntityPlayer entity = (EntityPlayer) state.entity;
         if (state.field38) {
@@ -211,7 +227,7 @@ public final class NcpSpeedMode extends SpeedMode<NcpSpeedState> {
         Predicate<IBlockState> partialBlock = blockState -> {
             Block block = blockState.getBlock();
             return block instanceof BlockStairs || block instanceof BlockSlab && !((BlockSlab) block).isDouble()
-                    || block == net.minecraft.init.Blocks.snow_layer || block == net.minecraft.init.Blocks.carpet;
+                    || block == Blocks.snow_layer || block == Blocks.carpet;
         };
         if (BlockUtil.isColliding(entity.getEntityBoundingBox().addCoord(0.0, entity.motionY, 0.0), partialBlock)) {
             entity.motionY = previousY;
@@ -228,5 +244,8 @@ public final class NcpSpeedMode extends SpeedMode<NcpSpeedState> {
         return true;
     }
 
-    @Override public NcpSpeedState createState(Entity entity) { return new NcpSpeedState(entity); }
+    @Override
+    public NcpSpeedState createState(Entity entity) {
+        return new NcpSpeedState(entity);
+    }
 }

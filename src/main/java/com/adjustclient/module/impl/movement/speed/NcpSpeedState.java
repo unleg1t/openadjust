@@ -6,20 +6,22 @@ public final class NcpSpeedState extends SpeedState {
     public Double pendingSpeed;
     public int ticks;
     public double speed;
-    public double lastDistance;
     public int jumpTicks = 10;
     public boolean damaged;
     public boolean jumped;
     public boolean field38;
     public boolean field39;
-    public NcpSpeedState(Entity entity) { super(entity); }
 
-    @Override public NcpSpeedState copy(Entity entity) {
+    public NcpSpeedState(Entity entity) {
+        super(entity);
+    }
+
+    @Override
+    public NcpSpeedState copy(Entity entity) {
         NcpSpeedState copy = new NcpSpeedState(entity);
         copy.pendingSpeed = pendingSpeed;
         copy.ticks = ticks;
         copy.speed = speed;
-        copy.lastDistance = lastDistance;
         copy.jumpTicks = jumpTicks;
         copy.damaged = damaged;
         copy.jumped = jumped;

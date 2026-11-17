@@ -103,7 +103,7 @@ public class MotionStepMode extends StepMode {
                 EventBus.post(attempt);
                 if (attempt.cancelled) continue;
                 result = searchStep(obstacle, height);
-                if (result != null && JumpEvent.isJumpCancelled()) result = null;
+                if (result != null && MovementUtil.isAutoJumping()) result = null;
                 if (result != null) stepTimer.reset();
                 cooldownTicks = 2;
                 return;

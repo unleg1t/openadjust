@@ -84,13 +84,13 @@ public final class ChatTweak extends Tweak {
     public static void refreshSuggestions() {
         if (mc != null && mc.currentScreen instanceof GuiChat) {
             CommandSuggestions suggestions = ((GuiChat) mc.currentScreen).commandSuggestions;
-            if (suggestions != null) suggestions.forkMethod14396d3a0();
+            if (suggestions != null) suggestions.resetSuggestionState();
         }
         if (Adjust.chatManager == null) return;
         Adjust.chatManager.syncMinecraftHistory();
         for (ChatChannel channel : Adjust.chatManager.channels) {
             if (channel != null && channel.history != null) {
-                channel.history.forkMethod143a2f000();
+                channel.history.refreshChatLines();
             }
         }
     }
@@ -132,7 +132,7 @@ public final class ChatTweak extends Tweak {
         }
         if (event.displayOnly || history == null) return;
         IChatComponent message = event.component;
-        String text = StringUtils.stripControlCodes(message.forkMethod14492b400()).trim();
+        String text = StringUtils.stripControlCodes(message.getStyledComponentText()).trim();
         if (text.isEmpty() || isSeparator(text)) return;
         int hash = hashComponent(message);
         history.hash = hash;
@@ -154,7 +154,7 @@ public final class ChatTweak extends Tweak {
         StackedChatComponent suffix = new StackedChatComponent(" (" + String.format("%,d", entry.count) + ")");
         suffix.getChatStyle().setColor(ChatColor.GRAY);
         message.appendSibling(suffix);
-        suffix.getChatStyle().forkMethod144941ea0();
+        suffix.getChatStyle().copyChatStyle();
     }
 
     @EventHandler public void filterLobbyMessage(DirectionalPacketEvent event) {
@@ -166,7 +166,7 @@ public final class ChatTweak extends Tweak {
                 || ServerTracker.INSTANCE.serverState.antiCheatModel.serverType != ServerType.HYPIXEL) return;
         IChatComponent message = packet.getChatComponent();
         if (StreamerModule.getChatSenderName(message) == null) return;
-        String text = message.forkMethod14492ae00();
+        String text = message.getPlainComponentText();
         if (text.length() < 6 || text.charAt(0) != '\u00a7' || text.charAt(2) != '['
                 || !(text.contains("§f§6") || text.contains("§f §6"))) return;
         if (Logger.debug) {
@@ -208,7 +208,7 @@ public final class ChatTweak extends Tweak {
             if (sibling != null && !(sibling instanceof StackedChatComponent)) hashes.add(hashComponent(sibling));
         }
         if (component instanceof StackedChatComponent) return Objects.hash(hashes);
-        return Objects.hash(component.forkMethod14492ae00().trim(), hashes, componentHash(component.getChatStyle()));
+        return Objects.hash(component.getPlainComponentText().trim(), hashes, componentHash(component.getChatStyle()));
     }
 
     public boolean mergeStack(ChatLineKey history, int hash) {

@@ -18,6 +18,7 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import com.adjustclient.backend.transport.HydraMessageDispatcher;
 import com.adjustclient.game.player.InventoryStateTracker;
+import com.adjustclient.module.impl.combat.killaura.KillAuraModule;
 
 public final class InventoryMoveModule extends Module {
     public static InventoryMoveModule INSTANCE;
@@ -32,6 +33,7 @@ public final class InventoryMoveModule extends Module {
     public final BooleanSetting keyboardSneak;
     public final BooleanSetting keyboardKeybinds;
     public final BooleanSetting clientsideOnly;
+    public final BooleanSetting allowInteractions;
     public boolean movingInScreen;
 
     static {
@@ -50,9 +52,11 @@ public final class InventoryMoveModule extends Module {
             Runnable reset = () -> resetKeys();
             reset.run();
         });
+        allowInteractions = new BooleanSetting(this, "Allow interactions", false);
         legitMode = new LegitInventoryMoveMode(this);
         mode = new ModeSetting<>(this, "Mode", VanillaInventoryMoveMode.VANILLA, VanillaInventoryMoveMode.VANILLA, legitMode);
         clientsideOnly.hideIf = () -> mode.getValue() != VanillaInventoryMoveMode.VANILLA;
+        allowInteractions.hideIf = () -> mode.getValue() != VanillaInventoryMoveMode.VANILLA || clientsideOnly.isEnabled();
         settings.remove(mode);
         settings.add(0, mode);
         ExpandSetting keyboard = new ExpandSetting(this, "Keyboard");
@@ -81,6 +85,14 @@ public final class InventoryMoveModule extends Module {
         if (keyboardSprint.isEnabled()) pollKey(mc.gameSettings.keyBindSprint);
     }
 
+    public boolean canInteractInScreen(boolean checkKillAura) {
+        if (checkKillAura && KillAuraModule.INSTANCE.active) return false;
+        return isEnabled()
+                && mode.getValue() == VanillaInventoryMoveMode.VANILLA
+                && !clientsideOnly.isEnabled()
+                && allowInteractions.isEnabled();
+    }
+
     public boolean shouldHandleScreen(boolean keybind) {
         GuiScreen screen = mc.currentScreen;
         if (mode.getValue() instanceof LegitInventoryMoveMode && screen instanceof GuiContainer
@@ -94,6 +106,13 @@ public final class InventoryMoveModule extends Module {
         if (InventoryStateTracker.inServerGui || InventoryStateTracker.inServerInventory || ScreenUtil.isSettingsScreenOpen()) return !mc.isGamePaused;
         if (screen != null && screen.getClass() == GuiInventory.class) return keybind || !clientsideOnly.isEnabled();
         return overlay != null;
+    }
+
+    @EventHandler public void onUserInput(UserInputVerificationEvent event) {
+        if (isEnabled() && canInteractInScreen(false)) {
+            event.inputRequested = true;
+            event.serverInventoryOpen = Boolean.FALSE;
+        }
     }
 
     @EventHandler public void onInputTick(PostInputEvent event) {

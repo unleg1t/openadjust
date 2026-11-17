@@ -25,12 +25,12 @@ public class SlotSpoofer {
         var inventory = mc.thePlayer.inventory;
         if (active && !renderSpoofed) return inventory.currentItem;
         if (inventory.player != mc.thePlayer) return inventory.currentItem;
-        if (InventoryStateTracker.inServerGui || InventoryStateTracker.inServerInventory) return mc.playerController.currentPlayerItem;
+        if (InventoryStateTracker.isInServersideGui()) return mc.playerController.currentPlayerItem;
         return Adjust.slotSpoofer.active ? Adjust.slotSpoofer.slot : inventory.currentItem;
     }
 
     public int resolveSlot(int realSlot) {
-        if (InventoryStateTracker.inServerGui || InventoryStateTracker.inServerInventory) return Minecraft.getMinecraft().playerController.currentPlayerItem;
+        if (InventoryStateTracker.isInServersideGui()) return Minecraft.getMinecraft().playerController.currentPlayerItem;
         return active ? slot : realSlot;
     }
 }

@@ -27,6 +27,28 @@ public class Timer
         this.lastSyncHRClock = System.nanoTime() / 1000000L;
     }
 
+    public void setTimerSpeed(float speed)
+    {
+        if (speed > 1.0F
+                && com.adjustclient.util.anticheat.ServerTracker.INSTANCE != null
+                && com.adjustclient.util.anticheat.ServerTracker.INSTANCE.serverState != null
+                && com.adjustclient.util.anticheat.ServerTracker.INSTANCE.serverState.antiCheatModel != null
+                && com.adjustclient.util.anticheat.ServerTracker.INSTANCE.serverState.antiCheatModel.serverType == com.adjustclient.server.ServerType.REWOUND
+                && com.adjustclient.Adjust.rewoundDisablerTracker != null
+                && !com.adjustclient.Adjust.rewoundDisablerTracker.canUseTimer())
+        {
+            return;
+        }
+
+        if (speed != 1.0F && this.timerSpeed == 1.0F)
+        {
+            this.unscaledElapsedPartialTicks = this.elapsedPartialTicks;
+            this.unscaledElapsedTicks = this.elapsedTicks;
+        }
+
+        this.timerSpeed = speed;
+    }
+
     public void updateTimer()
     {
         long i = Minecraft.getSystemTime();
