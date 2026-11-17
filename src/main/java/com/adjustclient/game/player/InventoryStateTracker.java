@@ -32,6 +32,10 @@ public final class InventoryStateTracker implements Listener, MinecraftInstance 
         private Object field16;
     }
 
+    public static boolean isInServersideGui() {
+        return (inServerGui || inServerInventory) && !InventoryMoveModule.INSTANCE.canInteractInScreen(false);
+    }
+
     @EventHandler public void onKeyPress(com.adjustclient.event.KeyBindingStateEvent event) {
         KeyBinding key = event.binding;
         boolean consume = event.queuedPress;

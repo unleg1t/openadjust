@@ -2,9 +2,9 @@ package com.adjustclient.backend.auth;
 
 public final class AuthStatics {
     public static float challengeScaleAccumulator;
-    public static int tokenSlot1350;
-    public static int tokenSlot1354;
-    public static int tokenSlot1358;
+    public static int authTokenPartA;
+    public static int authTokenPartB;
+    public static int authTokenPartC;
     public static int ctorTrapState;
     public static int stageValueSlot;
     public static int checksumStartSlot;

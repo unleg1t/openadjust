@@ -59,7 +59,7 @@ public final class InventorySettings {
     }
 
     public int resolveClosingDelay() {
-        if (bedWarsAutoChest.isEnabled()) {
+        if (bedWarsAutoChest.isEnabled() && !bedWarsAutoChest.isHidden()) {
             var server = ServerTracker.INSTANCE.serverState;
             if (server != null && server.antiCheatModel != null
                     && server.antiCheatModel.serverType == ServerType.HYPIXEL
@@ -68,7 +68,7 @@ public final class InventorySettings {
         return closingDelay.getInt();
     }
     public int resolveClickingDelay() {
-        if (bedWarsAutoChest.isEnabled()) {
+        if (bedWarsAutoChest.isEnabled() && !bedWarsAutoChest.isHidden()) {
             var server = ServerTracker.INSTANCE.serverState;
             if (server != null && server.antiCheatModel != null
                     && server.antiCheatModel.serverType == ServerType.HYPIXEL

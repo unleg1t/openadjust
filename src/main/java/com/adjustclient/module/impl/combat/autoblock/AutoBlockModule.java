@@ -1,24 +1,39 @@
 package com.adjustclient.module.impl.combat.autoblock;
 
 import com.adjustclient.Adjust;
+import com.adjustclient.game.player.InventoryStateTracker;
 import com.adjustclient.hypixel.HypixelGame;
 import com.adjustclient.module.Category;
 import com.adjustclient.module.Module;
-import com.adjustclient.module.impl.combat.autoblock.mode.*;
-import com.adjustclient.setting.*;
+import com.adjustclient.module.impl.combat.autoblock.mode.FullAutoBlockMode;
+import com.adjustclient.module.impl.combat.autoblock.mode.PredictiveAutoBlockMode;
+import com.adjustclient.module.impl.movement.antivoid.AntiVoidModule;
+import com.adjustclient.module.impl.player.breaker.BreakerModule;
 import com.adjustclient.server.ServerType;
-import com.adjustclient.util.*;
+import com.adjustclient.setting.BooleanSetting;
+import com.adjustclient.setting.ExpandSetting;
+import com.adjustclient.setting.ModeSetting;
+import com.adjustclient.setting.NumberSetting;
+import com.adjustclient.util.BlockUtil;
+import com.adjustclient.util.DistanceUtil;
+import com.adjustclient.util.MovementUtil;
+import com.adjustclient.util.RotationUtil;
+import com.adjustclient.util.WorldUtil;
 import com.adjustclient.util.anticheat.ServerTracker;
-import com.adjustclient.util.anticheat.entity.*;
+import com.adjustclient.util.anticheat.entity.TrackedEntity;
+import com.adjustclient.util.anticheat.entity.TrackedFireball;
+import com.adjustclient.util.anticheat.entity.TrackedLivingEntity;
+import com.adjustclient.util.anticheat.entity.TrackedOtherEntity;
+import com.adjustclient.util.anticheat.entity.TrackedThrowable;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.item.EntityEnderPearl;
+import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.projectile.EntityArrow;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
-import net.minecraft.util.*;
-import com.adjustclient.module.impl.movement.antivoid.AntiVoidModule;
-import com.adjustclient.game.player.InventoryStateTracker;
+import net.minecraft.util.MathHelper;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.Vec3;
 
 public final class AutoBlockModule extends Module {
     public static AutoBlockModule INSTANCE;
@@ -79,20 +94,30 @@ public final class AutoBlockModule extends Module {
             int slot = Adjust.slotSpoofer.resolveSlot(inventory.currentItem);
             stack = slot >= 0 && slot < 9 ? inventory.mainInventory[slot] : null;
         }
-        return stack != null && stack.getItem().getClass() == ItemSword.class;
+        return stack != null && stack.getItem() != null && stack.getItem().getClass() == ItemSword.class;
     }
-    @Override public void onEnable() { mode.getValue(); }
-    @Override public void onDisable() {
+
+    @Override
+    public void onEnable() {
+        mode.getValue();
+    }
+
+    @Override
+    public void onDisable() {
         AutoBlockMode mode = this.mode.getValue();
         if (mode instanceof PredictiveAutoBlockMode) {
             var predictive = (PredictiveAutoBlockMode) mode;
             predictive.resetAndFlush();
         }
     }
-    @Override public String getSuffix() { return mode.getValue().getName(); }
+
+    @Override
+    public String getSuffix() {
+        return mode.getValue().getName();
+    }
 
     public boolean shouldBlock() {
-        if (InventoryStateTracker.inServerGui || InventoryStateTracker.inServerInventory) return false;
+        if (InventoryStateTracker.isInServersideGui()) return false;
         MovingObjectPosition hit = mc.objectMouseOver;
         if (hit != null) {
             if (mc.playerController.getIsHittingBlock()) return false;
@@ -101,8 +126,13 @@ public final class AutoBlockModule extends Module {
             if (hit.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK && !mc.thePlayer.movementInput.sneak
                     && BlockUtil.isInteractable(mc.theWorld.getBlockState(hit.getBlockPos()).getBlock())) return false;
         }
+        var server = ServerTracker.INSTANCE.serverState;
+        if (server != null && server.antiCheatModel != null
+                && server.antiCheatModel.serverType == ServerType.HYPIXEL
+                && BreakerModule.INSTANCE.isEnabled()
+                && BreakerModule.INSTANCE.handler.target != null) return false;
         if (AntiVoidModule.INSTANCE.blink.blinkState != null) return false;
-        return !WorldUtil.isLookingAtBlock(false) && canBlockOnServer() && hasSword(true) && hasThreat();
+        return !WorldUtil.isLookingAtBlock(false) && canBlockOnServer() && hasSword(true) && hasThreat(false);
     }
 
     public static boolean canBlockOnServer() {
@@ -115,24 +145,35 @@ public final class AutoBlockModule extends Module {
                 || game.game == HypixelGame.THE_HYPIXEL_PIT;
     }
 
+    private static boolean isEntityFacingPlayer(Entity target) {
+        var local = mc.thePlayer;
+        float eyeHeight = local.isPlayerSleeping() ? 0.2F : 1.62F;
+        if (!local.isPlayerSleeping() && local.movementInput != null && local.movementInput.sneak) {
+            eyeHeight -= 0.08F;
+        }
+        Vec3 eyes = new Vec3(local.posX, local.posY + eyeHeight, local.posZ);
+        float yawToPlayer = RotationUtil.getYawBetween(eyes, target.getPositionVector()).x;
+        return Math.abs(MathHelper.wrapAngleTo180_float(target.getRotationYawHead() - yawToPlayer)) <= 90.0F;
+    }
+
     public boolean hasThreat() {
+        return hasThreat(false);
+    }
+
+    public boolean hasThreat(boolean requireFacing) {
         var tracker = ServerTracker.INSTANCE.entityTracker;
         Vec3 feet = mc.thePlayer.getPositionVector();
         double squaredRange = range.getDouble() * range.getDouble();
         for (TrackedLivingEntity tracked : tracker.getEntities(targetMask(), TrackedLivingEntity.class)) {
             var target = tracked.getEntity();
             if (target.ticksExisted < 3) continue;
+            if (requireFacing && !isEntityFacingPlayer(target)) continue;
             Vec3 nearest = DistanceUtil.closestPoint(feet, target.getEntityBoundingBox());
             double distance = feet.squareDistanceTo(nearest);
-            float eyeHeight = mc.thePlayer.isPlayerSleeping() ? 0.2F : 1.62F;
-            if (!mc.thePlayer.isPlayerSleeping() && mc.thePlayer.movementInput.sneak) eyeHeight -= 0.08F;
-            Vec3 eyes = new Vec3(mc.thePlayer.posX, mc.thePlayer.posY + eyeHeight, mc.thePlayer.posZ);
-            Vec3 targetEyes = target.getPositionVector().addVector(0.0, target.getEyeHeight(), 0.0);
-            MovingObjectPosition collision = target.worldObj.rayTraceBlocks(eyes, targetEyes, false, false, false);
-            if (collision == null) {
-                if (distance <= squaredRange) return true;
-            } else if (distance <= squaredRange * 0.5) return true;
+            double allowedDistance = mc.thePlayer.canEntityBeSeen(target) ? squaredRange : squaredRange * 0.5;
+            if (distance <= allowedDistance) return true;
         }
+        if (requireFacing) return false;
         for (TrackedEntity<?> tracked : tracker.getEntities(256, null)) {
             if (tracked == null) continue;
             if (tracked instanceof TrackedFireball && projectilesFireballs.isEnabled()) {

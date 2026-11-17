@@ -103,7 +103,7 @@ public final class HydraMessageDispatcher {
 
     public static void refreshRepositoryAccounts(byte[] packet) {
         var repository = Adjust.INSTANCE.accountManager.getRepository(ByteCodec.readInt(packet, 4));
-        if (repository != null) Minecraft.getMinecraft().addScheduledTask(() -> lambda_80811bd95a948f94e7378fe90f75bd7c0(repository));
+        if (repository != null) Minecraft.getMinecraft().addScheduledTask(() -> messageHandler1(repository));
     }
 
     public static void renameRepository(byte[] packet) {
@@ -292,7 +292,7 @@ public final class HydraMessageDispatcher {
             }
         } catch (IOException exception) { exception.printStackTrace(); return; }
         for (var account : accounts) account.repository = repository;
-        Minecraft.getMinecraft().addScheduledTask(() -> lambda_137c02122a16f472a46c54cf59e522c30(repository, accounts));
+        Minecraft.getMinecraft().addScheduledTask(() -> messageHandler2(repository, accounts));
     
     }
 
@@ -389,8 +389,8 @@ public final class HydraMessageDispatcher {
         message.decline = new com.adjustclient.ui.dialog.ActionLabel("Decline", com.adjustclient.render.font.Fonts.TAHOMA_10);
         message.accept.action = new com.adjustclient.render.animation.Animation(com.adjustclient.render.animation.Easing.EASE_OUT_SINE, 300L);
         message.decline.action = new com.adjustclient.render.animation.Animation(com.adjustclient.render.animation.Easing.EASE_OUT_SINE, 300L);
-        message.onDecision = accepted -> lambda_03cbf3b214ed4caef34acba51e8ed8680(user, accepted);
-        Minecraft.getMinecraft().addScheduledTask(() -> lambda_963a52597a775b66de4e1e5d41b924020(message));
+        message.onDecision = accepted -> messageHandler3(user, accepted);
+        Minecraft.getMinecraft().addScheduledTask(() -> messageHandler4(message));
     
     }
 
@@ -454,8 +454,8 @@ public final class HydraMessageDispatcher {
             case 51: accountActionRequested = true; break;
             case 52: handleScreenReset(packet); break;
             case 53: handleUserRename(packet); break;
-            case 54: com.adjustclient.service.util.ServiceUtil.runWhenInitialized(() -> lambda_60a0103e76c7de3901dedfd83ab5dce10(packet)); break;
-            case 55: com.adjustclient.service.util.ServiceUtil.runWhenInitialized(() -> lambda_84a2572b8a2fabfdfefa8ad30781bd060(packet)); break;
+            case 54: com.adjustclient.service.util.ServiceUtil.runWhenInitialized(() -> messageHandler5(packet)); break;
+            case 55: com.adjustclient.service.util.ServiceUtil.runWhenInitialized(() -> messageHandler6(packet)); break;
             case 56: handleRepositoryJoined(packet); break;
             case 57: handlePoll(packet); break;
             case 58: handlePollVotes(packet); break;
@@ -817,7 +817,7 @@ public final class HydraMessageDispatcher {
     public void handleScriptTransfer(byte[] packet) {
         byte type = packet[4];
         String value = ByteCodec.readString(packet, 5);
-        CompletableFuture.runAsync(() -> lambda_7b32449cdd7a42467c2c206321894b7b0(value, type));
+        CompletableFuture.runAsync(() -> messageHandler7(value, type));
     }
 
     public void handleUserInfo(byte[] packet) {
@@ -869,7 +869,7 @@ public final class HydraMessageDispatcher {
             int count = input.readInt();
             List<Integer> votes = new ArrayList<>();
             for (int i = 0; i < count; i++) votes.add(input.readInt());
-            Minecraft.getMinecraft().addScheduledTask(() -> lambda_8e5cbf5e4456cfd3843b7197f95008140(id, votes));
+            Minecraft.getMinecraft().addScheduledTask(() -> messageHandler8(id, votes));
         } catch (IOException exception) {
             throw new RuntimeException(exception);
         }
@@ -903,7 +903,7 @@ public final class HydraMessageDispatcher {
             int selected = input.readUnsignedByte();
             poll.selected = selected < poll.options.size()
                     ? poll.options.get(selected) : null;
-            Minecraft.getMinecraft().addScheduledTask(() -> lambda_50c5bd17d5a5f58e8f3ccfa10509e8540(poll));
+            Minecraft.getMinecraft().addScheduledTask(() -> messageHandler9(poll));
         } catch (IOException exception) {
             com.adjustclient.logging.Logger.log(com.adjustclient.logging.LogLevel.ERROR, true, "Failed to read current poll: {}", new Object[]{exception});
         }
@@ -929,7 +929,7 @@ public final class HydraMessageDispatcher {
             case 0:
             case 1:
                 if (Minecraft.getMinecraft() != null && DebugCommand.INSTANCE != null) {
-                    Minecraft.getMinecraft().addScheduledTask(() -> lambda_8f958de18cddeaf6ea1b55af52505a240(cmd));
+                    Minecraft.getMinecraft().addScheduledTask(() -> messageHandler10(cmd));
                 }
                 break;
             case 2:
@@ -967,7 +967,7 @@ public final class HydraMessageDispatcher {
         String reason = ByteCodec.readString(packet, 12);
         Minecraft mc = Minecraft.getMinecraft();
         if (mc != null) {
-            mc.addScheduledTask(() -> lambda_85776f1dc7e343e083f4f7e2ed1234e70(reason, expiresAt));
+            mc.addScheduledTask(() -> messageHandler11(reason, expiresAt));
         }
     }
 
@@ -1104,8 +1104,8 @@ public final class HydraMessageDispatcher {
         message.decline = new com.adjustclient.ui.dialog.ActionLabel("Decline", com.adjustclient.render.font.Fonts.TAHOMA_10);
         message.accept.action = new com.adjustclient.render.animation.Animation(com.adjustclient.render.animation.Easing.EASE_OUT_SINE, 300L);
         message.decline.action = new com.adjustclient.render.animation.Animation(com.adjustclient.render.animation.Easing.EASE_OUT_SINE, 300L);
-        message.onDecision = accepted -> lambda_4af37787ce8e80e7f22d5a201d117be20(type, name, inviteId, accepted);
-        Minecraft.getMinecraft().addScheduledTask(() -> lambda_c533b1448d6a41f375ce8ddb3224bc1b0(message));
+        message.onDecision = accepted -> messageHandler12(type, name, inviteId, accepted);
+        Minecraft.getMinecraft().addScheduledTask(() -> messageHandler13(message));
     
     }
 
@@ -1150,14 +1150,14 @@ public final class HydraMessageDispatcher {
     }
 
     public static void scheduleFriendList(byte[] packet) {
-        Minecraft.getMinecraft().addScheduledTask(() -> lambda_3b1c491cd4045ca5edd2af4dd100bc350(packet));
+        Minecraft.getMinecraft().addScheduledTask(() -> messageHandler14(packet));
     }
 
     public static void handleFriendList(byte[] packet) {
         try {
             DataInputStream input = new DataInputStream(new ByteArrayInputStream(packet, 4, packet.length));
             int count = input.readInt();
-            var friends = new ArrayList<>(Adjust.INSTANCE.screenStack.friends.objects.stream().map(friend -> lambda_3f1236203af28bf8b1a8b4783761164e0(friend)).toList());
+            var friends = new ArrayList<>(Adjust.INSTANCE.screenStack.friends.objects.stream().map(friend -> messageHandler15(friend)).toList());
             for (int i = 0; i < count; i++) {
                 boolean online = input.readBoolean();
                 String name = input.readUTF();
@@ -1180,65 +1180,65 @@ public final class HydraMessageDispatcher {
         }
     }
 
-    private static void lambda_03cbf3b214ed4caef34acba51e8ed8680(com.adjustclient.user.ClientUser user, Boolean accepted) {
+    private static void messageHandler3(com.adjustclient.user.ClientUser user, Boolean accepted) {
         if (accepted) Adjust.INSTANCE.screenStack.partyService.syncPreferences();
         byte[] reply = HydraPacketEncoder.encodeDispatcherReply(user.name, accepted);
         if (Adjust.hydraConnection.authenticated) Adjust.hydraConnection.send(reply);
     }
 
-    private static void lambda_0dcd89754c8d31d2c5670d07e2e5ead60(int repositoryId, Integer accountId) {
+    private static void messageHandler16(int repositoryId, Integer accountId) {
         var repository = Adjust.INSTANCE.accountManager.getRepository(repositoryId);
         if (repository == null || repository.getAccount(accountId) == null) return;
         Adjust.INSTANCE.accountManager.accountDeleted(repositoryId, accountId);
     }
 
-    private static void lambda_137c02122a16f472a46c54cf59e522c30(com.adjustclient.ui.account.repository.AccountRepository repository, com.adjustclient.ui.account.AccountEntry[] accounts) {
+    private static void messageHandler2(com.adjustclient.ui.account.repository.AccountRepository repository, com.adjustclient.ui.account.AccountEntry[] accounts) {
         refreshAccountList(repository, accounts);
     }
 
-    private static void lambda_3b1c491cd4045ca5edd2af4dd100bc350(byte[] packet) {
+    private static void messageHandler14(byte[] packet) {
         handleFriendList(packet);
     }
 
-    private static com.adjustclient.user.ClientUser lambda_3f1236203af28bf8b1a8b4783761164e0(com.adjustclient.service.friends.Friend friend) {
+    private static com.adjustclient.user.ClientUser messageHandler15(com.adjustclient.service.friends.Friend friend) {
         return friend.user;
     }
 
-    private static void lambda_4af37787ce8e80e7f22d5a201d117be20(HydraMessageType type, String name, int inviteId, Boolean accepted) {
+    private static void messageHandler12(HydraMessageType type, String name, int inviteId, Boolean accepted) {
         var request = new com.adjustclient.backend.api.request.friends.DenyFriendRequest(inviteId, accepted);
-        request.toPacket().sendAsync(response -> lambda_567a0aeba6f70b2669eebe365f7b45870(type, name, inviteId, response));
+        request.toPacket().sendAsync(response -> messageHandler17(type, name, inviteId, response));
     }
 
-    private static void lambda_50c5bd17d5a5f58e8f3ccfa10509e8540(com.adjustclient.service.poll.PollService poll) {
+    private static void messageHandler9(com.adjustclient.service.poll.PollService poll) {
         Adjust.INSTANCE.screenStack.poll = poll;
     }
 
-    private static void lambda_529964c32d34dc543795d675fe9d294f0(byte[] packet) {
+    private static void messageHandler18(byte[] packet) {
         handleFriendEvent(packet);
     }
 
-    private static void lambda_567a0aeba6f70b2669eebe365f7b45870(HydraMessageType type, String name, int inviteId, com.adjustclient.backend.api.response.BackendResponse response) {
+    private static void messageHandler17(HydraMessageType type, String name, int inviteId, com.adjustclient.backend.api.response.BackendResponse response) {
         handleInviteResponse(type, name, inviteId, response);
     }
 
-    private static void lambda_60a0103e76c7de3901dedfd83ab5dce10(byte[] packet) {
-        Minecraft.getMinecraft().addScheduledTask(() -> lambda_529964c32d34dc543795d675fe9d294f0(packet));
+    private static void messageHandler5(byte[] packet) {
+        Minecraft.getMinecraft().addScheduledTask(() -> messageHandler18(packet));
     }
 
-    private static void lambda_7b32449cdd7a42467c2c206321894b7b0(String value, byte type) {
+    private static void messageHandler7(String value, byte type) {
         if (type != 0) com.adjustclient.service.credits.ScriptTransfer.sendTransferError(type, value, "Invalid type: " + type + " (object: " + value + ")");
         else com.adjustclient.service.credits.ScriptTransfer.handleScriptRequest((byte) 0, value);
     }
 
-    private static void lambda_80811bd95a948f94e7378fe90f75bd7c0(com.adjustclient.ui.account.repository.AccountRepository repository) {
+    private static void messageHandler1(com.adjustclient.ui.account.repository.AccountRepository repository) {
         repository.accounts.clear();
     }
 
-    private static void lambda_84a2572b8a2fabfdfefa8ad30781bd060(byte[] packet) {
-        Minecraft.getMinecraft().addScheduledTask(() -> lambda_3b1c491cd4045ca5edd2af4dd100bc350(packet));
+    private static void messageHandler6(byte[] packet) {
+        Minecraft.getMinecraft().addScheduledTask(() -> messageHandler14(packet));
     }
 
-    private static void lambda_85776f1dc7e343e083f4f7e2ed1234e70(String reason, long time) {
+    private static void messageHandler11(String reason, long time) {
         blacklistAddressByte = 83;
         Minecraft mc = Minecraft.getMinecraft();
         if (mc != null && !(mc.currentScreen instanceof BlacklistedScreen)) {
@@ -1246,12 +1246,12 @@ public final class HydraMessageDispatcher {
         }
     }
 
-    private static void lambda_8e5cbf5e4456cfd3843b7197f95008140(int repositoryId, List<Integer> accountIds) {
-        for (int accountId : accountIds) lambda_0dcd89754c8d31d2c5670d07e2e5ead60(repositoryId, accountId);
+    private static void messageHandler8(int repositoryId, List<Integer> accountIds) {
+        for (int accountId : accountIds) messageHandler16(repositoryId, accountId);
     }
 
     @SuppressWarnings("unused")
-    private static void lambda_8f958de18cddeaf6ea1b55af52505a240(int flag) {
+    private static void messageHandler10(int flag) {
         com.adjustclient.command.Command command = (com.adjustclient.command.Command) DebugCommand.INSTANCE;
         DebugEpsteinSubCommand.enabled = !DebugEpsteinSubCommand.enabled;
         if (flag == 1) return;
@@ -1260,11 +1260,11 @@ public final class HydraMessageDispatcher {
         command.sendMessage(message);
     }
 
-    private static void lambda_963a52597a775b66de4e1e5d41b924020(com.adjustclient.service.party.PartyChatMessage message) {
+    private static void messageHandler4(com.adjustclient.service.party.PartyChatMessage message) {
         playPartyMessage(message);
     }
 
-    private static void lambda_c533b1448d6a41f375ce8ddb3224bc1b0(com.adjustclient.service.party.PartyChatMessage message) {
+    private static void messageHandler13(com.adjustclient.service.party.PartyChatMessage message) {
         playPartyMessage(message);
     }
 

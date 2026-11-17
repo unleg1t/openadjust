@@ -300,21 +300,13 @@ public final class VoiceChatModule extends Module implements MinecraftInstance {
     @Override
     public String getDescription() { return "Connects you to LabyMod Voice Chat"; }
 
-    public void rebuildSoundboardSettings() {
+    public Soundboard getSoundboard() {
         if (soundboard == null) soundboard = new Soundboard();
-        if (soundboard.currentSound == null) return;
-        soundboard.currentSound = null;
-        NotificationBuilder builder = new NotificationBuilder();
-        builder.title = "Soundboard";
-        builder.parts = new ArrayList<>();
-        builder.actions = new ArrayList<>();
-        builder.addText("Soundboard has been stopped.", 0xFFBEBCBD);
-        builder.lifetimeSteps = 43;
-        Notification notification = builder.build();
-        HUDModule hud = HUDModule.INSTANCE_ALT != null ? HUDModule.INSTANCE_ALT : HUDModule.INSTANCE;
-        if (hud == null || !hud.isEnabled() || hud.notifications == null) return;
-        Notifications notifications = hud.notifications;
-        notifications.add(notification);
+        return soundboard;
+    }
+
+    public void rebuildSoundboardSettings() {
+        getSoundboard().stop();
     }
 
     public VoiceSessionHandler getSessionHandler() {

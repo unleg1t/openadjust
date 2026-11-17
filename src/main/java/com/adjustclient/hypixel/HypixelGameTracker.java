@@ -28,7 +28,16 @@ public final class HypixelGameTracker extends AbstractGameTracker<HypixelGameSta
         this.state = initialState;
     }
 
-    public void reset() { state = HypixelGame.UNKNOWN_GAME.stateFactory.create(); }
+    public void reset() {
+        state = HypixelGame.UNKNOWN_GAME.stateFactory.create();
+        previousTrackedState = null;
+    }
+
+    private boolean isActiveServer() {
+        var serverState = ServerTracker.INSTANCE.serverState;
+        return serverState != null && serverState.antiCheatModel != null
+                && serverState.antiCheatModel.serverType == this.server;
+    }
 
     public static void notifyWinstreakEnd(String killer, String victim, HypixelPlayer player) {
         if (player == null || player.stats == null) return;
@@ -68,6 +77,7 @@ public final class HypixelGameTracker extends AbstractGameTracker<HypixelGameSta
 
     @EventHandler
     public void onPlayerKill(PlayerKillEvent event) {
+        if (!isActiveServer()) return;
         if (!(state instanceof TabTrackingGameState) || !event.finalKill) return;
         if (event.victim.equals(mc.getSession().getUsername())) return;
         var team = mc.theWorld.getScoreboard().getPlayersTeam(event.victim);
@@ -85,6 +95,7 @@ public final class HypixelGameTracker extends AbstractGameTracker<HypixelGameSta
 
     @EventHandler
     public void onPacket(LowLevelPacketReceiveEvent event) {
+        if (!isActiveServer()) return;
         Packet<?> packet = event.packet;
         if (packet instanceof S3BPacketScoreboardObjective) {
             if (state.game != HypixelGame.UNKNOWN_GAME && state.game != HypixelGame.DUELS) return;
@@ -113,17 +124,30 @@ public final class HypixelGameTracker extends AbstractGameTracker<HypixelGameSta
 
     @EventHandler(priority = 20)
     public void onPacketApplied(PacketAppliedEvent event) {
-        var serverState = ServerTracker.INSTANCE.serverState;
-        if (serverState != null && serverState.antiCheatModel != null
-                && serverState.antiCheatModel.serverType == this.server
-                && state != null) {
+        if (isActiveServer() && state != null) {
             state.onPacket(event.packet, false);
         }
     }
 
     @EventHandler
     public void onLocrawPacket(DirectionalPacketEvent event) {
-        if (state != null) state.parseLocraw(event);
+        if (isActiveServer() && state != null) {
+            state.parseLocraw(event);
+        }
+    }
+
+    @EventHandler
+    public void onUpdate(CancellablePlayerUpdateEvent event) {
+        if (!event.isCancelled() && isActiveServer() && state != null) {
+            state.onUpdate();
+        }
+    }
+
+    @EventHandler
+    public void onDisconnect(DisconnectTeardownEvent event) {
+        if (isActiveServer()) {
+            reset();
+        }
     }
 
     public void setGame(HypixelGameState state) {

@@ -29,7 +29,17 @@ public final class VanillaFlightMode extends FlightMode {
                 || mc.thePlayer.mc.cameraOverride == null);
     }
 
-    @EventHandler public void onMove(MoveEvent event) {
+    @Override
+    public void onDisable() {
+        if (mc.thePlayer != null) {
+            MovementUtil.setSpeed(Math.min(MovementUtil.getSpeed(),
+                    MovementUtil.getSpeedWithPotion(0.164D, 0.2D)));
+            mc.thePlayer.motionY = 0.0D;
+        }
+    }
+
+    @EventHandler
+    public void onMove(MoveEvent event) {
         if (!isActive()) return;
         float horizontalSpeed = RandomUtil.jitter(horizontal.getFloat(), 0.001F);
         if (mc.thePlayer != null) {

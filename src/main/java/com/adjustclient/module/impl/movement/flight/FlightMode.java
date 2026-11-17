@@ -13,7 +13,18 @@ public abstract class FlightMode implements Listener, MinecraftInstance, ModeOpt
         this.name = name;
     }
 
-    @Override public String getName() { return name; }
+    @Override
+    public String getName() {
+        return name;
+    }
 
-    public boolean isActive() { return module.isEnabled() && module.mode.getValue() == this; }
+    public void onEnable() {
+    }
+
+    public void onDisable() {
+    }
+
+    public boolean isActive() {
+        return module.isEnabled() && module.mode.getValue() == this;
+    }
 }

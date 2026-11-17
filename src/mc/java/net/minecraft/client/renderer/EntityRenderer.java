@@ -84,6 +84,7 @@ import com.adjustclient.event.MouseOverEntitiesEvent;
 import com.adjustclient.event.OverlayType;
 import com.adjustclient.event.Render3DEvent;
 import com.adjustclient.event.RenderEffectEvent;
+import com.adjustclient.event.ViewBobbingEvent;
 import com.adjustclient.game.movable.MovablePosition;
 import com.adjustclient.module.impl.combat.ReachModule;
 import com.adjustclient.module.impl.movement.SafeWalkModule;
@@ -955,9 +956,13 @@ public class EntityRenderer implements IResourceManagerReloadListener
 
         this.hurtCameraEffect(partialTicks);
 
-        if (this.mc.gameSettings.viewBobbing && (MinimalBobbingTweak.INSTANCE == null || !MinimalBobbingTweak.INSTANCE.enabledSetting()))
+        if (this.mc.gameSettings.viewBobbing)
         {
-            this.setupViewBobbing(partialTicks);
+            ViewBobbingEvent viewBobbingEvent = EventBus.post(new ViewBobbingEvent(ViewBobbingEvent.Type.WORLD));
+            if (!viewBobbingEvent.isCancelled())
+            {
+                this.setupViewBobbing(partialTicks);
+            }
         }
 
         float f1 = this.mc.thePlayer.prevTimeInPortal + (this.mc.thePlayer.timeInPortal - this.mc.thePlayer.prevTimeInPortal) * partialTicks;
@@ -1044,7 +1049,11 @@ public class EntityRenderer implements IResourceManagerReloadListener
 
                 if (this.mc.gameSettings.viewBobbing)
                 {
-                    this.setupViewBobbing(partialTicks);
+                    ViewBobbingEvent viewBobbingEvent = EventBus.post(new ViewBobbingEvent(ViewBobbingEvent.Type.ARM));
+                    if (!viewBobbingEvent.isCancelled())
+                    {
+                        this.setupViewBobbing(partialTicks);
+                    }
                 }
 
                 flag = this.mc.getRenderViewEntity() instanceof EntityLivingBase && ((EntityLivingBase)this.mc.getRenderViewEntity()).isPlayerSleeping();
@@ -1084,7 +1093,11 @@ public class EntityRenderer implements IResourceManagerReloadListener
 
             if (this.mc.gameSettings.viewBobbing)
             {
-                this.setupViewBobbing(partialTicks);
+                ViewBobbingEvent viewBobbingEvent = EventBus.post(new ViewBobbingEvent(ViewBobbingEvent.Type.ARM));
+                if (!viewBobbingEvent.isCancelled())
+                {
+                    this.setupViewBobbing(partialTicks);
+                }
             }
         }
     }

@@ -182,6 +182,9 @@ public final class TargetStrafeModule extends Module implements MinecraftInstanc
         var game = Adjust.gameStateTracker.state;
         if (game.isSpecialState() != 0 || game.isSpectator() || game.lobby != null
                 && !game.lobby && game.startTimer == null) return false;
+        var rewound = Adjust.rewoundGameTracker.state;
+        if (rewound.isInSpawn() || rewound.allowFlying || rewound.lobby != null
+                && !rewound.lobby && rewound.startTimer == null) return false;
         if (speedModuleOnly.isEnabled() && !hasMovementModule()) return false;
         if (alwaysWithFlight.isEnabled() && (LongJumpModule.INSTANCE.isEnabled() || FlightModule.INSTANCE.isEnabled())) return true;
         return holdBind.isDown() || holdBind.getValue().keys.isEmpty();

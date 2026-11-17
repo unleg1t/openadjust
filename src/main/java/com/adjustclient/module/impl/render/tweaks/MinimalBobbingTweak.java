@@ -1,5 +1,7 @@
 package com.adjustclient.module.impl.render.tweaks;
 
+import com.adjustclient.event.EventHandler;
+import com.adjustclient.event.ViewBobbingEvent;
 import com.adjustclient.setting.BooleanSetting;
 
 public final class MinimalBobbingTweak extends Tweak {
@@ -14,5 +16,13 @@ public final class MinimalBobbingTweak extends Tweak {
         enabled.setDescription("Removes the camera shake from view bobbing.");
     }
 
-    @Override public boolean enabledSetting() { return module.isEnabled() && enabled.isEnabled(); }
+    @EventHandler
+    public void onViewBobbing(ViewBobbingEvent event) {
+        if (!isEnabled()) return;
+        if (event.type == ViewBobbingEvent.Type.WORLD) {
+            event.setCancelled(true);
+        }
+    }
+
+    @Override public boolean enabledSetting() { return enabled.isEnabled(); }
 }

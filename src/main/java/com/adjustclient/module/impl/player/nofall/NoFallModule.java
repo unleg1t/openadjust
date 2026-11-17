@@ -26,7 +26,8 @@ public final class NoFallModule extends Module {
         packet = new PacketNoFallMode(this);
         water = new WaterNoFallMode(this);
         SpoofNoFallMode spoof = new SpoofNoFallMode(this);
-        mode = new ModeSetting<>(this, "Mode", spoof, new NoFallMode[] {spoof, packet, water});
+        RewoundNoFallMode rewound = new RewoundNoFallMode(this);
+        mode = new ModeSetting<>(this, "Mode", spoof, new NoFallMode[] {spoof, packet, rewound, water});
         settings.remove(mode);
         settings.add(0, mode);
         mode.addListener((Runnable) () -> { java.util.Objects.requireNonNull(this); });
@@ -80,6 +81,7 @@ public final class NoFallModule extends Module {
         NoFallMode selected = mode.getValue();
         if (selected instanceof PacketNoFallMode) return com.adjustclient.anticheat.feature.Features.NO_FALL_PACKET.isAllowed();
         if (selected instanceof SpoofNoFallMode) return com.adjustclient.anticheat.feature.Features.NO_FALL_SPOOF.isAllowed();
+        if (selected instanceof RewoundNoFallMode) return com.adjustclient.anticheat.feature.Features.NO_FALL_REWOUND.isAllowed();
         return true;
     }
 }

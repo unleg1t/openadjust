@@ -1,7 +1,10 @@
 package com.adjustclient.module.impl.movement.scaffold;
 
+import com.adjustclient.module.impl.movement.StasisModule;
 import com.adjustclient.util.MinecraftInstance;
 import com.adjustclient.util.Timer;
+import com.adjustclient.util.anticheat.ServerTracker;
+import com.adjustclient.util.anticheat.blocker.PacketWatcher;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -14,28 +17,26 @@ import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.server.S23PacketBlockChange;
 import net.minecraft.util.BlockPos;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
-import com.adjustclient.util.anticheat.ServerTracker;
-import com.adjustclient.module.impl.movement.StasisModule;
 
 public final class PlacementTracker implements MinecraftInstance {
 
     private final ScaffoldModule module;
-    /** position -> times at which a block was placed at that position */
     private final Map<BlockPos, List<Timer>> placementTimes = new HashMap<>();
-    /** placements waiting for the server's confirmation */
     private final List<BlockPlacementRecord> entries = new ArrayList<>();
     private TimedValue pending;
-    private Timer field20;
 
     public PlacementTracker(ScaffoldModule module) {
         this.module = module;
     }
 
-    /**
-     * A pending (unconfirmed) placement exists and is still valid. It is dropped once it timed out or the player
-     * moved more than 3 blocks away from it.
-     */
+    public void clear() {
+        this.placementTimes.clear();
+        this.entries.clear();
+        this.pending = null;
+    }
+
     public boolean hasPending() {
         TimedValue pending = this.pending;
         if (pending == null) {
@@ -50,17 +51,13 @@ public final class PlacementTracker implements MinecraftInstance {
         double dx = ((Vec3) pending.value).xCoord - playerPos.xCoord;
         double dy = ((Vec3) pending.value).yCoord - playerPos.yCoord;
         double dz = ((Vec3) pending.value).zCoord - playerPos.zCoord;
-        if (net.minecraft.util.MathHelper.sqrt_double(dx * dx + dy * dy + dz * dz) > 3.0F) {
+        if (MathHelper.sqrt_double(dx * dx + dy * dy + dz * dz) > 3.0F) {
             this.pending = null;
             return false;
         }
         return true;
     }
 
-    /**
-     * Starts tracking a placement that is about to be sent: only while the held item is a block. An already tracked
-     * placement at the same target position that was confirmed is replaced, one that is still unconfirmed is kept.
-     */
     public void trackPlacement(PlacementTarget placement) {
         if (mc.integratedServerIsRunning) {
             return;
@@ -90,7 +87,6 @@ public final class PlacementTracker implements MinecraftInstance {
         }
     }
 
-    /** Remembers the time of a placement at {@code pos} (per-position history). */
     public void recordPlacementTime(BlockPos pos) {
         List<Timer> times = this.placementTimes.get(pos);
         if (times == null) {
@@ -105,7 +101,7 @@ public final class PlacementTracker implements MinecraftInstance {
             BlockPlacementRecord entry = this.entries.get(i);
             long fade = 550L;
             if (ServerTracker.INSTANCE.serverState != null) {
-                com.adjustclient.util.anticheat.blocker.PacketWatcher accumulator = ServerTracker.INSTANCE.serverState.packetWatcher;
+                PacketWatcher accumulator = ServerTracker.INSTANCE.serverState.packetWatcher;
                 if (accumulator.delayCount != 0) {
                     fade = accumulator.totalDelay / accumulator.delayCount + 550L;
                 }
@@ -129,14 +125,8 @@ public final class PlacementTracker implements MinecraftInstance {
                 continue;
             }
             int y = changed.getY();
-            ScaffoldMode mode = (ScaffoldMode) this.module.settings.mode.getValue();
-            boolean skip;
-            if (mode instanceof NcpScaffoldMode || mode instanceof NormalScaffoldMode) {
-                skip = y >= mc.theWorld.getHeight();
-            } else {
-                skip = mode.isAboveBuildLimit(y);
-            }
-            if (!skip) {
+            ScaffoldMode mode = this.module.settings.mode.getValue();
+            if (!mode.isAboveBuildLimit(y)) {
                 entry = candidate;
                 break;
             }
@@ -159,54 +149,13 @@ public final class PlacementTracker implements MinecraftInstance {
             return;
         }
 
-        // ---- the placement was rejected
-        // the hotbar prediction has to trust the held slot of the placement again
         ServerTracker.INSTANCE.hotbarBlockTracker.forcedSlot = Integer.valueOf(entry.heldSlot);
         if (this.module.settings.mode.getValue() instanceof HypixelScaffoldMode) {
             ServerTracker.INSTANCE.ticks = 9;
             this.pending = new TimedValue(entry.playerPosition, 750);
         }
-        if (this.module.settings.isAutoStasis()) {                  // "Auto stasis"
-            StasisModule.INSTANCE.setEnabled(true, true);               // Stasis module
+        if (this.module.settings.isAutoStasis()) {
+            StasisModule.INSTANCE.setEnabled(true, true);
         }
-    }
-
-    @SuppressWarnings("unused")
-    private void vendorReportPlacementFailure(S23PacketBlockChange packet, BlockPlacementRecord entry) {
-        if (entry.failureReported || ServerTracker.INSTANCE == null) {
-            return;
-        }
-        long delayMs = com.adjustclient.service.util.ServiceUtil.addServerDelay(50);
-        Timer cooldown = ServerTracker.INSTANCE.interactionTimer;
-        if (cooldown != null) {
-            long now = System.currentTimeMillis();
-            if (cooldown.lastMs + delayMs <= now) {
-                com.adjustclient.hypixel.HypixelGameState state = com.adjustclient.Adjust.gameStateTracker != null
-                        ? com.adjustclient.Adjust.gameStateTracker.state
-                        : null;
-                if (state != null && state.game != null && state.game.isAnyOf(
-                        com.adjustclient.hypixel.HypixelGame.UHC_CHAMPIONS,
-                        com.adjustclient.hypixel.HypixelGame.BLITZ_SG,
-                        com.adjustclient.hypixel.HypixelGame.DUELS,
-                        com.adjustclient.hypixel.HypixelGame.BED_WARS_PRACTICE,
-                        com.adjustclient.hypixel.HypixelGame.BED_WARS,
-                        com.adjustclient.hypixel.HypixelGame.SKYWARS,
-                        com.adjustclient.hypixel.HypixelGame.MEGA_WALLS)
-                        && entry.placedTime != null) {
-                    long elapsed = System.currentTimeMillis();
-                    if (com.adjustclient.Adjust.telemetryListener != null) {
-                        com.adjustclient.Adjust.telemetryListener.report(
-                                new com.adjustclient.service.telemetry.event.FloatPairRecord(
-                                        com.adjustclient.service.telemetry.TelemetryFlag.MODULE,
-                                        com.adjustclient.service.telemetry.TelemetryCategory.MEDIUM,
-                                        packet.getBlockPosition(),
-                                        (short) (elapsed - cooldown.lastMs)));
-                        entry.failureReported = true;
-                        return;
-                    }
-                }
-            }
-        }
-        entry.failureReported = true;
     }
 }

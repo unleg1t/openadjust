@@ -370,7 +370,7 @@ public class GuiPersistentChat extends GuiNewChat
         }
     }
 
-    public void forkMethod143a2f000()
+    public void refreshChatLines()
     {
         int prevUnread = this.unreadMessages;
         int prevScroll = this.scrollPos;

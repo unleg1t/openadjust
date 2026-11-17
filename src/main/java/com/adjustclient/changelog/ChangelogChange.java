@@ -68,6 +68,8 @@ public abstract class ChangelogChange {
                     action = () -> showScriptingDocumentation();
                 } else if (name.equalsIgnoreCase("Fernan's Club Integration")) {
                     action = () -> showFernanDocumentation();
+                } else if (name.equalsIgnoreCase("Localts Integration")) {
+                    action = () -> showLocaltsDocumentation();
                 } else if (name.equalsIgnoreCase("Urchin API")) {
                     action = () -> {
                         DialogBuilder dialog = new DialogBuilder("Urchin API");
@@ -121,6 +123,15 @@ public abstract class ChangelogChange {
         dialog.message.append("Accounts can now be bought from Fernan's Club directly in Adjust client. The shop be accessed from the account manager. ");
         dialog.message.bold = true;
         dialog.message.append("https://fernan.club/api");
+        dialog.build();
+    }
+
+    public static void showLocaltsDocumentation() {
+        DialogBuilder dialog = new DialogBuilder("Localts");
+        dialog.addButton("OK", screen -> { }, screen -> true);
+        dialog.message.append("Accounts can now be bought from Localts directly in Adjust client. The shop can be accessed from the account manager. More information is available at ");
+        dialog.message.bold = true;
+        dialog.message.append("https://localts.store/api-docs");
         dialog.build();
     }
 

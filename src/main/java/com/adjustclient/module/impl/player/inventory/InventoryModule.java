@@ -9,6 +9,7 @@ import com.adjustclient.module.Module;
 import com.adjustclient.module.impl.player.inventory.chest.ChestLootStrategy;
 import com.adjustclient.module.impl.player.inventory.chest.DefaultChestStrategy;
 import com.adjustclient.module.impl.player.inventory.chest.LuckyBlockChestStrategy;
+import com.adjustclient.module.impl.player.inventory.chest.PitChestStrategy;
 import com.adjustclient.module.impl.player.inventory.click.InventoryClicker;
 import com.adjustclient.module.impl.player.inventory.item.ItemType;
 import com.adjustclient.module.impl.player.inventory.item.ItemTypes;
@@ -79,15 +80,20 @@ public final class InventoryModule extends Module implements MinecraftInstance {
     public boolean D() {
         return snapshot != null && E() && (K() || J())
                 && !snapshot.unassignedSlots.isEmpty()
-                && chestStrategy.canClose() && !B();
+                && chestStrategy.canClose() && !B()
+                && !com.adjustclient.module.impl.movement.inventorymove.InventoryMoveModule.INSTANCE.canInteractInScreen(false);
+    }
+
+    public boolean isBedWarsAutoChestActive() {
+        return chestStrategy instanceof LuckyBlockChestStrategy
+                && inventorySettings.bedWarsAutoChest.isEnabled()
+                && !inventorySettings.bedWarsAutoChest.isHidden();
     }
 
     public boolean E() {
         if (!inventorySettings.managerEnabled.isEnabled()
                 || inventorySettings.managerEnabled.isHidden()) {
-            if (!(chestStrategy instanceof LuckyBlockChestStrategy)
-                    || !inventorySettings.bedWarsAutoChest.isEnabled()
-                    || inventorySettings.bedWarsAutoChest.isHidden()
+            if (!isBedWarsAutoChestActive()
                     || transferDirection == null || !(mc.currentScreen instanceof GuiChest)) return false;
         }
         if (pauseCooldown.durationMs >= 0 && !pauseCooldown.isExpired()) return false;
@@ -110,6 +116,14 @@ public final class InventoryModule extends Module implements MinecraftInstance {
         if (mc.thePlayer == null || !(mc.thePlayer.openContainer instanceof net.minecraft.inventory.ContainerChest chest)) return false;
         if (!inventorySettings.validateChest.isEnabled()) return true;
         var inventory = chest.getLowerChestInventory();
+        var state = com.adjustclient.util.anticheat.ServerTracker.INSTANCE.serverState;
+        if (state != null && state.antiCheatModel != null
+                && state.antiCheatModel.serverType == com.adjustclient.server.ServerType.REWOUND
+                && com.adjustclient.Adjust.rewoundGameTracker.state.game == com.adjustclient.game.rewound.RewoundGame.BEDWARS
+                && inventory instanceof net.minecraft.inventory.InventoryBasic basic
+                && "Ender Chest".equals(basic.getName())) {
+            return true;
+        }
         return inventory instanceof net.minecraft.client.player.inventory.ContainerLocalMenu menu
                 && menu.hasCustomName() && menu.forkField21;
     }
@@ -117,8 +131,13 @@ public final class InventoryModule extends Module implements MinecraftInstance {
     public static boolean K() {
         if (mc.currentScreen instanceof net.minecraft.client.gui.inventory.GuiContainerCreative)
             return net.minecraft.client.gui.inventory.GuiContainerCreative.selectedTabIndex == 11;
-        return mc.currentScreen instanceof net.minecraft.client.gui.inventory.GuiInventory
-                || InventoryStateTracker.inServerInventory && com.adjustclient.Adjust.inventoryStateTracker.open;
+        if (mc.currentScreen instanceof net.minecraft.client.gui.inventory.GuiInventory)
+            return true;
+        if (InventoryStateTracker.inServerInventory && com.adjustclient.Adjust.inventoryStateTracker.open)
+            return true;
+        return com.adjustclient.module.impl.movement.inventorymove.InventoryMoveModule.INSTANCE.canInteractInScreen(true)
+                && mc.thePlayer != null && mc.thePlayer.openContainer != null
+                && mc.thePlayer.openContainer.getClass() == net.minecraft.inventory.ContainerPlayer.class;
     }
 
     public boolean L() {
@@ -135,9 +154,7 @@ public final class InventoryModule extends Module implements MinecraftInstance {
 
     @EventHandler public void onMouseClick(ScreenMouseClickEvent event) {
         if (!isEnabled() || event.cancelled) return;
-        if (chestStrategy instanceof LuckyBlockChestStrategy
-                && inventorySettings.bedWarsAutoChest.isEnabled()
-                && !inventorySettings.bedWarsAutoChest.isHidden()) {
+        if (isBedWarsAutoChestActive()) {
             float wheel = org.lwjgl.input.Mouse.getEventDWheel();
             if (wheel != 0.0F && transferDirection == null) {
                 snapshot = null;
@@ -159,9 +176,7 @@ public final class InventoryModule extends Module implements MinecraftInstance {
 
     @EventHandler public void onScreenOpen(GuiOpenedEvent event) {
         if (!isEnabled()) return;
-        if (!(chestStrategy instanceof LuckyBlockChestStrategy)
-                || !inventorySettings.bedWarsAutoChest.isEnabled()
-                || !(event.screen instanceof GuiChest)) return;
+        if (!isBedWarsAutoChestActive() || !(event.screen instanceof GuiChest)) return;
         if ((com.adjustclient.service.config.user.UserConfiguration.INSTANCE.timestamp & 1L) != 0) return;
         var game = com.adjustclient.Adjust.gameStateTracker.state;
         if (game.startTimer != null && game.lobby != null
@@ -331,12 +346,21 @@ public final class InventoryModule extends Module implements MinecraftInstance {
 
     public void z() {
         var state = com.adjustclient.util.anticheat.ServerTracker.INSTANCE.serverState;
-        boolean bedWars = state != null && state.antiCheatModel != null
+        boolean hypixelBedWars = state != null && state.antiCheatModel != null
                 && state.antiCheatModel.serverType == com.adjustclient.server.ServerType.HYPIXEL
                 && com.adjustclient.Adjust.gameStateTracker.state.game == com.adjustclient.hypixel.HypixelGame.BED_WARS;
-        if (bedWars) {
+        boolean rewound = state != null && state.antiCheatModel != null
+                && state.antiCheatModel.serverType == com.adjustclient.server.ServerType.REWOUND;
+        boolean rewoundBedWars = rewound
+                && com.adjustclient.Adjust.rewoundGameTracker.state.game == com.adjustclient.game.rewound.RewoundGame.BEDWARS;
+        boolean rewoundPit = rewound
+                && com.adjustclient.Adjust.rewoundGameTracker.state.game == com.adjustclient.game.rewound.RewoundGame.PIT;
+        if (hypixelBedWars || rewoundBedWars) {
             if (!(chestStrategy instanceof LuckyBlockChestStrategy))
                 chestStrategy = new LuckyBlockChestStrategy(this);
+        } else if (rewoundPit) {
+            if (!(chestStrategy instanceof PitChestStrategy))
+                chestStrategy = new PitChestStrategy(this);
         } else if (!(chestStrategy instanceof DefaultChestStrategy)) {
             chestStrategy = new DefaultChestStrategy(this);
         }

@@ -42,11 +42,9 @@ public final class AntiFireballModule extends Module {
                     || game.ended) return true;
         }
         if (ScaffoldModule.INSTANCE.isEnabled()
-                && ScaffoldModule.INSTANCE.placeReady != null
-                && ScaffoldModule.INSTANCE.placeReady.booleanValue()) return true;
+                && ScaffoldModule.INSTANCE.placeReady) return true;
         return mc.thePlayer == null || mc.thePlayer.getHealth() <= 0.0F
-                || InventoryStateTracker.inServerGui
-                || InventoryStateTracker.inServerInventory
+                || InventoryStateTracker.isInServersideGui()
                 || ServerTracker.INSTANCE.attackedEntity != null
                 || ServerTracker.INSTANCE.usedItemSinceMovement
                 || ServerTracker.INSTANCE.dugSinceMovement;

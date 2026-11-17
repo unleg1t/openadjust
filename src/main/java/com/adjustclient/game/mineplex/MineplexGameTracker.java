@@ -3,6 +3,7 @@ import com.adjustclient.event.EventHandler;
 import com.adjustclient.event.LowLevelPacketReceiveEvent;
 import com.adjustclient.game.server.AbstractGameTracker;
 import com.adjustclient.server.ServerType;
+import com.adjustclient.util.anticheat.ServerTracker;
 import net.minecraft.network.Packet;
 import net.minecraft.network.play.server.S01PacketJoinGame;
 import net.minecraft.network.play.server.S47PacketPlayerListHeaderFooter;
@@ -11,6 +12,11 @@ public final class MineplexGameTracker extends AbstractGameTracker<MineplexGameS
     public Object field12;
     public MineplexGameTracker(ServerType server, MineplexGameState initialState) { super(server, initialState); }
     @EventHandler public void onPacket(LowLevelPacketReceiveEvent event) {
+        var serverState = ServerTracker.INSTANCE.serverState;
+        if (serverState == null || serverState.antiCheatModel == null
+                || serverState.antiCheatModel.serverType != this.server) {
+            return;
+        }
         Packet<?> packet = event.packet;
         if (packet instanceof S01PacketJoinGame) {
             state = MineplexGame.UNKNOWN_GAME.stateFactory.create();

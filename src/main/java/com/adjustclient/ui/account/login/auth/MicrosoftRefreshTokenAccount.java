@@ -32,6 +32,7 @@ import com.adjustclient.logging.LogLevel;
 import com.adjustclient.logging.Logger;
 import com.adjustclient.ui.account.AccountEntry;
 import com.adjustclient.ui.account.AccountType;
+import com.adjustclient.ui.account.LocalAccountStore;
 import com.adjustclient.ui.hud.notification.NotificationBuilder;
 
 public final class MicrosoftRefreshTokenAccount extends AccountEntry {
@@ -93,6 +94,10 @@ public final class MicrosoftRefreshTokenAccount extends AccountEntry {
         return AccountType.BROWSER;
     }
 
+    public String getRefreshToken() {
+        return this.refreshToken;
+    }
+
     /**
      * Performs the refresh-token login chain and returns the resulting session/status.
      * Every HTTP call goes through the shared helper {@code MicrosoftAuth.post(url, body, json)} which returns null on failure.
@@ -114,6 +119,9 @@ public final class MicrosoftRefreshTokenAccount extends AccountEntry {
                 JsonObject msa = JsonParser.parseString(msaResponse).getAsJsonObject();
                 msaAccessToken = msa.get("access_token").getAsString();
                 this.refreshToken = msa.get("refresh_token").getAsString();
+                if (this.repository != null) {
+                    LocalAccountStore.INSTANCE.save();
+                }
                 xblResponse = MicrosoftAuth.post("https://user.auth.xboxlive.com/user/authenticate",
                         "{\"Properties\":{\"AuthMethod\":\"RPS\",\"SiteName\":\"user.auth.xboxlive.com\",\"RpsTicket\":\"t=" + msaAccessToken
                                 + "\"},\"RelyingParty\":\"http://auth.xboxlive.com\",\"TokenType\":\"JWT\"}",
@@ -132,6 +140,9 @@ public final class MicrosoftRefreshTokenAccount extends AccountEntry {
                 JsonObject msa = JsonParser.parseString(msaResponse).getAsJsonObject();
                 msaAccessToken = msa.get("access_token").getAsString();
                 this.refreshToken = msa.get("refresh_token").getAsString();
+                if (this.repository != null) {
+                    LocalAccountStore.INSTANCE.save();
+                }
                 xblResponse = MicrosoftAuth.post("https://user.auth.xboxlive.com/user/authenticate",
                         "{\"Properties\":{\"AuthMethod\":\"RPS\",\"SiteName\":\"user.auth.xboxlive.com\",\"RpsTicket\":\"d=" + msaAccessToken
                                 + "\"},\"RelyingParty\":\"http://auth.xboxlive.com\",\"TokenType\":\"JWT\"}",

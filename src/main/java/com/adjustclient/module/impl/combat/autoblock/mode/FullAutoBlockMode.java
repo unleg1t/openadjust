@@ -7,24 +7,32 @@ import com.adjustclient.event.IngameActionEvent;
 import com.adjustclient.hypixel.HypixelGame;
 import com.adjustclient.module.impl.combat.autoblock.AutoBlockMode;
 import com.adjustclient.module.impl.combat.autoblock.AutoBlockModule;
+import com.adjustclient.module.impl.player.breaker.BreakerModule;
+import com.adjustclient.server.ServerType;
 import com.adjustclient.util.RandomUtil;
 import com.adjustclient.util.WorldUtil;
+import com.adjustclient.util.anticheat.ServerTracker;
 import net.minecraft.entity.item.EntityArmorStand;
-import net.minecraft.util.MovingObjectPosition;
 
 public final class FullAutoBlockMode extends AutoBlockMode {
     public static FullAutoBlockMode INSTANCE;
     private Integer holdTicks;
     private boolean blocking;
-    public FullAutoBlockMode(AutoBlockModule module) { super(module, "Full"); INSTANCE = this; }
 
-    @EventHandler(priority = 82) public void onTick(IngameActionEvent event) {
+    public FullAutoBlockMode(AutoBlockModule module) {
+        super(module, "Full");
+        INSTANCE = this;
+    }
+
+    @EventHandler(priority = 82)
+    public void onTick(IngameActionEvent event) {
         if (event.suppressActions) return;
-        // the hub only calls this while the mode is enabled (AutoBlockMode.isEnabled gate at :3826): nothing is reset
-        // while disabled
         if (!isEnabled()) return;
         blocking = false;
-        if (mc.thePlayer == null) { holdTicks = null; return; }
+        if (mc.thePlayer == null) {
+            holdTicks = null;
+            return;
+        }
         var use = Adjust.mouseClickHelper.right;
         if (!module.shouldBlock() || use.disabled) {
             if (holdTicks != null) {
@@ -48,11 +56,17 @@ public final class FullAutoBlockMode extends AutoBlockMode {
         use.holdTicks = holdTicks;
     }
 
-    @EventHandler public void onUseItemTick(CancellableInputActionStageEvent event) {
+    @EventHandler
+    public void onUseItemTick(CancellableInputActionStageEvent event) {
         if (event.isCancelled() || !isEnabled() || mc.thePlayer == null || !blocking) return;
         var use = Adjust.mouseClickHelper.right;
         if (!use.isClicked(false)) return;
-        if (!WorldUtil.canInteract()) {
+        var server = ServerTracker.INSTANCE.serverState;
+        boolean breakingOnHypixel = server != null && server.antiCheatModel != null
+                && server.antiCheatModel.serverType == ServerType.HYPIXEL
+                && BreakerModule.INSTANCE.isEnabled()
+                && BreakerModule.INSTANCE.handler.target != null;
+        if (!WorldUtil.canInteract() || breakingOnHypixel) {
             use.clicks = null;
             use.down = false;
             use.holdTicks = 0;
@@ -62,9 +76,7 @@ public final class FullAutoBlockMode extends AutoBlockMode {
         }
         if (Adjust.gameStateTracker.state.game == HypixelGame.HOUSING
                 && mc.objectMouseOver != null && mc.objectMouseOver.entityHit instanceof EntityArmorStand) {
-            mc.objectMouseOver.typeOfHit = MovingObjectPosition.MovingObjectType.MISS;
-            mc.pointedEntity = null;
-            com.adjustclient.util.anticheat.ServerTracker.INSTANCE.mouseOverOverridden = true;
+            WorldUtil.clearMouseOver();
         }
     }
 }

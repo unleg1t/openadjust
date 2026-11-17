@@ -51,15 +51,29 @@ public class BreakerTargetFinder implements MinecraftInstance {
         Block wanted = module.block.getValue().block;
         BlockPos target = BlockUtil.findBed(pos -> {
             if (mc.theWorld.getBlockState(pos).getBlock() != Blocks.bed) return false;
-            var game = Adjust.gameStateTracker.state;
-            if (!(game instanceof BedWarsGameState bedWars) || bedWars.startTimer == null) return true;
-            if (bedWars.isNearSpawn(pos)) return false;
-            BedWarsMapInfo map = bedWars.mapInfo;
-            if (map == null) return true;
-            BedWarsTeam team = map.getTeam(pos);
-            if (team == null) return true;
-            for (String name : Adjust.INSTANCE.tagManager.getSavedNames())
-                if (bedWars.findPlayerTeam(name) == team) return false;
+            var server = ServerTracker.INSTANCE.serverState;
+            if (server != null && server.antiCheatModel != null) {
+                if (server.antiCheatModel.serverType == ServerType.HYPIXEL) {
+                    var game = Adjust.gameStateTracker.state;
+                    if (!(game instanceof BedWarsGameState bedWars) || bedWars.startTimer == null) return true;
+                    if (bedWars.isNearSpawn(pos)) return false;
+                    BedWarsMapInfo map = bedWars.mapInfo;
+                    if (map == null) return true;
+                    BedWarsTeam team = map.getTeam(pos);
+                    if (team == null) return true;
+                    for (String name : Adjust.INSTANCE.tagManager.getSavedNames())
+                        if (bedWars.findPlayerTeam(name) == team) return false;
+                    return true;
+                }
+                if (server.antiCheatModel.serverType == ServerType.REWOUND) {
+                    var game = Adjust.rewoundGameTracker.state;
+                    if (game instanceof com.adjustclient.game.rewound.RewoundBedWarsGameState rewoundBedWars
+                            && rewoundBedWars.startTimer != null
+                            && rewoundBedWars.isNearSpawn(pos)) {
+                        return false;
+                    }
+                }
+            }
             return true;
         });
         if (target == null) return null;

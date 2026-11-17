@@ -2,7 +2,7 @@ package com.adjustclient.module.impl.player.voicechat.soundboard;
 
 public class SineWaveSound implements SoundboardSound {
     public static final SineWaveSound INSTANCE = new SineWaveSound();
-    public String getName() { return "Sign Wave"; }
+    public String getName() { return "Sine Wave"; }
     public short[] nextFrame() {
         short[] samples = new short[960];
         for (int i = 0; i < samples.length; i++) {

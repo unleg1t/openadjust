@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import com.adjustclient.Adjust;
+import com.adjustclient.module.impl.player.autorewound.AutoRewoundModule;
 import com.adjustclient.module.impl.render.hud.HUDModule;
 import com.adjustclient.render.ColorUtil;
 import com.adjustclient.script.engine.ScriptManager;
@@ -78,7 +79,7 @@ public final class ToggledList extends HudElement implements Listener {
             this.entries.forEach(entry -> this.updateEntry(entry));
         }
         this.update();
-        Collections.sort(this.entries);                                // ComparableTimSort
+        Collections.sort(this.entries);
         this.dirty = false;
     }
 
@@ -89,6 +90,11 @@ public final class ToggledList extends HudElement implements Listener {
         if (suffix == null || !this.settings.suffix.isEnabled()) {
             entry.text = name;
         } else {
+            if (AutoRewoundModule.INSTANCE != null
+                    && AutoRewoundModule.INSTANCE.isActive()
+                    && AutoRewoundModule.INSTANCE.showModulesAsHypixel.isEnabled()) {
+                suffix = suffix.replaceAll("\\bRewound\\b", "Hypixel");
+            }
             entry.text = name + " " + ChatColor.GRAY + suffix;
         }
         entry.width = Fonts.TAHOMA_12.getStringWidth(entry.text);

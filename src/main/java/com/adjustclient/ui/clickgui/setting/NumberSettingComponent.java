@@ -72,7 +72,7 @@ public final class NumberSettingComponent extends SettingComponent<NumberSetting
     public void renderContent(com.adjustclient.event.Render2DEvent queue, com.adjustclient.util.Vec2f mouse) {
         AdjustComponent bounds = this.bounds;
         float trackLeft = bounds.x + 0.0F;
-        float trackWidth = bounds.width - 2.0F; // f2
+        float trackWidth = bounds.width - 2.0F;
         NumberSetting setting = this.setting;
         if (this.dragging) {
             float mouseX = mouse.x;

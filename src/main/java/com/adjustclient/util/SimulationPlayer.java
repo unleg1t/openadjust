@@ -2,6 +2,7 @@ package com.adjustclient.util;
 
 import com.adjustclient.event.SprintEvent;
 import com.adjustclient.module.impl.movement.speed.SpeedMode;
+import com.adjustclient.module.impl.movement.speed.SpeedState;
 import com.adjustclient.util.rotation.SimulatedEntity;
 import com.mojang.authlib.GameProfile;
 import java.util.UUID;
@@ -15,7 +16,7 @@ import net.minecraft.world.World;
 
 public final class SimulationPlayer extends EntityPlayer implements SimulatedEntity {
     public static final GameProfile PROFILE;
-    public static byte primitiveSlot20d1 = 2;
+    public static byte simulationModeState = 2;
     public MovementInput movementInput = new MovementInput();
     public net.minecraft.util.AxisAlignedBB field692;
     public SpeedMode speedMode;
@@ -45,14 +46,11 @@ public final class SimulationPlayer extends EntityPlayer implements SimulatedEnt
     }
 
     @Override
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public void moveFlying(float strafe, float forward, float friction) {
         super.moveFlying(strafe, forward, friction);
         if (speedMode != null) {
-            if (speedMode instanceof com.adjustclient.module.impl.movement.speed.NcpSpeedMode)
-                ((com.adjustclient.module.impl.movement.speed.NcpSpeedMode)speedMode).update(
-                        (com.adjustclient.module.impl.movement.speed.NcpSpeedState) speedState);
-            else ((com.adjustclient.module.impl.movement.speed.VanillaSpeedMode)speedMode).update(
-                    (com.adjustclient.module.impl.movement.speed.VanillaSpeedState) speedState);
+            ((SpeedMode) speedMode).update((SpeedState) speedState);
         }
     }
 
@@ -99,7 +97,7 @@ public final class SimulationPlayer extends EntityPlayer implements SimulatedEnt
 
     @Override
     protected void updateEntityActionState() {
-        if (primitiveSlot20d1 == 2) {
+        if (simulationModeState == 2) {
             super.updateEntityActionState();
             rotationYawHead = rotationYaw;
         }

@@ -20,10 +20,11 @@ public class BreakHandler implements MinecraftInstance {
     public BreakHandler(BreakerModule module) { this.module = module; }
 
     public boolean tick() {
+        if (target == null) return false;
         BlockPos pos = target.pos;
         Block block = mc.theWorld.getBlockState(pos).getBlock();
         AxisAlignedBB box = block.getSelectedBoundingBox(mc.theWorld, pos);
-        if (box == null || InventoryStateTracker.inServerGui || InventoryStateTracker.inServerInventory || !target.isValid()) {
+        if (box == null || InventoryStateTracker.isInServersideGui() || !target.isValid()) {
             target = null; samplingFactor = RandomUtil.nextFloat(0.05F, 0.06F); return false;
         }
         float eyeHeight = mc.thePlayer.isPlayerSleeping() ? 0.2F : 1.62F;
@@ -58,6 +59,7 @@ public class BreakHandler implements MinecraftInstance {
     }
 
     public void selectTool(boolean force) {
+        if (target == null) return;
         ToolChoice tool = target.tool;
         if (tool == null || tool.slot == mc.thePlayer.inventory.m() && !force) return;
         Adjust.slotSpoofer.slot = tool.slot;
@@ -95,7 +97,7 @@ public class BreakHandler implements MinecraftInstance {
                 selectTool(false);
                 if (!preventInput) setMouseOver(hit);
             }
-            if (!preventInput) mc.forkMethod1438f8440(mc.leftClickCounter == 0, hit);
+            if (!preventInput) mc.sendClickBlockToControllerAt(mc.leftClickCounter == 0, hit);
             if (target != null && willFinish(hit.getBlockPos(), true)) rotation = angles;
         } else if (preventInput) {
             rotation = angles;

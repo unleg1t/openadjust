@@ -59,7 +59,7 @@ public final class SeasonalSimulatorModule extends UtilityModule {
         var server = ServerTracker.INSTANCE.serverState;
         if (server == null || server.antiCheatModel == null
                 || server.antiCheatModel.serverType != ServerType.HYPIXEL
-                || InventoryStateTracker.inServerGui || InventoryStateTracker.inServerInventory) return;
+                || InventoryStateTracker.isInServersideGui()) return;
         if (collectEnabled.isEnabled() && isCollectionGame() && Adjust.cpsCounter.canClick(cps)) collectCandy();
     }
 

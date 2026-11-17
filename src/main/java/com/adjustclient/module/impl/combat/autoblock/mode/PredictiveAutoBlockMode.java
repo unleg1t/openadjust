@@ -1,20 +1,27 @@
 package com.adjustclient.module.impl.combat.autoblock.mode;
 
 import com.adjustclient.Adjust;
-import com.adjustclient.event.*;
+import com.adjustclient.event.AttackEntityEvent;
+import com.adjustclient.event.EventHandler;
+import com.adjustclient.event.GameLoopEvent;
+import com.adjustclient.event.IngameActionEvent;
+import com.adjustclient.event.WorldResetEvent;
 import com.adjustclient.game.packet.PacketHold;
 import com.adjustclient.module.impl.combat.autoblock.AutoBlockMode;
 import com.adjustclient.module.impl.combat.autoblock.AutoBlockModule;
-import com.adjustclient.setting.*;
-import com.adjustclient.util.DamageUtil;
+import com.adjustclient.setting.BooleanSetting;
+import com.adjustclient.setting.ExpandSetting;
+import com.adjustclient.setting.NumberSetting;
 import com.adjustclient.util.Timer;
 import com.adjustclient.util.anticheat.ServerTracker;
+import com.adjustclient.util.anticheat.entity.CombatStats;
 import com.adjustclient.util.anticheat.entity.TrackedLivingEntity;
 import net.minecraft.entity.Entity;
 import org.lwjgl.input.Mouse;
 
 public final class PredictiveAutoBlockMode extends AutoBlockMode {
     public static PredictiveAutoBlockMode INSTANCE;
+    public final PingSetting ping;
     public final NumberSetting maxHoldTime;
     public final BooleanSetting fakeBlockVisual;
     public final BooleanSetting lagEnabled;
@@ -36,6 +43,7 @@ public final class PredictiveAutoBlockMode extends AutoBlockMode {
         INSTANCE = this;
         timer = new Timer();
         state = AutoBlockState.IDLE;
+        ping = new PingSetting(module, () -> module.mode.getValue() != this);
         maxHoldTime = new NumberSetting(module, "Max hold time", 50, 50, 500, 1,
                 () -> module.mode.getValue() != this);
         maxHoldTime.formatter(NumberSetting.MILLISECONDS);
@@ -65,7 +73,33 @@ public final class PredictiveAutoBlockMode extends AutoBlockMode {
         onlyWhenHurt.setDescription("Only auto block when hurt.");
     }
 
-    @EventHandler(priority = 81) public void onTick(IngameActionEvent event) {
+    private static boolean isHurtWindowReady(CombatStats stats, int ticks, int pingMs) {
+        int latency = (int) (pingMs * 1.5F);
+        long now = System.currentTimeMillis();
+        long hurtDelay = 50L * (9 - ticks) - latency;
+        if (stats.hurtWindowOnly) {
+            return hurtDelay <= now - stats.lastHurt;
+        }
+        return 50L * (10 - ticks) <= now - stats.lastAttack
+                && hurtDelay <= now - stats.lastHurt;
+    }
+
+    private boolean shouldStartBlock(TrackedLivingEntity player) {
+        CombatStats stats = player.combatStats;
+        if (!onlyWhenHurt.isEnabled()) {
+            if (System.currentTimeMillis() - stats.lastHurt >= 500L) {
+                return true;
+            }
+            return isHurtWindowReady(stats, 0, ping.getPing());
+        }
+        if (System.currentTimeMillis() - stats.lastHurt < 500L) {
+            return isHurtWindowReady(stats, 0, ping.getPing()) && module.hasThreat(true);
+        }
+        return false;
+    }
+
+    @EventHandler(priority = 81)
+    public void onTick(IngameActionEvent event) {
         if (event.suppressActions) return;
         fakeBlocking = false;
         if (!isEnabled()) return;
@@ -89,13 +123,10 @@ public final class PredictiveAutoBlockMode extends AutoBlockMode {
             return;
         }
         var player = ServerTracker.INSTANCE.entityTracker.getLocalPlayer();
-        if (player != null && System.currentTimeMillis() - player.combatStats.lastHurt < 500
-                && !player.combatStats.canKillWithHeldItem(2)) {
+        if (player != null && System.currentTimeMillis() - player.combatStats.lastHurt < 500L
+                && !isHurtWindowReady(player.combatStats, 0, ping.getPing())) {
+            nextBlockTick = 0;
             resetAndFlush();
-            return;
-        }
-        if (state != AutoBlockState.LAG && Adjust.mouseClickHelper.left.isPressed(false)) {
-            state = AutoBlockState.IDLE;
             return;
         }
         if (state == AutoBlockState.LAG && timer.hasElapsed(lagMaxTime.getLong())) {
@@ -103,8 +134,7 @@ public final class PredictiveAutoBlockMode extends AutoBlockMode {
             releasePending = true;
         }
         if (player == null) return;
-        if (!onlyWhenHurt.isEnabled() && System.currentTimeMillis() - player.combatStats.lastHurt >= 500
-                || player.combatStats.canKillWithHeldItem(2)) {
+        if (shouldStartBlock(player)) {
             if (state == AutoBlockState.IDLE && (blockAgainImmediately.isEnabled()
                     || mc.thePlayer.ticksExisted >= nextBlockTick)) {
                 state = AutoBlockState.BLOCK;
@@ -119,28 +149,36 @@ public final class PredictiveAutoBlockMode extends AutoBlockMode {
                 state = AutoBlockState.LAG;
                 timer.reset();
                 addHold();
-            } else state = AutoBlockState.IDLE;
+            } else {
+                state = AutoBlockState.IDLE;
+            }
         }
     }
 
-    @EventHandler public void onGameLoop(GameLoopEvent event) {
+    @EventHandler
+    public void onGameLoop(GameLoopEvent event) {
         if (!isEnabled() || !event.preScheduled || mc.thePlayer == null) return;
-        if (releasePending) { releaseHold(); releasePending = false; }
+        if (releasePending) {
+            releaseHold();
+            releasePending = false;
+        }
     }
 
-    @EventHandler(priority = 1) public void onWorldReset(WorldResetEvent event) {
+    @EventHandler(priority = 1)
+    public void onWorldReset(WorldResetEvent event) {
         if (!isEnabled()) return;
         nextBlockTick = 0;
         resetAndFlush();
     }
 
-    @EventHandler public void onAttack(AttackEntityEvent event) {
-        if (!isEnabled() || !preventDelayingAttacks.isEnabled()) return;
+    @EventHandler
+    public void onAttack(AttackEntityEvent event) {
+        if (!event.pre || !isEnabled() || !preventDelayingAttacks.isEnabled()) return;
         Entity target = event.entity;
         var tracked = ServerTracker.INSTANCE.entityTracker.get(target);
         if (state != AutoBlockState.LAG || !(tracked instanceof TrackedLivingEntity)) return;
         var stats = ((TrackedLivingEntity) tracked).combatStats;
-        if (stats.canKillWithHeldItem(1)) {
+        if (isHurtWindowReady(stats, 1, ping.getPing())) {
             state = AutoBlockState.IDLE;
             releasePending = true;
         }
@@ -155,14 +193,24 @@ public final class PredictiveAutoBlockMode extends AutoBlockMode {
         return !holdBlock.isEnabled() || Mouse.isCreated() && Mouse.isButtonDown(1);
     }
 
-    public void addHold() { if (hold == null) hold = Adjust.outboundPacketQueue.addHold(null, false); }
-    public void releaseHold() {
-        if (hold != null) { Adjust.outboundPacketQueue.removeHold(hold); hold = null; }
+    public void addHold() {
+        if (hold == null) hold = Adjust.outboundPacketQueue.addHold(null, false);
     }
+
+    public void releaseHold() {
+        if (hold != null) {
+            Adjust.outboundPacketQueue.removeHold(hold);
+            hold = null;
+        }
+    }
+
     public void resetAndFlush() {
         releasePending = false;
         state = AutoBlockState.IDLE;
         timer.reset();
-        if (hold != null) { Adjust.outboundPacketQueue.removeHold(hold); hold = null; }
+        if (hold != null) {
+            Adjust.outboundPacketQueue.removeHold(hold);
+            hold = null;
+        }
     }
 }

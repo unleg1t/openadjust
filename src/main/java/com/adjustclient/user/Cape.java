@@ -12,7 +12,7 @@ public enum Cape implements ModeOption {
     NONE("None", null, 0, false, false),
     ADJUST("Adjust", "textures/cape/adjust.png", 1, false, true),
     NOSTALGIA("Minecraft", "textures/cape/nostalgia.png", 2, false, true),
-    GRAALVM("GraalVM", "textures/cape/graalvm.png", 3, true, false);
+    CUSTOM("Custom", null, 3, true, false);
 
     private final String displayName;
     private final String texturePath;

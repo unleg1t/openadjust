@@ -459,7 +459,7 @@ public final class Authenticator {
             if (dec[pos] < 5) {
                 return;
             }
-            EntityEspRenderer.primitiveSlot1334++;
+            EntityEspRenderer.espRenderPassCounter++;
             byte b5 = dec[pos + 5];
             short tag = (short) ((((b5 ^ dec[pos + 7]) ^ 0x48) << 8) | ((b5 ^ dec[pos + 6]) ^ 0x43));
             if (tag >= 1) {
@@ -468,11 +468,11 @@ public final class Authenticator {
                         | (((b5 ^ dec[pos + 3]) & 0xFF) << 16)
                         | (((b5 ^ dec[pos + 4]) & 0xFF) << 24);
                 if (tag == 1828) {
-                    AuthStatics.tokenSlot1350 = val;
+                    AuthStatics.authTokenPartA = val;
                 } else if (tag == 1982) {
-                    AuthStatics.tokenSlot1354 = val;
+                    AuthStatics.authTokenPartB = val;
                 } else if (tag == 3144) {
-                    AuthStatics.tokenSlot1358 = val - 105;
+                    AuthStatics.authTokenPartC = val - 105;
                 }
             }
         }
@@ -742,7 +742,7 @@ public final class Authenticator {
         byte[] header = "where is jenny from?".getBytes(StandardCharsets.US_ASCII);
         System.arraycopy(header, 0, buf, 0, header.length);
         AuthStatics.stepByte20ca = 32;
-        SimulationPlayer.primitiveSlot20d1 = 2;
+        SimulationPlayer.simulationModeState = 2;
         for (int j = 0; j < len; j++) {
             buf[j] ^= (byte) ((-47 * j) ^ 0x8F);
         }

@@ -14,7 +14,6 @@ public abstract class BuilderComponent implements Listener, MinecraftInstance {
     public boolean isEnabled() {
         if (!owner.isEnabled() || !((BuilderFeature) this).active) return false;
         if (ScaffoldModule.INSTANCE.isEnabled()
-                && ScaffoldModule.INSTANCE.placeReady != null
                 && ScaffoldModule.INSTANCE.placeReady) return false;
         return GameStateUtil.isActive();
     }

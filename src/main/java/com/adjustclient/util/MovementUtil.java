@@ -115,4 +115,24 @@ public final class MovementUtil implements MinecraftInstance {
         return mc.thePlayer != null && mc.thePlayer.movementInput != null
                 && (mc.thePlayer.movementInput.moveForward != 0 || mc.thePlayer.movementInput.moveStrafe != 0);
     }
+    public static boolean isAutoJumping() {
+        com.adjustclient.module.impl.movement.PearlAssistModule pearl = com.adjustclient.module.impl.movement.PearlAssistModule.INSTANCE;
+        if (pearl != null && pearl.isEnabled() && pearl.safetyActive
+                && pearl.jumpRestrict.getDouble() > 0.0D
+                && !pearl.targetTimer.hasElapsed((long) (pearl.jumpRestrict.getDouble() * 1000.0D))) {
+            return true;
+        }
+        if (com.adjustclient.module.impl.movement.scaffold.NcpScaffoldMode.INSTANCE != null
+                && com.adjustclient.module.impl.movement.scaffold.NcpScaffoldMode.INSTANCE.shouldAutoJump()) {
+            return true;
+        }
+        if (com.adjustclient.module.impl.movement.scaffold.RewoundScaffoldMode.INSTANCE != null
+                && com.adjustclient.module.impl.movement.scaffold.RewoundScaffoldMode.INSTANCE.shouldAutoJump()) {
+            return true;
+        }
+        return com.adjustclient.module.impl.movement.jesus.JesusModule.INSTANCE != null
+                && com.adjustclient.module.impl.movement.jesus.JesusModule.INSTANCE.isEnabled()
+                && com.adjustclient.module.impl.movement.jesus.JesusModule.INSTANCE.mode.getValue() == com.adjustclient.module.impl.movement.jesus.RewoundJesusMode.INSTANCE
+                && com.adjustclient.module.impl.movement.jesus.RewoundJesusMode.isStandingOnLiquid();
+    }
 }

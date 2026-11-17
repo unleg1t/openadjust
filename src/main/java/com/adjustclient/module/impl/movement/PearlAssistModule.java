@@ -353,7 +353,7 @@ public final class PearlAssistModule extends Module {
         long remaining = plan.flightMillis
                 - (System.currentTimeMillis() - plan.timer.lastMs);
         String time = remaining >= 1 ? com.adjustclient.util.TimeUtil.formatDuration(remaining, true) : "0.0s";
-        return time + ChatColor.GRAY + " " + Math.round(plan.distance) + "m";
+        return time + ChatColor.GRAY + " [" + Math.round(plan.distance) + "m]";
     }
 
     public void simulateThrows(Vec3 destination, Vec3 origin, List<PearlSimulationState> results) {

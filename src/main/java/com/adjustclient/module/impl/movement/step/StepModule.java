@@ -28,22 +28,28 @@ public final class StepModule extends Module {
             if (oldMode instanceof MotionStepMode previous) {
                 previous.result = null;
                 previous.lastAlignedTick = -1;
+            } else if (oldMode instanceof NcpStepMode previous) {
+                previous.timerSpeed = 1.0F;
             }
         });
-        // The factory creates Height before Mode, then moves Mode to the front of the settings list.
         settings.remove(mode);
         settings.add(0, mode);
     }
 
-    @Override public void onDisable() {
-        mc.timer.timerSpeed = 1.0F;
+    @Override
+    public void onDisable() {
         if (mode.getValue() instanceof MotionStepMode motion) {
             motion.result = null;
             motion.lastAlignedTick = -1;
+        } else if (mode.getValue() instanceof NcpStepMode ncp) {
+            ncp.timerSpeed = 1.0F;
         }
     }
 
-    @Override public String getSuffix() { return mode.getValue().getName(); }
+    @Override
+    public String getSuffix() {
+        return mode.getValue().getName();
+    }
 
     public boolean isStepping() {
         if (!isEnabled()) return false;

@@ -37,7 +37,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import com.adjustclient.Adjust;
+import com.adjustclient.game.rewound.RewoundGame;
 import com.adjustclient.hypixel.HypixelGameState;
+import com.adjustclient.module.impl.player.autorewound.AutoRewoundModule;
 import com.adjustclient.hypixel.TabListTracker;
 import com.adjustclient.hypixel.api.client.AntiSniperApiClient;
 import com.adjustclient.hypixel.api.client.CubelifyApiClient;
@@ -118,6 +120,7 @@ public final class PlayerEntry implements Comparable<PlayerEntry> {
     public boolean npc;
     public boolean noEntity;
     public boolean nameResolved;
+    public boolean rewoundRealPlayer;
 
     public PlayerEntry(TabPlayer player) {
         this.player = player;
@@ -208,7 +211,9 @@ public final class PlayerEntry implements Comparable<PlayerEntry> {
     public int compareTo(PlayerEntry other) {
         NetworkPlayerInfo a = this.player.info;
         NetworkPlayerInfo b = other.player.info;
-        if (Adjust.gameStateTracker.state.game != HypixelGame.BED_WARS) {
+        boolean bedWars = Adjust.gameStateTracker.state.game == HypixelGame.BED_WARS
+                || (isOnRewound() && Adjust.rewoundGameTracker.state.game == RewoundGame.BEDWARS);
+        if (!bedWars) {
             // vanilla tab list order: GuiPlayerTabOverlay.PlayerComparator
             return new net.minecraft.client.gui.GuiPlayerTabOverlay.PlayerComparator().compare(a, b);
         }
@@ -241,7 +246,7 @@ public final class PlayerEntry implements Comparable<PlayerEntry> {
             return;
         }
         UUID id = this.uuid != null ? this.uuid : profile().getId();
-        if (id == null || (this.lastTagUuid != null && this.lastTagUuid.equals(id))) { // compared by both 64-bit halves
+        if (id == null || (this.lastTagUuid != null && this.lastTagUuid.equals(id))) {
             return;
         }
         this.lastTagUuid = id;
@@ -331,6 +336,12 @@ public final class PlayerEntry implements Comparable<PlayerEntry> {
         }
         this.nameColor = user == null ? HUDModule.getHudColor().getRGB() : user.getColor();
         this.bounty = null;
+        this.rewoundRealPlayer = false;
+        boolean onRewound = isOnRewound();
+        if (onRewound && this.player.info.getDisplayName() != null
+                && this.player.info.getDisplayName().getFormattedText().startsWith("§r§c* ")) {
+            this.rewoundRealPlayer = true;
+        }
 
         // scoreboard team of the player
         Minecraft mc = Minecraft.getMinecraft();
@@ -341,13 +352,16 @@ public final class PlayerEntry implements Comparable<PlayerEntry> {
                 this.updateHypixelStats(ign);
                 this.updateKd(ign);
                 this.parseTeamSuffix(team);
+            } else if (onRewound) {
+                this.updateKd(ign);
+                this.parseRewoundTeamSuffix(team);
             } else if (ServerTracker.INSTANCE.serverState != null && ServerTracker.INSTANCE.serverState.antiCheatModel != null
                     && ServerTracker.INSTANCE.serverState.antiCheatModel.serverType == ServerType.HYPIXEL) {    // connected to Hypixel
                 this.updateKd(ign);
             }
         } else if (!fullUpdate) {
-            if (ServerTracker.INSTANCE.serverState != null && ServerTracker.INSTANCE.serverState.antiCheatModel != null
-                    && ServerTracker.INSTANCE.serverState.antiCheatModel.serverType == ServerType.HYPIXEL) {
+            if (onRewound || (ServerTracker.INSTANCE.serverState != null && ServerTracker.INSTANCE.serverState.antiCheatModel != null
+                    && ServerTracker.INSTANCE.serverState.antiCheatModel.serverType == ServerType.HYPIXEL)) {
                 this.updateKd(ign);
             }
         } else {
@@ -456,7 +470,11 @@ public final class PlayerEntry implements Comparable<PlayerEntry> {
             return;
         }
         int kills = stats.kills;
-        if (game == HypixelGame.SKYWARS || game == HypixelGame.BLITZ_SG) {
+        boolean killsOnly = isOnRewound()
+                ? (Adjust.rewoundGameTracker.state.game == RewoundGame.SKYWARS
+                        || Adjust.rewoundGameTracker.state.game == RewoundGame.SURVIVAL_GAMES)
+                : (game == HypixelGame.SKYWARS || game == HypixelGame.BLITZ_SG);
+        if (killsOnly) {
             this.kd = Integer.toString(kills);
         } else if (kills >= 1) {
             int deaths = stats.deaths;
@@ -541,10 +559,52 @@ public final class PlayerEntry implements Comparable<PlayerEntry> {
         }
     }
 
+    public void parseRewoundTeamSuffix(ScorePlayerTeam team) {
+        if (Adjust.rewoundGameTracker.state.game == RewoundGame.PIT && team.getColorSuffix() != null) {
+            Matcher matcher = BOUNTY_PATTERN.matcher(team.getColorSuffix());
+            if (matcher.find()) {
+                try {
+                    this.bounty = String.format("%,d", Integer.parseInt(matcher.group(1)));
+                } catch (NumberFormatException ignored) {
+                }
+            }
+        }
+    }
+
+    private static boolean isOnRewound() {
+        return ServerTracker.INSTANCE.serverState != null
+                && ServerTracker.INSTANCE.serverState.antiCheatModel != null
+                && ServerTracker.INSTANCE.serverState.antiCheatModel.serverType == ServerType.REWOUND;
+    }
+
     public void updateTeamColor(boolean checkGame, ScorePlayerTeam team) {
         int color = 0xDFB9B9B9;
-        if (ServerTracker.INSTANCE.serverState == null || ServerTracker.INSTANCE.serverState.antiCheatModel == null
-                || ServerTracker.INSTANCE.serverState.antiCheatModel.serverType != ServerType.HYPIXEL) {
+        if (ServerTracker.INSTANCE.serverState == null || ServerTracker.INSTANCE.serverState.antiCheatModel == null) {
+            return;
+        }
+        ServerType serverType = ServerTracker.INSTANCE.serverState.antiCheatModel.serverType;
+        if (serverType == ServerType.REWOUND) {
+            if (team == null) {
+                this.teamColor = color;
+                return;
+            }
+            String prefix = team.getColorPrefix();
+            if (prefix != null) {
+                if (prefix.startsWith("§c* ")) {
+                    prefix = prefix.substring(4);
+                }
+                if (Adjust.rewoundGameTracker.state.game == RewoundGame.PIT && prefix.length() >= 2) {
+                    prefix = prefix.substring(0, 2);
+                }
+                String format = net.minecraft.client.gui.FontRenderer.getFormatFromString(prefix);
+                if (format.length() >= 2) {
+                    color = Minecraft.getMinecraft().fontRendererObj.getColorCode(format.charAt(1)) & 0xFFFFFF | 0xFF000000;
+                }
+            }
+            this.teamColor = color;
+            return;
+        }
+        if (serverType != ServerType.HYPIXEL) {
             return;
         }
         if (team != null && " §5[V]".equals(team.getColorSuffix())) {
@@ -888,11 +948,14 @@ public final class PlayerEntry implements Comparable<PlayerEntry> {
         }
         com.adjustclient.tag.PlayerTag property = Adjust.INSTANCE.tagManager.getTag(name);
         if (property == null) {
-            this.status = RowTint.NONE;
+            this.status = this.rewoundRealPlayer
+                    && (AutoRewoundModule.INSTANCE == null || !AutoRewoundModule.INSTANCE.shouldHideBots())
+                    ? RowTint.REAL_PLAYER
+                    : RowTint.NONE;
             this.progress = null;
             return;
         }
-        switch (StatsSwitchMap.PAIR[property.ordinal()]) {        // int[2] {1, 2} (ordinal -> case)
+        switch (StatsSwitchMap.PAIR[property.ordinal()]) {
             case 1:
                 this.status = RowTint.WHITELISTED;
                 break;
@@ -900,7 +963,7 @@ public final class PlayerEntry implements Comparable<PlayerEntry> {
                 this.status = RowTint.TARGETED;
                 break;
             default:
-                throw new IllegalStateException();                                // MatchException
+                throw new IllegalStateException();
         }
     }
 }

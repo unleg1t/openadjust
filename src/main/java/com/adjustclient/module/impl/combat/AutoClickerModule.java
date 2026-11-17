@@ -2,40 +2,36 @@ package com.adjustclient.module.impl.combat;
 
 import com.adjustclient.Adjust;
 import com.adjustclient.bind.Bind;
+import com.adjustclient.bind.BindMode;
 import com.adjustclient.bind.MouseKey;
 import com.adjustclient.event.AttackInputStageEvent;
 import com.adjustclient.event.EventHandler;
 import com.adjustclient.event.IngameActionEvent;
-import com.adjustclient.event.MouseDeltaEvent;
-import com.adjustclient.event.InventoryKeyEvent;
-import com.adjustclient.game.player.InventoryStateTracker;
+import com.adjustclient.event.ScreenMouseClickEvent;
 import com.adjustclient.logging.LogLevel;
 import com.adjustclient.logging.Logger;
 import com.adjustclient.module.Category;
 import com.adjustclient.module.Module;
 import com.adjustclient.module.impl.combat.autoblock.AutoBlockMode;
+import com.adjustclient.module.impl.combat.autoblock.AutoBlockModule;
 import com.adjustclient.module.impl.combat.autoblock.mode.PredictiveAutoBlockMode;
 import com.adjustclient.module.impl.combat.displacement.DisplacementModule;
 import com.adjustclient.module.util.CpsCounter;
 import com.adjustclient.module.util.CpsSettings;
-import com.adjustclient.module.util.MouseClickHelper;
 import com.adjustclient.setting.BooleanSetting;
 import com.adjustclient.setting.ExpandSetting;
 import com.adjustclient.setting.KeybindSetting;
 import com.adjustclient.util.MinecraftInstance;
 import com.adjustclient.util.RandomUtil;
-import com.adjustclient.util.Timer;
 import com.adjustclient.util.WorldUtil;
 import com.adjustclient.util.anticheat.ServerTracker;
 import com.adjustclient.util.anticheat.entity.TrackedLivingEntity;
-import java.util.List;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.EnumAction;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.MovingObjectPosition;
 import org.lwjgl.input.Mouse;
-import com.adjustclient.module.impl.combat.autoblock.AutoBlockModule;
 
 public final class AutoClickerModule extends Module implements MinecraftInstance {
     public static AutoClickerModule INSTANCE;
@@ -54,15 +50,13 @@ public final class AutoClickerModule extends Module implements MinecraftInstance
     public final BooleanSetting triggerBotTargetsTeammates;
     public final BooleanSetting triggerBotTargetsInvisibles;
     public final KeybindSetting holdBind;
-    private Timer inventoryTimer;
     private int lastSlot;
     public boolean handlingMouseInput;
-    private boolean slotChanged;
-    private boolean awaitMouseRelease;
 
     public AutoClickerModule() {
         super("Auto Clicker", Category.COMBAT);
         INSTANCE = this;
+        lastSlot = -1;
         cps = new CpsSettings(this, 8, 16);
         disableOn = new ExpandSetting(this, "Disable on");
         disableOnBreakingBlock = new BooleanSetting(disableOn, "Breaking block", true);
@@ -83,8 +77,6 @@ public final class AutoClickerModule extends Module implements MinecraftInstance
         triggerBotTargetsPlayers = new BooleanSetting(triggerBotTargets, "Players", true);
         triggerBotTargetsTeammates = new BooleanSetting(triggerBotTargets, "Teammates", false);
         triggerBotTargetsInvisibles = new BooleanSetting(triggerBotTargets, "Invisibles", true);
-        lastSlot = 0;
-        inventoryTimer = new Timer();
         Bind bind = Adjust.INSTANCE.bindManager.register(
                 "module.autoclicker.holdbind", mode -> { }, "Auto Clicker Hold Bind");
         bind.addKey(new MouseKey(0));
@@ -111,18 +103,25 @@ public final class AutoClickerModule extends Module implements MinecraftInstance
     }
 
     @EventHandler
-    public void onMouseInput(com.adjustclient.event.ScreenMouseClickEvent event) {
-        if (!isEnabled()) return;
-        if (!(mc.currentScreen instanceof GuiContainer) || !inventoryEnabled.isEnabled()
-                || !Mouse.isCreated() || !Mouse.isButtonDown(0) || awaitMouseRelease) {
-            inventoryTimer.reset();
+    public void onMouseInput(ScreenMouseClickEvent event) {
+        if (!isEnabled() || handlingMouseInput) return;
+        if (!(mc.currentScreen instanceof GuiContainer container) || !inventoryEnabled.isEnabled()) return;
+        if (event.mouseButton == 0 && event.inputAction == BindMode.RELEASED) {
+            lastSlot = -1;
             return;
         }
-        if (inventoryTimer.lastMs + 160L > System.currentTimeMillis()) return;
+        if (!Mouse.isCreated() || Mouse.getButtonCount() < 1 || !Mouse.isButtonDown(0)) return;
+        boolean initialPress = event.mouseButton == 0 && event.inputAction == BindMode.PRESSED;
+        if (initialPress) lastSlot = -1;
+        int hoveredSlot = getSlotAtMouse(container);
+        if (hoveredSlot == -1 || hoveredSlot == lastSlot) return;
         boolean due = Adjust.cpsCounter.canClick(cps);
-        boolean override = slotChanged && inventoryCpsOverride.isEnabled();
-        if (!due && !override) return;
-        awaitMouseRelease = true;
+        boolean override = inventoryCpsOverride.isEnabled();
+        if (!due && !override) {
+            if (initialPress) lastSlot = hoveredSlot;
+            return;
+        }
+        lastSlot = hoveredSlot;
         Adjust.cpsCounter.recordClick();
         event.cancelled = true;
         handlingMouseInput = true;
@@ -134,17 +133,28 @@ public final class AutoClickerModule extends Module implements MinecraftInstance
             mc.currentScreen.handleMouseInput();
         } catch (Exception exception) {
             Logger.log(LogLevel.ERROR, true, "Auto Clicker handle mouse input: {}", exception);
+        } finally {
+            handlingMouseInput = false;
+            Mouse.eventButton = oldButton;
+            Mouse.event_state = oldState;
         }
-        handlingMouseInput = false;
-        Mouse.eventButton = oldButton;
-        Mouse.event_state = oldState;
+    }
+
+    private int getSlotAtMouse(GuiContainer container) {
+        int mouseX = Mouse.getEventX() * container.width / mc.displayWidth - container.guiLeft;
+        int mouseY = container.height - Mouse.getEventY() * container.height / mc.displayHeight - 1 - container.guiTop;
+        for (Slot slot : container.inventorySlots.inventorySlots) {
+            if (slot.xDisplayPosition - 1 <= mouseX && slot.xDisplayPosition + 17 > mouseX
+                    && slot.yDisplayPosition - 1 <= mouseY && slot.yDisplayPosition + 17 > mouseY) {
+                return slot.slotNumber;
+            }
+        }
+        return -1;
     }
 
     @EventHandler(priority = 100)
     public void onAttackTick(AttackInputStageEvent event) {
         if (event.isCancelled() || !isEnabled()) return;
-        lastSlot = -1;
-        slotChanged = false;
         if (!canClick()) return;
         var left = Adjust.mouseClickHelper.left;
         if (left.disabled) return;
@@ -160,32 +170,9 @@ public final class AutoClickerModule extends Module implements MinecraftInstance
         Adjust.cpsCounter.recordClick();
     }
 
-    @EventHandler
-    public void onSlotRender(com.adjustclient.event.SlotRenderEvent event) {
-        if (!isEnabled()) return;
-        Slot slot = event.slot;
-        if (slot == null) return;
-        GuiContainer screen = event.screen;
-        int mouseX = event.mouseX - screen.guiLeft;
-        int mouseY = event.mouseY - screen.guiTop;
-        if (slot.xDisplayPosition - 1 <= mouseX && slot.xDisplayPosition + 17 > mouseX
-                && slot.yDisplayPosition - 1 <= mouseY && slot.yDisplayPosition + 17 > mouseY) {
-            int previous = lastSlot;
-            lastSlot = slot.slotNumber;
-            if (lastSlot != previous) slotChanged = true;
-        }
-    }
-
-    @EventHandler
-    public void onPlayerUpdate(com.adjustclient.event.CancellablePlayerUpdateEvent event) {
-        if (isEnabled() && !event.isCancelled()) awaitMouseRelease = false;
-    }
-
-    @Override public void onEnable() {
+    @Override
+    public void onEnable() {
         lastSlot = -1;
-        slotChanged = false;
-        awaitMouseRelease = true;
-        inventoryTimer = new Timer();
     }
 
     public boolean canClick() {
@@ -197,7 +184,7 @@ public final class AutoClickerModule extends Module implements MinecraftInstance
         if (disableOnNoWeapon.isEnabled() && !WorldUtil.isHoldingWeapon()) return false;
         if (!ServerTracker.INSTANCE.hasSwingCooldownElapsed()) return false;
         var game = Adjust.gameStateTracker.state;
-        if ((game.game.flags & 2) != 0) return false;
+        if ((game.game.flags & 2) != 0 || (Adjust.rewoundGameTracker.state.game.flags & 2) != 0) return false;
         if (triggerBotEnabled.isEnabled() && mc.objectMouseOver != null
                 && mc.objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY) {
             var entity = ServerTracker.INSTANCE.entityTracker.get(mc.objectMouseOver.entityHit);

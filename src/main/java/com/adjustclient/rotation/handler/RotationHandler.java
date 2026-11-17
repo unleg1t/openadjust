@@ -25,7 +25,7 @@ public final class RotationHandler implements Listener, MinecraftInstance {
         RotationHandler state = INSTANCE;
         if (!state.active || state.requested) return;
         state.updating = true;
-        if (!InventoryStateTracker.inServerGui && !InventoryStateTracker.inServerInventory && mc.thePlayer != null)
+        if (!InventoryStateTracker.isInServersideGui() && mc.thePlayer != null)
             mc.entityRenderer.updateMouseInput(1.0F);
         state.updating = false;
         if (ServerTracker.INSTANCE.mouseOverOverridden) return;
@@ -75,7 +75,7 @@ public final class RotationHandler implements Listener, MinecraftInstance {
         state.requested = true;
         state.active = true;
         state.updating = true;
-        if (InventoryStateTracker.inServerGui || InventoryStateTracker.inServerInventory) { state.updating = false; return; }
+        if (InventoryStateTracker.isInServersideGui()) { state.updating = false; return; }
         if (mc.thePlayer != null) mc.entityRenderer.updateMouseInput(1.0F);
         state.updating = false;
     }
@@ -84,7 +84,7 @@ public final class RotationHandler implements Listener, MinecraftInstance {
         RotationHandler state = INSTANCE;
         if (!state.active) return;
         state.updating = true;
-        if (!InventoryStateTracker.inServerGui && !InventoryStateTracker.inServerInventory && mc.thePlayer != null)
+        if (!InventoryStateTracker.isInServersideGui() && mc.thePlayer != null)
             mc.entityRenderer.updateMouseInput(1.0F);
         state.updating = false;
     }

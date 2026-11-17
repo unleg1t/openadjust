@@ -204,7 +204,7 @@ public class EntityPlayerSP extends AbstractClientPlayer
             }
         }
 
-        if (Adjust.slotSpoofer != null && Adjust.slotSpoofer.active && !InventoryStateTracker.inServerGui && !InventoryStateTracker.inServerInventory)
+        if (Adjust.slotSpoofer != null && Adjust.slotSpoofer.active && !InventoryStateTracker.isInServersideGui())
         {
             if (Adjust.slotSpoofer.field12 == Adjust.slotSpoofer.field8)
             {
@@ -852,10 +852,16 @@ public class EntityPlayerSP extends AbstractClientPlayer
             effectiveForward = (float)((double)effectiveForward / 0.3D);
         }
 
-        this.pushOutOfBlocks(this.posX - (double)this.width * 0.35D, this.getEntityBoundingBox().minY + 0.5D, this.posZ + (double)this.width * 0.35D);
-        this.pushOutOfBlocks(this.posX - (double)this.width * 0.35D, this.getEntityBoundingBox().minY + 0.5D, this.posZ - (double)this.width * 0.35D);
-        this.pushOutOfBlocks(this.posX + (double)this.width * 0.35D, this.getEntityBoundingBox().minY + 0.5D, this.posZ - (double)this.width * 0.35D);
-        this.pushOutOfBlocks(this.posX + (double)this.width * 0.35D, this.getEntityBoundingBox().minY + 0.5D, this.posZ + (double)this.width * 0.35D);
+        if (com.adjustclient.module.impl.exploit.phase.PhaseModule.INSTANCE == null
+                || !com.adjustclient.module.impl.exploit.phase.PhaseModule.INSTANCE.isEnabled()
+                || !(com.adjustclient.module.impl.exploit.phase.PhaseModule.INSTANCE.mode.getValue() instanceof com.adjustclient.module.impl.exploit.phase.mode.PacketlessPhaseMode
+                    || com.adjustclient.module.impl.exploit.phase.PhaseModule.INSTANCE.mode.getValue() instanceof com.adjustclient.module.impl.exploit.phase.mode.VerticalPhaseMode))
+        {
+            this.pushOutOfBlocks(this.posX - (double)this.width * 0.35D, this.getEntityBoundingBox().minY + 0.5D, this.posZ + (double)this.width * 0.35D);
+            this.pushOutOfBlocks(this.posX - (double)this.width * 0.35D, this.getEntityBoundingBox().minY + 0.5D, this.posZ - (double)this.width * 0.35D);
+            this.pushOutOfBlocks(this.posX + (double)this.width * 0.35D, this.getEntityBoundingBox().minY + 0.5D, this.posZ - (double)this.width * 0.35D);
+            this.pushOutOfBlocks(this.posX + (double)this.width * 0.35D, this.getEntityBoundingBox().minY + 0.5D, this.posZ + (double)this.width * 0.35D);
+        }
         boolean flag3 = (float)this.getFoodStats().getFoodLevel() > 6.0F || this.capabilities.allowFlying;
         this.omniSprint = false;
         SprintEligibilityEvent sprintEvent = EventBus.post(new SprintEligibilityEvent(flag3));

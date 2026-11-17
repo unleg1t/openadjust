@@ -48,7 +48,7 @@ public final class HypixelNoSlowMode extends NoSlowMode {
         if (!isActive()) return;
         blocking = false;
         if (!event.suppressActions && mc.thePlayer.ridingEntity == null
-                && !InventoryStateTracker.inServerGui && !InventoryStateTracker.inServerInventory
+                && !InventoryStateTracker.isInServersideGui()
                 && module.getItemType(true) == NoSlowItemType.SWORD
                 && (NoFallModule.INSTANCE.water.placement == null || !NoFallModule.INSTANCE.water.isActive())
                 && Adjust.mouseClickHelper.right.isClicked(false)) {
@@ -156,7 +156,9 @@ public final class HypixelNoSlowMode extends NoSlowMode {
     }
 
     public static Boolean isDifferentSlot(int slot) {
-        return slot != mc.thePlayer.inventory.m();
+        if (slot == mc.thePlayer.inventory.m()) return false;
+        net.minecraft.item.ItemStack stack = mc.thePlayer.inventory.mainInventory[slot];
+        return stack == null || !stack.hasTagCompound();
     }
 
     @Override

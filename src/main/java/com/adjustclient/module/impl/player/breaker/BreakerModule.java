@@ -111,6 +111,17 @@ public final class BreakerModule extends Module implements MinecraftInstance {
         return false;
     }
 
+    public boolean hasTarget() {
+        return handler.target != null;
+    }
+
+    public boolean isBreakingOnRewound() {
+        var server = com.adjustclient.util.anticheat.ServerTracker.INSTANCE.serverState;
+        return server != null && server.antiCheatModel != null
+                && server.antiCheatModel.serverType == com.adjustclient.server.ServerType.REWOUND
+                && handler.target != null && mc.playerController.getIsHittingBlock();
+    }
+
     public void setBreakPriority(boolean value) {
         if (breakPriority == value) return;
         breakPriority = value;

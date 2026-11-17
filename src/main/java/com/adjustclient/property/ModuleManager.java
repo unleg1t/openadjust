@@ -36,6 +36,7 @@ public final class ModuleManager extends Manager<Module> {
         add(new com.adjustclient.module.impl.player.AntiCheatModule());
         add(new com.adjustclient.module.impl.player.inventory.InventoryModule());
         add(new com.adjustclient.module.impl.player.AntiDebuffModule());
+        add(new com.adjustclient.module.impl.player.AutoRespawnModule());
         add(new com.adjustclient.module.impl.player.GameSpeedModule());
         add(new com.adjustclient.module.impl.player.NoRotateModule());
         add(new com.adjustclient.module.impl.player.BlinkModule());
@@ -67,6 +68,7 @@ public final class ModuleManager extends Manager<Module> {
         add(new com.adjustclient.module.impl.movement.SafeWalkModule());
         add(new com.adjustclient.module.impl.player.AntiAFKModule());
         add(new com.adjustclient.module.impl.movement.MovementFixModule());
+        add(new com.adjustclient.module.impl.movement.highjump.HighJumpModule());
         add(new com.adjustclient.module.impl.movement.DoubleJumpModule());
         add(new com.adjustclient.module.impl.movement.StasisModule());
         add(new com.adjustclient.module.impl.render.blockoverlay.BlockOverlayModule());
@@ -107,12 +109,12 @@ public final class ModuleManager extends Manager<Module> {
         add(new com.adjustclient.module.impl.render.BarrierRevealModule());
         add(new com.adjustclient.module.impl.movement.NoJumpDelayModule());
         add(new com.adjustclient.module.impl.player.autohypixel.AutoHypixelModule());
+        add(new com.adjustclient.module.impl.player.autorewound.AutoRewoundModule());
         add(new com.adjustclient.module.impl.exploit.IncognitoModule());
         add(new com.adjustclient.module.impl.combat.KnockbackDelayModule());
         add(new com.adjustclient.module.impl.combat.AutoClickerModule());
         add(new com.adjustclient.module.impl.combat.targetstrafe.TargetStrafeModule());
         add(new com.adjustclient.module.impl.movement.antivoid.AntiVoidModule());
-        add(new com.adjustclient.module.impl.player.zombies.ZombiesModule());
         add(new com.adjustclient.module.impl.player.voicechat.VoiceChatModule());
         add(new com.adjustclient.module.impl.combat.TPAuraModule());
         for (Module module : view) byClass.put(module.getClass(), module);

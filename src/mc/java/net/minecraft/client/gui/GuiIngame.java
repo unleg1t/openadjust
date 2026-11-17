@@ -304,7 +304,7 @@ public class GuiIngame extends Gui
             this.mc.mcProfiler.endSection();
         }
 
-        if (this.titlesTimer > 0 && (TweaksModule.INSTANCE == null || !TweaksModule.INSTANCE.noTitle.isEnabled()))
+        if (this.titlesTimer > 0 && (TweaksModule.INSTANCE == null || !TweaksModule.INSTANCE.noRender.hideTitle()))
         {
             this.mc.mcProfiler.startSection("titleAndSubtitle");
             float f3 = (float)this.titlesTimer - partialTicks;
@@ -654,7 +654,15 @@ public class GuiIngame extends Gui
             collection = list;
         }
 
+        com.adjustclient.event.ScoreboardRenderEvent scoreboardEvent = com.adjustclient.event.EventBus.post(
+                new com.adjustclient.event.ScoreboardRenderEvent(objective, collection));
+
         int i = (int)this.getFontRenderer().getStringWidth(objective.getDisplayName());
+
+        if (scoreboardEvent.overlay != null)
+        {
+            i = Math.max(i, (int)scoreboardEvent.overlay.getWidth());
+        }
 
         for (Score score : collection)
         {
@@ -713,6 +721,11 @@ public class GuiIngame extends Gui
 
                 this.getFontRenderer().drawString(s3, l1 + i / 2 - (int)this.getFontRenderer().getStringWidth(s3) / 2, k - this.getFontRenderer().FONT_HEIGHT, 553648127);
             }
+        }
+
+        if (scoreboardEvent.overlay != null)
+        {
+            scoreboardEvent.overlay.render(scaledRes, (float)i, transparent, (float)j1);
         }
     }
 
@@ -1007,7 +1020,7 @@ public class GuiIngame extends Gui
 
     protected void renderBossHealth()
     {
-        if (TweaksModule.INSTANCE != null && TweaksModule.INSTANCE.noBossBar.isEnabled())
+        if (TweaksModule.INSTANCE != null && TweaksModule.INSTANCE.noRender.hideBossBar())
         {
             return;
         }

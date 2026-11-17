@@ -139,7 +139,8 @@ public final class SessionService implements Listener, MinecraftInstance {
         if (!isInGame(server)) {
             gameTimer.reset();
             countTotal = isActive();
-        } else if ((Adjust.gameStateTracker.state.game.flags & 4) != 0 && !isActive()) {
+        } else if (((Adjust.gameStateTracker.state.game.flags & 4) != 0
+                || (Adjust.rewoundGameTracker.state.game.flags & 4) != 0) && !isActive()) {
             gameTimer.reset();
             countTotal = isActive();
         } else {

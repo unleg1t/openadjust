@@ -36,7 +36,7 @@ public final class LegitNoSlowMode extends NoSlowMode {
         if (!isActive()) return;
         blocking = false;
         if (event.suppressActions || mc.thePlayer.ridingEntity != null
-                || InventoryStateTracker.inServerGui || InventoryStateTracker.inServerInventory
+                || InventoryStateTracker.isInServersideGui()
                 || module.getItemType(true) != NoSlowItemType.SWORD
                 || (NoFallModule.INSTANCE.water.placement != null && NoFallModule.INSTANCE.water.isActive())
                 || !Adjust.mouseClickHelper.right.isClicked(false)) {

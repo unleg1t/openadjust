@@ -62,6 +62,14 @@ public final class LegitAntiVoidMode extends AntiVoidMode {
         });
     }
 
+    @Override public void onEnable() {
+        safeSpot = null;
+    }
+
+    @Override public void onDisable() {
+        timer.lastMs = 0L;
+    }
+
     @EventHandler public void onTeleport(TeleportEvent event) {
         if (!isActive()) return;
         failureTimer.lastMs = 0L;
@@ -374,7 +382,6 @@ public final class LegitAntiVoidMode extends AntiVoidMode {
         if (module.liquidCheckCooldown.isExpired()) {
             clear = WorldUtil.isColumnCollisionFree(position, module.getCheckBottom(position.yCoord), halfWidth);
         } else {
-            // The liquid-aware branch clamps its scan floor to the world floor.
             double bottom = module.isFullVoidDistance() ? 0.0D : Math.max(0.0D, module.getCheckBottom(position.yCoord));
             clear = WorldUtil.isColumnFreeOfLiquidAndClimbables(position, bottom, halfWidth);
         }

@@ -82,7 +82,7 @@ public final class TPAuraModule extends Module implements MinecraftInstance {
     }
     @EventHandler public void onMovement(UserInputVerificationEvent event) {
         if (!isEnabled()) return;
-        if (mc.thePlayer != null && !InventoryStateTracker.inServerGui && !InventoryStateTracker.inServerInventory) event.inputRequested = true;
+        if (mc.thePlayer != null && !InventoryStateTracker.isInServersideGui()) event.inputRequested = true;
     }
     @EventHandler public void onRender2D(Render2DEvent event) {
         if (!isEnabled() || target == null) return;

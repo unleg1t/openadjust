@@ -3,7 +3,6 @@ package com.adjustclient.module.impl.movement.jesus;
 import com.adjustclient.module.Category;
 import com.adjustclient.module.Module;
 import com.adjustclient.setting.ModeSetting;
-import java.util.Objects;
 
 public final class JesusModule extends Module {
     public static JesusModule INSTANCE;
@@ -13,30 +12,25 @@ public final class JesusModule extends Module {
         super("Jesus", Category.MOVEMENT);
         INSTANCE = this;
         SolidJesusMode solid = new SolidJesusMode(this);
+        RewoundJesusMode rewound = new RewoundJesusMode(this);
         FloatJesusMode floating = new FloatJesusMode(this);
-        mode = new ModeSetting<>(this, "Mode", solid, solid, floating);
+        mode = new ModeSetting<>(this, "Mode", solid, solid, rewound, floating);
         mode.addListener((oldMode, newMode) -> {
             if (isEnabled() && oldMode != newMode) {
-                if (oldMode instanceof FloatJesusMode old) {
-                    old.waterTicks = 0;
-                    old.ascentTicks = 0;
-                }
-                Objects.requireNonNull(newMode);
+                if (oldMode != null) ((JesusMode) oldMode).onDisable();
+                ((JesusMode) newMode).onEnable();
             }
         });
     }
 
     @Override
     public void onEnable() {
-        Objects.requireNonNull(mode.getValue());
+        mode.getValue().onEnable();
     }
 
     @Override
     public void onDisable() {
-        if (Objects.requireNonNull(mode.getValue()) instanceof FloatJesusMode floating) {
-            floating.waterTicks = 0;
-            floating.ascentTicks = 0;
-        }
+        mode.getValue().onDisable();
     }
 
     @Override

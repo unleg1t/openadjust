@@ -225,7 +225,6 @@ import com.adjustclient.module.impl.combat.displacement.DisplacementModule;
 import com.adjustclient.module.impl.player.BlockSwapModule;
 import com.adjustclient.module.impl.player.fastuse.feature.AutomationFeature;
 import com.adjustclient.module.impl.player.fastuse.feature.BlockBreakingFeature;
-import com.adjustclient.module.impl.player.zombies.ZombiesAutoShoot;
 import com.adjustclient.module.impl.render.ItemAnimationsModule;
 import com.adjustclient.module.impl.render.freecam.FreecamCamera;
 import com.adjustclient.module.impl.render.freecam.FreecamModule;
@@ -234,7 +233,6 @@ import com.adjustclient.module.impl.render.hud.widget.ClickSpeedWidget;
 import com.adjustclient.module.impl.render.hud.widget.HudWidget;
 import com.adjustclient.module.impl.render.tweaks.FullscreenTweak;
 import com.adjustclient.module.impl.render.tweaks.NoHotbarScrollTweak;
-import com.adjustclient.module.impl.render.tweaks.NoTitleTweak;
 import com.adjustclient.module.impl.render.tweaks.ZoomTweak;
 import com.adjustclient.module.util.MouseClick;
 import com.adjustclient.property.KeybindManager;
@@ -1499,7 +1497,7 @@ public class Minecraft implements IThreadListener, IPlayerUsage
         }
     }
 
-    public void forkMethod1438f8440(boolean held, MovingObjectPosition hit)
+    public void sendClickBlockToControllerAt(boolean held, MovingObjectPosition hit)
     {
         if (!held)
         {
@@ -1527,7 +1525,7 @@ public class Minecraft implements IThreadListener, IPlayerUsage
         }
     }
 
-    public void forkMethod143900500(com.adjustclient.module.util.MouseClickHelper helper, boolean actionStage, boolean flag)
+    public void processMouseClickHelper(com.adjustclient.module.util.MouseClickHelper helper, boolean actionStage, boolean flag)
     {
         if (helper == null || this.thePlayer == null)
         {
@@ -1551,7 +1549,7 @@ public class Minecraft implements IThreadListener, IPlayerUsage
         {
             if (allowAttack)
             {
-                this.clickMouse();
+                this.clickMouse(actionStage);
             }
         }
 
@@ -1559,7 +1557,7 @@ public class Minecraft implements IThreadListener, IPlayerUsage
         {
             while (helper.right.isPressed(true))
             {
-                this.rightClickMouse();
+                this.rightClickMouse(actionStage);
             }
 
             while (helper.middle.isPressed(true))
@@ -1570,6 +1568,11 @@ public class Minecraft implements IThreadListener, IPlayerUsage
     }
 
     private void clickMouse()
+    {
+        this.clickMouse(true);
+    }
+
+    private void clickMouse(boolean actionStage)
     {
         if (this.thePlayer != null)
         {
@@ -1620,6 +1623,11 @@ public class Minecraft implements IThreadListener, IPlayerUsage
                         this.playerController.attackEntity(this.thePlayer, this.objectMouseOver.entityHit);
                         break;
                     case BLOCK:
+                        if (!actionStage)
+                        {
+                            break;
+                        }
+
                         BlockPos blockpos = this.objectMouseOver.getBlockPos();
 
                         if (this.theWorld.getBlockState(blockpos).getBlock().getMaterial() != Material.air)
@@ -1640,10 +1648,15 @@ public class Minecraft implements IThreadListener, IPlayerUsage
         }
     }
 
-    @SuppressWarnings("incomplete-switch")
     private void rightClickMouse()
     {
-        if (!this.playerController.getIsHittingBlock())
+        this.rightClickMouse(true);
+    }
+
+    @SuppressWarnings("incomplete-switch")
+    private void rightClickMouse(boolean actionStage)
+    {
+        if (!this.playerController.getIsHittingBlock() || !actionStage)
         {
             InputEvent rightInput = new InputEvent(InputAction.RIGHT);
             if (HUDModule.INSTANCE != null && HUDModule.INSTANCE.isEnabled()
@@ -1940,6 +1953,7 @@ public class Minecraft implements IThreadListener, IPlayerUsage
 
     public void runTick() throws IOException
     {
+        this.timer.setTimerSpeed(1.0F);
         com.adjustclient.rotation.handler.RenderRotationTracker.INSTANCE.disabled = false;
         RotationHandler.beginTick();
         EventBus.post(new PreClientTickEvent());
@@ -2083,7 +2097,9 @@ public class Minecraft implements IThreadListener, IPlayerUsage
         boolean allowUserInputBase = this.currentScreen == null || this.currentScreen.allowUserInput;
         boolean hasBlockingOverlay = Adjust.INSTANCE != null && Adjust.INSTANCE.screenStack != null && Adjust.INSTANCE.screenStack.hasBlockingOverlay();
         boolean suppressScreenGameplay = (Adjust.inventoryStateTracker != null && Adjust.inventoryStateTracker.open) || !allowUserInputBase || hasBlockingOverlay;
-        boolean serverInventoryOpen = preScreenOpen || (Adjust.inventoryStateTracker != null && Adjust.inventoryStateTracker.open);
+        boolean serverInventoryOpen = userInputEvent.serverInventoryOpen != null
+                ? userInputEvent.serverInventoryOpen
+                : (preScreenOpen || (Adjust.inventoryStateTracker != null && Adjust.inventoryStateTracker.open));
         boolean allowInGameActions = !userInputEvent.inputHandled && !hasBlockingOverlay;
 
         if (allowMouseAndKeys)
@@ -2431,11 +2447,6 @@ public class Minecraft implements IThreadListener, IPlayerUsage
                 {
                     AutomationFeature.INSTANCE.onTick();
                 }
-
-                if (ZombiesAutoShoot.INSTANCE != null && ZombiesAutoShoot.INSTANCE.isActive())
-                {
-                    ZombiesAutoShoot.INSTANCE.updateAutoSwap();
-                }
             }
 
             if (!suppressScreenGameplay && this.thePlayer != null)
@@ -2542,15 +2553,23 @@ public class Minecraft implements IThreadListener, IPlayerUsage
                         }
                         else
                         {
-                            this.forkMethod143900500(Adjust.mouseClickHelper, ingameEvent.actionStage, allowInGameActions && this.currentScreen == null);
+                            this.processMouseClickHelper(Adjust.mouseClickHelper, ingameEvent.actionStage, !hasBlockingOverlay);
                         }
 
                         if (Adjust.mouseClickHelper.right.isClicked(false) && this.rightClickDelayTimer == 0 && !this.thePlayer.isUsingItem())
                         {
-                            this.rightClickMouse();
+                            this.rightClickMouse(ingameEvent.actionStage);
                         }
 
-                        this.sendClickBlockToController(ingameEvent.actionStage && allowInGameActions && this.currentScreen == null && this.inGameHasFocus && Adjust.mouseClickHelper.left.isClicked(false));
+                        if (ingameEvent.actionStage)
+                        {
+                            boolean allowClickBlock = !hasBlockingOverlay
+                                    && (this.currentScreen == null || userInputEvent.inputHandled)
+                                    && Adjust.mouseClickHelper.left.isClicked(false)
+                                    && this.cameraOverride == null
+                                    && (this.inGameHasFocus || userInputEvent.inputHandled);
+                            this.sendClickBlockToControllerAt(allowClickBlock, null);
+                        }
                     }
 
                     for (MouseClick click : Adjust.mouseClickHelper.buttons.values())
@@ -2586,12 +2605,12 @@ public class Minecraft implements IThreadListener, IPlayerUsage
                     {
                         while (this.gameSettings.keyBindAttack.isPressed())
                         {
-                            this.clickMouse();
+                            this.clickMouse(ingameEvent.actionStage);
                         }
 
                         while (this.gameSettings.keyBindUseItem.isPressed())
                         {
-                            this.rightClickMouse();
+                            this.rightClickMouse(ingameEvent.actionStage);
                         }
 
                         while (this.gameSettings.keyBindPickBlock.isPressed())
@@ -2602,10 +2621,18 @@ public class Minecraft implements IThreadListener, IPlayerUsage
 
                     if (this.gameSettings.keyBindUseItem.isKeyDown() && this.rightClickDelayTimer == 0 && !this.thePlayer.isUsingItem())
                     {
-                        this.rightClickMouse();
+                        this.rightClickMouse(ingameEvent.actionStage);
                     }
 
-                    this.sendClickBlockToController(ingameEvent.actionStage && allowInGameActions && this.currentScreen == null && this.gameSettings.keyBindAttack.isKeyDown() && this.inGameHasFocus);
+                    if (ingameEvent.actionStage)
+                    {
+                        boolean allowClickBlock = !hasBlockingOverlay
+                                && (this.currentScreen == null || userInputEvent.inputHandled)
+                                && this.gameSettings.keyBindAttack.isKeyDown()
+                                && this.cameraOverride == null
+                                && (this.inGameHasFocus || userInputEvent.inputHandled);
+                        this.sendClickBlockToControllerAt(allowClickBlock, null);
+                    }
                 }
             }
 

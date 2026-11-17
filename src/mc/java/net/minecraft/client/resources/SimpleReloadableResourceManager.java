@@ -1,5 +1,6 @@
 package net.minecraft.client.resources;
 
+import com.adjustclient.vfs.RemoteResourceManager;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
@@ -48,6 +49,8 @@ public class SimpleReloadableResourceManager implements IReloadableResourceManag
 
             fallbackresourcemanager.addResourcePack(resourcePack);
         }
+
+        this.setResourceDomains.add("adjust_remote");
     }
 
     public Set<String> getResourceDomains()
@@ -57,7 +60,7 @@ public class SimpleReloadableResourceManager implements IReloadableResourceManag
 
     public IResource getResource(ResourceLocation location) throws IOException
     {
-        IResourceManager iresourcemanager = (IResourceManager)this.domainResourceManagers.get(location.getResourceDomain());
+        IResourceManager iresourcemanager = "adjust_remote".equals(location.getResourceDomain()) ? RemoteResourceManager.INSTANCE : (IResourceManager)this.domainResourceManagers.get(location.getResourceDomain());
 
         if (iresourcemanager != null)
         {
@@ -71,7 +74,7 @@ public class SimpleReloadableResourceManager implements IReloadableResourceManag
 
     public List<IResource> getAllResources(ResourceLocation location) throws IOException
     {
-        IResourceManager iresourcemanager = (IResourceManager)this.domainResourceManagers.get(location.getResourceDomain());
+        IResourceManager iresourcemanager = "adjust_remote".equals(location.getResourceDomain()) ? RemoteResourceManager.INSTANCE : (IResourceManager)this.domainResourceManagers.get(location.getResourceDomain());
 
         if (iresourcemanager != null)
         {

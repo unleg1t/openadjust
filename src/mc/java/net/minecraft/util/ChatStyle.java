@@ -384,7 +384,7 @@ public class ChatStyle
         return chatstyle;
     }
 
-    public ChatStyle forkMethod144941ea0()
+    public ChatStyle copyChatStyle()
     {
         return this.createShallowCopy();
     }

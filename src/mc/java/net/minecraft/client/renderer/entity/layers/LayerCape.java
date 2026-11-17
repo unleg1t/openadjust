@@ -8,6 +8,7 @@ import com.adjustclient.game.entity.tracker.ServerPositionTracker;
 import com.adjustclient.service.config.user.UserConfiguration;
 import com.adjustclient.user.Cape;
 import com.adjustclient.user.ClientUser;
+import com.adjustclient.user.CustomCape;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.renderer.GlStateManager;
@@ -57,8 +58,29 @@ public class LayerCape implements LayerRenderer<AbstractClientPlayer>
                 Cape chosen = user.useClientColor && UserConfiguration.INSTANCE != null ? UserConfiguration.INSTANCE.cape : user.cape;
                 if (chosen != null && chosen != Cape.NONE)
                 {
-                    customCape = chosen;
-                    capeLocation = chosen.texture;
+                    if (chosen == Cape.CUSTOM)
+                    {
+                        CustomCape userCustomCape = user.customCape;
+                        if (userCustomCape != null)
+                        {
+                            if (!userCustomCape.exists)
+                            {
+                                return;
+                            }
+                            customCape = chosen;
+                            capeLocation = userCustomCape.resourceLocation;
+                        }
+                        else
+                        {
+                            customCape = chosen;
+                            capeLocation = null;
+                        }
+                    }
+                    else
+                    {
+                        customCape = chosen;
+                        capeLocation = chosen.texture;
+                    }
                 }
             }
             if (customCape == null)

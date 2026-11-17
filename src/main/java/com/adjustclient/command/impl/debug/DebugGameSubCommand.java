@@ -27,7 +27,7 @@ public final class DebugGameSubCommand extends SubCommand {
                 + "\nhasDug(): " + tracker.dugSinceMovement
                 + "\nhasPlaced(): " + tracker.usedItemSinceMovement
                 + "\nhasAttacked(): " + (tracker.attackedEntity != null)
-                + "\nisInServersideGui(): " + (InventoryStateTracker.inServerGui || InventoryStateTracker.inServerInventory)
+                + "\nisInServersideGui(): " + InventoryStateTracker.isInServersideGui()
                 + "\nPing: " + ping
                 + "\nIssued By: " + Adjust.username;
         ((DebugCommand) parent).printDebugData("Game debug", data);

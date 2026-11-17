@@ -1,10 +1,12 @@
 package com.adjustclient.module.impl.render.hud.playerlist;
 
+import com.adjustclient.game.rewound.RewoundGame;
 import com.adjustclient.hypixel.HypixelGame;
 
 final class PlayerListSwitchMap {
 
     static final int[] GAME = new int[HypixelGame.values().length];
+    static final int[] REWOUND_GAME = new int[RewoundGame.values().length];
 
     static {
         GAME[HypixelGame.SKYWARS.ordinal()] = 1;
@@ -26,5 +28,12 @@ final class PlayerListSwitchMap {
         GAME[HypixelGame.GRINCH_SIMULATOR.ordinal()] = 17;
         GAME[HypixelGame.EASTER_SIMULATOR.ordinal()] = 18;
         GAME[HypixelGame.TNT_TAG.ordinal()] = 19;
+
+        REWOUND_GAME[RewoundGame.SKYWARS.ordinal()] = 1;
+        REWOUND_GAME[RewoundGame.DUELS.ordinal()] = 2;
+        REWOUND_GAME[RewoundGame.BEDWARS.ordinal()] = 3;
+        REWOUND_GAME[RewoundGame.SURVIVAL_GAMES.ordinal()] = 4;
+        REWOUND_GAME[RewoundGame.PIT.ordinal()] = 5;
+        REWOUND_GAME[RewoundGame.REPLAY.ordinal()] = 6;
     }
 }

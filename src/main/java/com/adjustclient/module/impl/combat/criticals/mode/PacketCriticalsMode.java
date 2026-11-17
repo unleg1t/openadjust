@@ -13,7 +13,7 @@ import com.adjustclient.module.impl.player.AntiCheatModule;
 public class PacketCriticalsMode extends CriticalsMode {
     public PacketCriticalsMode(CriticalsModule module) { super(module, "Packet"); }
     @EventHandler public void onAttack(AttackEntityEvent event) {
-        if (!isEnabled()) return;
+        if (!event.pre || !isEnabled()) return;
         if (AntiCheatModule.restrictionsEnabled) {
             var state = ServerTracker.INSTANCE.serverState;
             if (state != null && state.featureBlocker != null) {

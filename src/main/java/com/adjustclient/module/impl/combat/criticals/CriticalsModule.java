@@ -5,6 +5,7 @@ import com.adjustclient.event.MotionEvent;
 import com.adjustclient.module.Module;
 import com.adjustclient.module.Category;
 import com.adjustclient.module.impl.combat.criticals.mode.PacketCriticalsMode;
+import com.adjustclient.module.impl.combat.criticals.mode.RewoundCriticalsMode;
 import com.adjustclient.setting.*;
 
 public final class CriticalsModule extends Module {
@@ -16,11 +17,17 @@ public final class CriticalsModule extends Module {
         super("Criticals", Category.COMBAT);
         INSTANCE = this;
         PacketCriticalsMode packet = new PacketCriticalsMode(this);
-        mode = new ModeSetting<>(this, "Mode", packet, packet);
-        delay = new NumberSetting(this, "Delay", 15, 1, 20, 1).formatter(NumberSetting.TICKS);
+        RewoundCriticalsMode rewound = new RewoundCriticalsMode(this);
+        mode = new ModeSetting<>(this, "Mode", packet, packet, rewound);
+        delay = new NumberSetting(this, "Delay", 15, 1, 20, 1,
+                () -> mode.getValue() instanceof RewoundCriticalsMode).formatter(NumberSetting.TICKS);
     }
     @Override public void onEnable() { delayTicks = 0; }
-    @Override public String getSuffix() { return mode.getValue().getName() + " " + delay.getInt(); }
+    @Override public String getSuffix() {
+        return mode.getValue() instanceof RewoundCriticalsMode
+                ? mode.getValue().getName()
+                : mode.getValue().getName() + " " + delay.getInt();
+    }
     public void resetDelay() { delayTicks = delay.getInt(); }
 
     @EventHandler public void onMotion(MotionEvent event) {

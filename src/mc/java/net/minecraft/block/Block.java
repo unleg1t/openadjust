@@ -409,6 +409,11 @@ public class Block
             com.adjustclient.event.BlockCollisionCandidateEvent event = new com.adjustclient.event.BlockCollisionCandidateEvent(this, pos, axisalignedbb, list, contextFlag);
             com.adjustclient.event.EventBus.post(event);
 
+            if (event.isCancelled())
+            {
+                return;
+            }
+
             axisalignedbb = event.boundingBox;
         }
 

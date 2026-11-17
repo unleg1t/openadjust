@@ -21,10 +21,11 @@ public final class AntiCheatDetector {
     private static final AntiCheatModelFactory<GrimModel> blocksMC = (address, port, data) -> detectBlocksMC(address, port, data);
     private static final AntiCheatModelFactory<WatchdogModel> hypixel = (address, port, data) -> detectHypixel(address, port, data);
     private static final AntiCheatModelFactory<VoxylModel> voxyl = (address, port, data) -> detectVoxyl(address, port, data);
+    private static final AntiCheatModelFactory<CiyunaModel> rewound = (address, port, data) -> detectRewound(address);
 
     static {
         factories = new AntiCheatModelFactory<?>[] {
-                hypixel, blocksMC, minemen, voxyl, roxbot, mineplex, antiCheatTest, liquidBounce
+                hypixel, blocksMC, minemen, voxyl, roxbot, mineplex, rewound, antiCheatTest, liquidBounce
         };
     }
 
@@ -96,6 +97,10 @@ public final class AntiCheatDetector {
                     ? new GrimModel(ServerType.BLOCKSMC) : null;
         }
         return matchesDomain(host, "blocksmc.com") ? new GrimModel(ServerType.BLOCKSMC) : null;
+    }
+
+    public static CiyunaModel detectRewound(String address) {
+        return matchesDomain(address.toLowerCase(), "rewound.cc") ? new CiyunaModel(ServerType.REWOUND) : null;
     }
 
     public static WatchdogModel detectHypixel(String address, int port, ServerData data) {

@@ -147,7 +147,7 @@ public final class AutoPotionModule extends Module {
         if (!mc.thePlayer.addedToChunk) return true;
         if (mc.playerController.getCurrentGameType() != net.minecraft.world.WorldSettings.GameType.SURVIVAL
                 && mc.playerController.getCurrentGameType() != net.minecraft.world.WorldSettings.GameType.ADVENTURE) return true;
-        if (InventoryStateTracker.inServerGui || InventoryStateTracker.inServerInventory
+        if (InventoryStateTracker.isInServersideGui()
                 || com.adjustclient.module.impl.movement.scaffold.ScaffoldModule.INSTANCE.isEnabled()
                 || TargetStrafeModule.INSTANCE.strafeState != null) return true;
         ServerTracker tracker = ServerTracker.INSTANCE;

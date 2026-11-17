@@ -1,8 +1,9 @@
 package com.adjustclient.module.impl.movement.scaffold;
 
+import com.adjustclient.event.EventHandler;
 import com.adjustclient.event.MoveFlyingEvent;
-import com.adjustclient.util.MovementUtil;
 import com.adjustclient.util.BlockUtil;
+import com.adjustclient.util.MovementUtil;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.potion.Potion;
 import net.minecraft.util.AxisAlignedBB;
@@ -10,45 +11,48 @@ import net.minecraft.util.EnumFacing;
 
 public final class NormalScaffoldMode extends ScaffoldMode {
 
-    /** Set by {@link #onPlace} when a block was placed on the UP face (the player towered); consumed next tick. */
-    boolean towering;
+    boolean placedUp;
 
     @Override
-    public boolean isAboveBuildLimit(int y) {
-        return y >= mc.theWorld.getHeight();   // 256
+    public void reset() {
+        super.reset();
+        this.placedUp = false;
     }
 
-    @com.adjustclient.event.EventHandler
-    public void onMotion(MoveFlyingEvent e) {
-        if (!this.isActive() || e.pre) {          // *(byte *)(e + 5)
-            return;
-        }
+    private boolean canTowerNow() {
         ScaffoldSettings settings = this.module.settings;
-        boolean active = false;
-        if (settings.towerEnabled.isEnabled()
-                && (((ScaffoldMode) settings.mode.getValue()).capabilities & 8) != 0) {
-            EntityPlayerSP player = mc.thePlayer;
-            if (!(player.inWater || player.isInLava())) {
-                if (!player.isPotionActive(Potion.jump) && settings.isTowerKeyDown()) {
-                    active = true;
-                }
-            }
+        if (!settings.isTower()) {
+            return false;
         }
-        if (!active) {
-            this.module.towering = false;
-            this.towering = false;
+        EntityPlayerSP player = mc.thePlayer;
+        if (player.inWater || player.isInLava()) {
+            return false;
+        }
+        if (player.isPotionActive(Potion.jump)) {
+            return false;
+        }
+        return settings.isTowerKeyDown();
+    }
+
+    @EventHandler
+    public void onMotion(MoveFlyingEvent e) {
+        if (!this.isActive() || e.pre) {
             return;
         }
-        if (this.towering) {
-            // jump motion (0.42 plus jump boost), only if there is room above the player
+        if (!this.canTowerNow()) {
+            this.towering = false;
+            this.placedUp = false;
+            return;
+        }
+        if (this.placedUp) {
             double jumpMotion = MovementUtil.getJumpMotion((double) 0.42F);
             AxisAlignedBB box = mc.thePlayer.getEntityBoundingBox().offset(0.0D, jumpMotion, 0.0D);
             if (!BlockUtil.isColliding(box)) {
                 mc.thePlayer.motionY = jumpMotion;
             }
-            this.module.towering = true;
+            this.towering = true;
         }
-        TowerMovement movement = (TowerMovement) settings.towerMovement.getValue();
+        TowerMovement movement = this.module.settings.towerMovement.getValue();
         switch (movement) {
             case STOP:
                 MovementUtil.stop();
@@ -59,43 +63,21 @@ public final class NormalScaffoldMode extends ScaffoldMode {
             default:
                 break;
         }
-        this.towering = false;
+        this.placedUp = false;
     }
 
-    /**
-     * Remembers that the player towers when a block is placed on the UP face while the tower conditions of
-     * {@link #onMotion} hold.
-     */
     @Override
     public void onPlace(PlacementTarget placement) {
-        ScaffoldSettings settings = this.module.settings;
-        if (!settings.towerEnabled.isEnabled()) {
+        if (!this.canTowerNow()) {
             return;
         }
-        if ((((ScaffoldMode) settings.mode.getValue()).capabilities & 8) == 0) {
-            return;
-        }
-        EntityPlayerSP player = mc.thePlayer;
-        if (player.inWater || player.isInLava()) {
-            return;
-        }
-        if (player.isPotionActive(Potion.jump)) {
-            return;
-        }
-        if (settings.isTowerKeyDown()) {
-            if (placement.facing == EnumFacing.UP) {
-                this.towering = true;
-            }
+        if (placement.facing == EnumFacing.UP) {
+            this.placedUp = true;
         }
     }
 
     @Override
     public boolean canSprint() {
         return this.module.settings.isAllowSprint();
-    }
-
-    @Override
-    public boolean e() {
-        return false;
     }
 }

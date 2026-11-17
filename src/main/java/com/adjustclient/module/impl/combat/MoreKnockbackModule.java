@@ -78,6 +78,7 @@ public class MoreKnockbackModule extends Module implements MinecraftInstance {
 
     @EventHandler
     public void onAttack(AttackEntityEvent event) {
+        if (!event.pre) return;
         if (!isEnabled()) return;
         if (mode.getValue() != MoreKnockbackMode.values()[3] && (state == STOPPING || state == WAITING)) return;
         var entity = event.entity;

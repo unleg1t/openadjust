@@ -15,6 +15,9 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import com.adjustclient.game.entity.EntityTrackerService;
 import com.adjustclient.game.mineplex.MineplexGameTracker;
+import com.adjustclient.game.rewound.RewoundDisablerTracker;
+import com.adjustclient.game.rewound.RewoundGame;
+import com.adjustclient.game.rewound.RewoundGameTracker;
 import com.adjustclient.game.movable.MovableManager;
 import com.adjustclient.game.packet.InboundPacketQueue;
 import com.adjustclient.game.packet.OutboundPacketQueue;
@@ -66,6 +69,8 @@ public final class Adjust implements Listener {
     public static HypixelPacketBalance packetBalance;
     public static HypixelGameTracker gameStateTracker;
     public static MineplexGameTracker mineplexGameTracker;
+    public static RewoundGameTracker rewoundGameTracker;
+    public static RewoundDisablerTracker rewoundDisablerTracker;
     public static OutboundPacketQueue outboundPacketQueue;
     public static InboundPacketQueue inboundPacketQueue;
     public static SlotSpoofer slotSpoofer;
@@ -121,7 +126,7 @@ public final class Adjust implements Listener {
         this.commandManager = new CommandManager();
         this.accountManager = new AccountManagerScreen();
         com.adjustclient.ui.account.LocalAccountStore.INSTANCE.open(this.accountManager);
-        ServerTracker.referenceSlot2460 = this;
+        ServerTracker.clientInstance = this;
         this.field40 = new com.adjustclient.property.UserManager();
         this.field40.field16 = this.field40.getOrCreate(username);
         com.adjustclient.script.engine.ScriptManager.INSTANCE = new com.adjustclient.script.engine.ScriptManager();
@@ -164,6 +169,8 @@ public final class Adjust implements Listener {
         visitAndRegisterListener(packetBalance, visited);
         visitAndRegisterListener(gameStateTracker, visited);
         visitAndRegisterListener(mineplexGameTracker, visited);
+        visitAndRegisterListener(rewoundGameTracker, visited);
+        visitAndRegisterListener(rewoundDisablerTracker, visited);
         visitAndRegisterListener(outboundPacketQueue, visited);
         visitAndRegisterListener(inboundPacketQueue, visited);
         visitAndRegisterListener(slotSpoofer, visited);
@@ -191,7 +198,6 @@ public final class Adjust implements Listener {
         visitAndRegisterListener(com.adjustclient.rotation.handler.RenderRotationTracker.INSTANCE, visited);
         visitAndRegisterListener(com.adjustclient.service.party.PartyOverlay.INSTANCE, visited);
         visitAndRegisterListener(com.adjustclient.module.impl.player.inventory.quickbuy.QuickBuyListener.INSTANCE, visited);
-        visitAndRegisterListener(com.adjustclient.module.impl.player.zombies.ZombiesAutoShoot.INSTANCE, visited);
         visitAndRegisterListener(com.adjustclient.module.impl.exploit.murdermystery.MurderMysteryAutoStrike.INSTANCE, visited);
         visitAndRegisterListener(com.adjustclient.module.impl.combat.builder.BuilderPlacer.INSTANCE, visited);
         visitAndRegisterListener(com.adjustclient.module.impl.combat.builder.feature.headhitter.HeadHitterFeature.INSTANCE, visited);
@@ -215,6 +221,9 @@ public final class Adjust implements Listener {
         visitAndRegisterListener(com.adjustclient.module.impl.player.autohypixel.feature.ChatStats.INSTANCE, visited);
         visitAndRegisterListener(com.adjustclient.module.impl.player.autohypixel.feature.bedwars.AntiObsidianMisplace.INSTANCE, visited);
         visitAndRegisterListener(com.adjustclient.module.impl.player.autohypixel.feature.bedwars.tracker.BedWarsTracker.INSTANCE, visited);
+        visitAndRegisterListener(com.adjustclient.module.impl.player.autorewound.feature.AutoGG.INSTANCE, visited);
+        visitAndRegisterListener(com.adjustclient.module.impl.player.autorewound.feature.AutoPlay.INSTANCE, visited);
+        visitAndRegisterListener(com.adjustclient.module.impl.player.autorewound.feature.PitFeature.INSTANCE, visited);
     }
 
     private static boolean isExcludedFromEventBus(Class<?> cls) {
@@ -340,6 +349,9 @@ public final class Adjust implements Listener {
         gameStateTracker = new HypixelGameTracker(com.adjustclient.server.ServerType.HYPIXEL, hypixelState);
         var mineplexState = MineplexGame.UNKNOWN_GAME.stateFactory.create();
         mineplexGameTracker = new MineplexGameTracker(ServerType.MINEPLEX, mineplexState);
+        var rewoundState = RewoundGame.UNKNOWN_GAME.stateFactory.create();
+        rewoundGameTracker = new RewoundGameTracker(ServerType.REWOUND, rewoundState);
+        rewoundDisablerTracker = new RewoundDisablerTracker();
         serviceInitializationStage = (byte) 5;
         mouseClickHelper = new com.adjustclient.module.util.MouseClickHelper(net.minecraft.client.Minecraft.getMinecraft());
         outboundPacketQueue = new OutboundPacketQueue();

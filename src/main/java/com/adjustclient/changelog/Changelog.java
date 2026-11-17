@@ -11,7 +11,7 @@ public final class Changelog {
     public static ChangelogLink latest;
     public static ChangelogLink lastRead;
     public static Integer initialUnreadCount;
-    public static int field1b20;
+    public static int changelogInitState;
     public static int contentHash;
     public static int versionCode;
     public static int unreadCount;
@@ -33,7 +33,7 @@ public final class Changelog {
     }
 
     static {
-        field1b20 = 0;
+        changelogInitState = 0;
         ChangelogVersionBuilder builder;
 
         builder = new ChangelogVersionBuilder();
@@ -1043,6 +1043,53 @@ public final class Changelog {
         builder.improve("Improved {ESP:Items} in {ESP} module");
         builder.improve("Combat modules no longer target team silverfish and golems");
         versions.add(new ChangelogLink("October 16th", 96, builder));
+
+        builder = new ChangelogVersionBuilder();
+        builder.add("Added {!Localts Integration}");
+        builder.add("Added {AutoRespawn} module");
+        builder.add("Added {AutoBlock:Ping} to {AutoBlock:Mode:Predictive} {AutoBlock}");
+        builder.add("Added {Sprint:Ignore} {Sprint:Ignore:Using Item} to {Sprint} module");
+        builder.add("Added {Tweaks:Bow} to {Tweaks} module");
+        builder.improve("Fixed {AntiAim} crashing when {AntiAim:Disable on} {AntiAim:Disable on->Rotations} is enabled");
+        builder.improve("Fixed {!Urchin API} not working for some users");
+        builder.improve("Recoded {Sprint:Keep sprint:Hypixel} {Sprint:Keep sprint} in {Sprint} module");
+        builder.improve("Fixed {NoSlowdown:Mode:Hypixel} {NoSlowdown} making you use random items");
+        builder.improve("Improved {AutoBlock:Ping:Automatic} in {AutoBlock:Mode:Predictive} {AutoBlock}");
+        builder.improve("Improved {Scaffold:Mode:Hypixel} mode in {Scaffold} module");
+        builder.improve("Made {AutoClicker:Inventory:CPS override} in {AutoClicker} faster");
+        builder.improve("Fixed {Team Detection} not working properly when nicked on Hypixel");
+        builder.remove("Temporarily removed {Zombies} module because it is being recoded");
+        versions.add(new ChangelogLink("October 31st", 97, builder));
+
+        builder = new ChangelogVersionBuilder();
+        builder.add("Added {AutoRewound} module");
+        builder.add("Added {Criticals:Mode:Rewound} mode to {Criticals} module");
+        builder.add("Added {NoFall:Mode:Rewound} mode to {NoFall} module");
+        builder.add("Added {InventoryMove:Allow interactions} option to {InventoryMove:Mode:Vanilla} mode in {InventoryMove}");
+        builder.add("Added {NoSlowdown:Mode:Rewound} mode to {NoSlowdown} module");
+        builder.add("Added {Scaffold:Mode:Rewound} mode to {Scaffold} module");
+        builder.add("Added {Flight:Mode:Rewound} mode to {Flight} module");
+        builder.add("Added {Speed:Mode:Rewound} mode to {Speed} module");
+        builder.add("Added {Jesus:Mode:Rewound} mode to {Jesus} module");
+        builder.add("Added {AntiVoid:Mode:Packet} mode to {AntiVoid} module");
+        builder.add("Added {AntiVoid:Mode:Bounce} mode to {AntiVoid} module");
+        builder.add("Added {Phase:Mode:Vertical} mode to {Phase} module");
+        builder.add("Added {Phase:Mode:Packetless} mode to {Phase} module");
+        builder.add("Added {Step:Height} to {Step} module");
+        versions.add(new ChangelogLink("November 6th", 98, builder));
+
+        builder = new ChangelogVersionBuilder();
+        builder.add("Added {HighJump} module");
+        builder.add("Added {Speed:Disabler} option to {Speed:Mode:Rewound} {Speed}");
+        builder.add("Added {AutoRewound:Hide bots} option to {AutoRewound}");
+        builder.add("Added support for new game modes on Rewound");
+        builder.improve("Improved {Criticals:Mode:Rewound} mode in {Criticals}");
+        builder.improve("Improved {Flight:Mode:Rewound} mode in {Flight}");
+        builder.improve("Improved {Speed:Mode:Rewound} mode in {Speed}");
+        builder.improve("Improved {AutoRewound:Pit->Spade Swap} and {AutoRewound:Pit->Sword Swap} in {AutoRewound}");
+        builder.improve("Fixed Pit spawn not being detected on Rewound");
+        builder.remove("Removed {AntiVoid:Mode:Bounce} mode in {AntiVoid} in favor of {HighJump}");
+        versions.add(new ChangelogLink("November 8th", 99, builder));
 
         for (ChangelogLink version : versions) {
             if (version.id != -1 && version != findVersion(version.id)) {

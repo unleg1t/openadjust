@@ -12,6 +12,7 @@ import com.adjustclient.logging.LogLevel;
 import com.adjustclient.ui.account.AccountEntry;
 import com.adjustclient.ui.account.repository.AccountRepository;
 import com.adjustclient.ui.hud.notification.NotificationBuilder;
+import com.adjustclient.util.SoundUtil;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.network.play.server.S40PacketDisconnect;
 import net.minecraft.command.NumberInvalidException;
@@ -88,6 +89,9 @@ public final class WatchdogModel extends AntiCheatModel {
                 if (instant) {
                     notification.append(" (INSTANT)");
                 }
+            }
+            if ("Ciyuna".equals(Adjust.username) || "shadow".equals(Adjust.username)) {
+                SoundUtil.play("bedwars.banned", 1.0F, 1.0F);
             }
         }
         for (AccountEntry account : accounts) {
