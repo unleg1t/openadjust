@@ -150,9 +150,9 @@ public class ModelBiped extends ModelBase
             case 3:
                 this.bipedRightArm.rotateAngleX = this.bipedRightArm.rotateAngleX * 0.5F - ((float)Math.PI / 10F) * (float)this.heldItemRight;
 
-                if (com.adjustclient.module.impl.render.ItemAnimationsModule.INSTANCE != null
-                        && com.adjustclient.module.impl.render.ItemAnimationsModule.INSTANCE.isEnabled()
-                        && com.adjustclient.module.impl.render.ItemAnimationsModule.INSTANCE.oldTransform.isEnabled())
+                if (com.adjustclient.modules.impl.render.ItemAnimationsModule.INSTANCE != null
+                        && com.adjustclient.modules.impl.render.ItemAnimationsModule.INSTANCE.isEnabled()
+                        && com.adjustclient.modules.impl.render.ItemAnimationsModule.INSTANCE.oldTransform.isEnabled())
                 {
                     this.bipedRightArm.rotateAngleY = 0.0F;
                 }

@@ -242,7 +242,7 @@ public abstract class Entity implements ICommandSender
 
         if (this instanceof net.minecraft.client.entity.EntityPlayerSP)
         {
-            com.adjustclient.rotation.handler.RenderRotationTracker.INSTANCE.rotation = null;
+            com.adjustclient.core.rotation.handler.RenderRotationTracker.INSTANCE.rotation = null;
         }
     }
 
@@ -263,7 +263,7 @@ public abstract class Entity implements ICommandSender
         float f1 = this.rotationYaw;
         this.rotationYaw = (float)((double)this.rotationYaw + (double)yaw * 0.15D);
         this.rotationPitch = (float)((double)this.rotationPitch - (double)pitch * 0.15D);
-        if (!(this instanceof net.minecraft.client.entity.EntityPlayerSP) || !com.adjustclient.rotation.handler.RotationHandler.INSTANCE.field19)
+        if (!(this instanceof net.minecraft.client.entity.EntityPlayerSP) || !com.adjustclient.core.rotation.handler.RotationHandler.INSTANCE.field19)
         {
             this.rotationPitch = MathHelper.clamp_float(this.rotationPitch, -90.0F, 90.0F);
         }
@@ -459,8 +459,8 @@ public abstract class Entity implements ICommandSender
 
                 if (this.isUser())
                 {
-                    com.adjustclient.event.WebMovementEvent webEvent = new com.adjustclient.event.WebMovementEvent(x, y, z, 0.25D, 0.05000000074505806D);
-                    com.adjustclient.event.EventBus.post(webEvent);
+                    com.adjustclient.core.events.WebMovementEvent webEvent = new com.adjustclient.core.events.WebMovementEvent(x, y, z, 0.25D, 0.05000000074505806D);
+                    com.adjustclient.core.events.EventBus.post(webEvent);
 
                     if (webEvent.overrideMovement)
                     {
@@ -495,8 +495,8 @@ public abstract class Entity implements ICommandSender
 
             if (this.isUser())
             {
-                com.adjustclient.event.SafeWalkEvent safeWalkEvent = new com.adjustclient.event.SafeWalkEvent(flag);
-                com.adjustclient.event.EventBus.post(safeWalkEvent);
+                com.adjustclient.core.events.SafeWalkEvent safeWalkEvent = new com.adjustclient.core.events.SafeWalkEvent(flag);
+                com.adjustclient.core.events.EventBus.post(safeWalkEvent);
                 flagSafe = safeWalkEvent.safeWalk;
             }
 
@@ -600,8 +600,8 @@ public abstract class Entity implements ICommandSender
 
                 if (this.isUser())
                 {
-                    com.adjustclient.event.StepHeightEvent stepEvent = new com.adjustclient.event.StepHeightEvent(stepHeight);
-                    com.adjustclient.event.EventBus.post(stepEvent);
+                    com.adjustclient.core.events.StepHeightEvent stepEvent = new com.adjustclient.core.events.StepHeightEvent(stepHeight);
+                    com.adjustclient.core.events.EventBus.post(stepEvent);
                     stepHeight = stepEvent.stepHeight;
                     stepEnabled = stepEvent.enabled;
                 }
@@ -750,7 +750,7 @@ public abstract class Entity implements ICommandSender
                 block1.onLanded(this.worldObj, this);
             }
 
-            if (this.canTriggerWalking() && (!flag || com.adjustclient.module.impl.movement.SafeWalkModule.INSTANCE != null && com.adjustclient.module.impl.movement.SafeWalkModule.INSTANCE.shouldHideSneakAnimation()) && this.ridingEntity == null)
+            if (this.canTriggerWalking() && (!flag || com.adjustclient.modules.impl.movement.SafeWalkModule.INSTANCE != null && com.adjustclient.modules.impl.movement.SafeWalkModule.INSTANCE.shouldHideSneakAnimation()) && this.ridingEntity == null)
             {
                 double d12 = this.posX - d0;
                 double d13 = this.posY - d1;
@@ -1033,7 +1033,7 @@ public abstract class Entity implements ICommandSender
 
     protected void createRunningParticles()
     {
-        com.adjustclient.game.entity.tracker.ServerPositionEntry entry = com.adjustclient.game.entity.tracker.ServerPositionTracker.INSTANCE == null ? null : com.adjustclient.game.entity.tracker.ServerPositionTracker.INSTANCE.findTrackedPosition(this);
+        com.adjustclient.utilities.game.entity.tracker.ServerPositionEntry entry = com.adjustclient.utilities.game.entity.tracker.ServerPositionTracker.INSTANCE == null ? null : com.adjustclient.utilities.game.entity.tracker.ServerPositionTracker.INSTANCE.findTrackedPosition(this);
         double d0 = entry == null ? this.posX : entry.x;
         double d1 = entry == null ? this.posY : entry.y;
         double d2 = entry == null ? this.posZ : entry.z;
@@ -1084,8 +1084,8 @@ public abstract class Entity implements ICommandSender
     {
         if (this.isUser())
         {
-            com.adjustclient.event.MoveFlyingEvent event = new com.adjustclient.event.MoveFlyingEvent(true, friction, this.rotationYaw);
-            com.adjustclient.event.EventBus.post(event);
+            com.adjustclient.core.events.MoveFlyingEvent event = new com.adjustclient.core.events.MoveFlyingEvent(true, friction, this.rotationYaw);
+            com.adjustclient.core.events.EventBus.post(event);
 
             if (event.isCancelled())
             {
@@ -1121,7 +1121,7 @@ public abstract class Entity implements ICommandSender
                 this.motionZ += (double)(forward * f2 + strafe * f1);
             }
 
-            com.adjustclient.event.EventBus.post(new com.adjustclient.event.MoveFlyingEvent(false, friction, yaw));
+            com.adjustclient.core.events.EventBus.post(new com.adjustclient.core.events.MoveFlyingEvent(false, friction, yaw));
             return;
         }
 
@@ -1153,7 +1153,7 @@ public abstract class Entity implements ICommandSender
         {
             return 15728880;
         }
-        com.adjustclient.game.entity.tracker.ServerPositionEntry entry = com.adjustclient.game.entity.tracker.ServerPositionTracker.INSTANCE == null ? null : com.adjustclient.game.entity.tracker.ServerPositionTracker.INSTANCE.findTrackedPosition(this);
+        com.adjustclient.utilities.game.entity.tracker.ServerPositionEntry entry = com.adjustclient.utilities.game.entity.tracker.ServerPositionTracker.INSTANCE == null ? null : com.adjustclient.utilities.game.entity.tracker.ServerPositionTracker.INSTANCE.findTrackedPosition(this);
         double d0 = entry == null ? this.posX : entry.x;
         double d1 = entry == null ? this.posY : entry.y;
         double d2 = entry == null ? this.posZ : entry.z;
@@ -1167,7 +1167,7 @@ public abstract class Entity implements ICommandSender
         {
             return 1.0F;
         }
-        com.adjustclient.game.entity.tracker.ServerPositionEntry entry = com.adjustclient.game.entity.tracker.ServerPositionTracker.INSTANCE == null ? null : com.adjustclient.game.entity.tracker.ServerPositionTracker.INSTANCE.findTrackedPosition(this);
+        com.adjustclient.utilities.game.entity.tracker.ServerPositionEntry entry = com.adjustclient.utilities.game.entity.tracker.ServerPositionTracker.INSTANCE == null ? null : com.adjustclient.utilities.game.entity.tracker.ServerPositionTracker.INSTANCE.findTrackedPosition(this);
         double d0 = entry == null ? this.posX : entry.x;
         double d1 = entry == null ? this.posY : entry.y;
         double d2 = entry == null ? this.posZ : entry.z;
@@ -1218,7 +1218,7 @@ public abstract class Entity implements ICommandSender
 
         if (this instanceof net.minecraft.client.entity.EntityPlayerSP)
         {
-            com.adjustclient.rotation.handler.RenderRotationTracker.INSTANCE.rotation = null;
+            com.adjustclient.core.rotation.handler.RenderRotationTracker.INSTANCE.rotation = null;
         }
 
         this.setPosition(this.posX, this.posY, this.posZ);
@@ -1404,9 +1404,9 @@ public abstract class Entity implements ICommandSender
     @SideOnly(Side.CLIENT)
     public boolean isInRangeToRender3d(double x, double y, double z)
     {
-        com.adjustclient.event.EntityRenderEligibilityEvent event = new com.adjustclient.event.EntityRenderEligibilityEvent(this);
-        com.adjustclient.module.impl.render.chams.ChamsModule chams = com.adjustclient.Adjust.INSTANCE != null && com.adjustclient.Adjust.INSTANCE.moduleManager != null
-                ? com.adjustclient.Adjust.INSTANCE.moduleManager.getModule(com.adjustclient.module.impl.render.chams.ChamsModule.class)
+        com.adjustclient.core.events.EntityRenderEligibilityEvent event = new com.adjustclient.core.events.EntityRenderEligibilityEvent(this);
+        com.adjustclient.modules.impl.render.chams.ChamsModule chams = com.adjustclient.Adjust.INSTANCE != null && com.adjustclient.Adjust.INSTANCE.moduleManager != null
+                ? com.adjustclient.Adjust.INSTANCE.moduleManager.getModule(com.adjustclient.modules.impl.render.chams.ChamsModule.class)
                 : null;
 
         if (chams != null && chams.isEnabled())

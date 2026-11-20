@@ -1,8 +1,8 @@
 package net.minecraft.client.multiplayer;
 
-import com.adjustclient.event.DisconnectTeardownEvent;
-import com.adjustclient.event.EventBus;
-import com.adjustclient.event.ScreenEventPhase;
+import com.adjustclient.core.events.DisconnectTeardownEvent;
+import com.adjustclient.core.events.EventBus;
+import com.adjustclient.core.events.ScreenEventPhase;
 import com.google.common.collect.Sets;
 import java.util.Random;
 import java.util.Set;

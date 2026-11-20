@@ -1,6 +1,6 @@
 package org.lwjgl.opengl;
 
-import com.adjustclient.util.ClipboardUtil;
+import com.adjustclient.utilities.ClipboardUtil;
 import java.awt.Canvas;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;

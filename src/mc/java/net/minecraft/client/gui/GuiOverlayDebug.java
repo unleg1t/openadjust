@@ -1,8 +1,8 @@
 package net.minecraft.client.gui;
 
-import com.adjustclient.event.DebugCoordinatesEvent;
-import com.adjustclient.event.EventBus;
-import com.adjustclient.util.Timer;
+import com.adjustclient.core.events.DebugCoordinatesEvent;
+import com.adjustclient.core.events.EventBus;
+import com.adjustclient.utilities.Timer;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import java.util.Collection;

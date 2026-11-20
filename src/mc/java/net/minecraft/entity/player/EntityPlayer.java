@@ -76,17 +76,17 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldSettings;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import com.adjustclient.event.AttackSlowdownEvent;
-import com.adjustclient.event.EventBus;
-import com.adjustclient.event.ItemUseDurationEvent;
-import com.adjustclient.event.MiningFatigueEvent;
-import com.adjustclient.event.SprintEvent;
-import com.adjustclient.event.SprintState;
-import com.adjustclient.module.impl.combat.autoblock.mode.PredictiveAutoBlockMode;
-import com.adjustclient.module.impl.movement.noslowdown.SwapNoSlowMode;
-import com.adjustclient.module.impl.movement.sprint.SprintModule;
-import com.adjustclient.module.impl.player.fastuse.FastUseModule;
-import com.adjustclient.module.impl.render.MoreParticlesModule;
+import com.adjustclient.core.events.AttackSlowdownEvent;
+import com.adjustclient.core.events.EventBus;
+import com.adjustclient.core.events.ItemUseDurationEvent;
+import com.adjustclient.core.events.MiningFatigueEvent;
+import com.adjustclient.core.events.SprintEvent;
+import com.adjustclient.core.events.SprintState;
+import com.adjustclient.modules.impl.combat.autoblock.mode.PredictiveAutoBlockMode;
+import com.adjustclient.modules.impl.movement.noslowdown.SwapNoSlowMode;
+import com.adjustclient.modules.impl.movement.sprint.SprintModule;
+import com.adjustclient.modules.impl.player.fastuse.FastUseModule;
+import com.adjustclient.modules.impl.render.MoreParticlesModule;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 
 @SuppressWarnings("incomplete-switch")

@@ -1,7 +1,7 @@
 package net.minecraft.network.login.server;
 
-import com.adjustclient.util.anticheat.ServerTracker;
-import com.adjustclient.util.anticheat.blocker.BlockerState;
+import com.adjustclient.utilities.anticheat.ServerTracker;
+import com.adjustclient.utilities.anticheat.blocker.BlockerState;
 import java.io.IOException;
 import java.security.PublicKey;
 import net.minecraft.client.network.NetHandlerLoginClient;

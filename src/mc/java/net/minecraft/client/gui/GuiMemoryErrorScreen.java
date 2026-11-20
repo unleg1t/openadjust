@@ -1,6 +1,6 @@
 package net.minecraft.client.gui;
 
-import com.adjustclient.ui.mainmenu.AdjustMainMenu;
+import com.adjustclient.core.gui.mainmenu.AdjustMainMenu;
 import java.io.IOException;
 import net.minecraft.client.resources.I18n;
 import net.minecraftforge.fml.relauncher.Side;

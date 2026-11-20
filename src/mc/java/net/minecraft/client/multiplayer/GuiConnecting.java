@@ -1,21 +1,21 @@
 package net.minecraft.client.multiplayer;
 
 import com.adjustclient.Adjust;
-import com.adjustclient.event.EventBus;
-import com.adjustclient.event.ServerConnectionAttemptEvent;
-import com.adjustclient.logging.LogLevel;
-import com.adjustclient.lunar.LunarClientService;
-import com.adjustclient.module.impl.player.autohypixel.feature.AutoTip;
-import com.adjustclient.module.impl.player.voicechat.VoiceChatModule;
-import com.adjustclient.ui.account.AccountManagerScreen;
-import com.adjustclient.ui.account.BanTracker;
-import com.adjustclient.ui.hud.toggled.ToggledList;
-import com.adjustclient.util.ChatMessage;
-import com.adjustclient.util.TimeUtil;
-import com.adjustclient.util.anticheat.ServerTracker;
-import com.adjustclient.util.anticheat.model.AntiCheatDetector;
-import com.adjustclient.util.anticheat.model.AntiCheatModel;
-import com.adjustclient.util.anticheat.model.WatchdogModel;
+import com.adjustclient.core.events.EventBus;
+import com.adjustclient.core.events.ServerConnectionAttemptEvent;
+import com.adjustclient.core.logging.LogLevel;
+import com.adjustclient.utilities.lunar.LunarClientService;
+import com.adjustclient.modules.impl.player.autohypixel.feature.AutoTip;
+import com.adjustclient.modules.impl.player.voicechat.VoiceChatModule;
+import com.adjustclient.core.gui.account.AccountManagerScreen;
+import com.adjustclient.core.gui.account.BanTracker;
+import com.adjustclient.core.gui.hud.toggled.ToggledList;
+import com.adjustclient.utilities.ChatMessage;
+import com.adjustclient.utilities.TimeUtil;
+import com.adjustclient.utilities.anticheat.ServerTracker;
+import com.adjustclient.utilities.anticheat.model.AntiCheatDetector;
+import com.adjustclient.utilities.anticheat.model.AntiCheatModel;
+import com.adjustclient.utilities.anticheat.model.WatchdogModel;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -102,7 +102,7 @@ public class GuiConnecting extends GuiScreen
             return;
         }
 
-        com.adjustclient.logging.Logger.log(
+        com.adjustclient.core.logging.Logger.log(
                 LogLevel.INFO,
                 true,
                 "Establishing connection to {}",

@@ -173,7 +173,7 @@ public class GuiMultiplayer extends GuiScreen implements GuiYesNoCallback
             }
             else if (button.id == 10)
             {
-                this.mc.displayGuiScreen(new com.adjustclient.ui.multisession.MultiSessionScreen(this));
+                this.mc.displayGuiScreen(new com.adjustclient.core.gui.multisession.MultiSessionScreen(this));
             }
         }
     }

@@ -43,28 +43,28 @@ import net.minecraft.stats.StatBase;
 import net.minecraft.stats.StatFileWriter;
 import net.minecraft.tileentity.TileEntitySign;
 import com.adjustclient.Adjust;
-import com.adjustclient.event.CancellablePlayerUpdateEvent;
-import com.adjustclient.event.EventBus;
-import com.adjustclient.event.ItemSlowdownEvent;
-import com.adjustclient.event.MotionEvent;
-import com.adjustclient.event.MoveEvent;
-import com.adjustclient.event.PlayerUpdateTailEvent;
-import com.adjustclient.event.SprintEligibilityEvent;
-import com.adjustclient.event.SprintEvent;
-import com.adjustclient.game.player.InventoryStateTracker;
-import com.adjustclient.module.impl.combat.KnockbackDelayModule;
-import com.adjustclient.module.impl.movement.inventorymove.InventoryMoveModule;
-import com.adjustclient.module.impl.player.fastuse.feature.BlockBreakingFeature;
-import com.adjustclient.module.impl.render.MoreParticlesModule;
-import com.adjustclient.module.impl.render.freecam.FreecamModule;
-import com.adjustclient.module.impl.render.hud.HUDModule;
-import com.adjustclient.module.impl.render.hud.playerlist.menu.PlayerContextMenu;
-import com.adjustclient.module.impl.render.trajectories.TrajectoriesModule;
-import com.adjustclient.protocol.interaction.NativeInteractionHandler;
-import com.adjustclient.ui.hud.HudElement;
-import com.adjustclient.ui.hud.information.Information;
-import com.adjustclient.util.ScreenUtil;
-import com.adjustclient.util.anticheat.ServerTracker;
+import com.adjustclient.core.events.CancellablePlayerUpdateEvent;
+import com.adjustclient.core.events.EventBus;
+import com.adjustclient.core.events.ItemSlowdownEvent;
+import com.adjustclient.core.events.MotionEvent;
+import com.adjustclient.core.events.MoveEvent;
+import com.adjustclient.core.events.PlayerUpdateTailEvent;
+import com.adjustclient.core.events.SprintEligibilityEvent;
+import com.adjustclient.core.events.SprintEvent;
+import com.adjustclient.utilities.game.player.InventoryStateTracker;
+import com.adjustclient.modules.impl.combat.KnockbackDelayModule;
+import com.adjustclient.modules.impl.movement.inventorymove.InventoryMoveModule;
+import com.adjustclient.modules.impl.player.fastuse.feature.BlockBreakingFeature;
+import com.adjustclient.modules.impl.render.MoreParticlesModule;
+import com.adjustclient.modules.impl.render.freecam.FreecamModule;
+import com.adjustclient.modules.impl.render.hud.HUDModule;
+import com.adjustclient.modules.impl.render.hud.playerlist.menu.PlayerContextMenu;
+import com.adjustclient.modules.impl.render.trajectories.TrajectoriesModule;
+import com.adjustclient.utilities.protocol.interaction.NativeInteractionHandler;
+import com.adjustclient.core.gui.hud.HudElement;
+import com.adjustclient.core.gui.hud.information.Information;
+import com.adjustclient.utilities.ScreenUtil;
+import com.adjustclient.utilities.anticheat.ServerTracker;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.DamageSource;
@@ -736,7 +736,7 @@ public class EntityPlayerSP extends AbstractClientPlayer
             this.isJumping = this.movementInput.jump;
             this.prevRenderArmYaw = this.renderArmYaw;
             this.prevRenderArmPitch = this.renderArmPitch;
-            com.adjustclient.util.Vec2f tracked = com.adjustclient.rotation.handler.RenderRotationTracker.INSTANCE.rotation;
+            com.adjustclient.utilities.Vec2f tracked = com.adjustclient.core.rotation.handler.RenderRotationTracker.INSTANCE.rotation;
             float armPitch = this.mc.cameraOverride != null
                     ? this.mc.cameraOverride.rotationPitch
                     : (tracked != null ? tracked.y : this.rotationPitch);
@@ -852,10 +852,10 @@ public class EntityPlayerSP extends AbstractClientPlayer
             effectiveForward = (float)((double)effectiveForward / 0.3D);
         }
 
-        if (com.adjustclient.module.impl.exploit.phase.PhaseModule.INSTANCE == null
-                || !com.adjustclient.module.impl.exploit.phase.PhaseModule.INSTANCE.isEnabled()
-                || !(com.adjustclient.module.impl.exploit.phase.PhaseModule.INSTANCE.mode.getValue() instanceof com.adjustclient.module.impl.exploit.phase.mode.PacketlessPhaseMode
-                    || com.adjustclient.module.impl.exploit.phase.PhaseModule.INSTANCE.mode.getValue() instanceof com.adjustclient.module.impl.exploit.phase.mode.VerticalPhaseMode))
+        if (com.adjustclient.modules.impl.exploit.phase.PhaseModule.INSTANCE == null
+                || !com.adjustclient.modules.impl.exploit.phase.PhaseModule.INSTANCE.isEnabled()
+                || !(com.adjustclient.modules.impl.exploit.phase.PhaseModule.INSTANCE.mode.getValue() instanceof com.adjustclient.modules.impl.exploit.phase.mode.PacketlessPhaseMode
+                    || com.adjustclient.modules.impl.exploit.phase.PhaseModule.INSTANCE.mode.getValue() instanceof com.adjustclient.modules.impl.exploit.phase.mode.VerticalPhaseMode))
         {
             this.pushOutOfBlocks(this.posX - (double)this.width * 0.35D, this.getEntityBoundingBox().minY + 0.5D, this.posZ + (double)this.width * 0.35D);
             this.pushOutOfBlocks(this.posX - (double)this.width * 0.35D, this.getEntityBoundingBox().minY + 0.5D, this.posZ - (double)this.width * 0.35D);
@@ -866,18 +866,18 @@ public class EntityPlayerSP extends AbstractClientPlayer
         this.omniSprint = false;
         SprintEligibilityEvent sprintEvent = EventBus.post(new SprintEligibilityEvent(flag3));
 
-        boolean autoPotionSprinting = com.adjustclient.module.impl.player.autopotion.AutoPotionModule.INSTANCE != null
-                && com.adjustclient.module.impl.player.autopotion.AutoPotionModule.INSTANCE.isEnabled()
-                && com.adjustclient.module.impl.player.autopotion.AutoPotionModule.INSTANCE.plan != null
-                && com.adjustclient.module.impl.player.autopotion.AutoPotionModule.INSTANCE.plan.sprinting;
+        boolean autoPotionSprinting = com.adjustclient.modules.impl.player.autopotion.AutoPotionModule.INSTANCE != null
+                && com.adjustclient.modules.impl.player.autopotion.AutoPotionModule.INSTANCE.isEnabled()
+                && com.adjustclient.modules.impl.player.autopotion.AutoPotionModule.INSTANCE.plan != null
+                && com.adjustclient.modules.impl.player.autopotion.AutoPotionModule.INSTANCE.plan.sprinting;
         if (!autoPotionSprinting && InventoryMoveModule.INSTANCE != null && InventoryMoveModule.INSTANCE.isEnabled() && sprintEvent.sprintEligible && ScreenUtil.isSettingsScreenOpen())
         {
             sprintEvent.sprintEligible = false;
         }
 
-        if (com.adjustclient.module.impl.player.PixelPartyModule.INSTANCE != null)
+        if (com.adjustclient.modules.impl.player.PixelPartyModule.INSTANCE != null)
         {
-            com.adjustclient.module.impl.player.PixelPartyModule.INSTANCE.onInput();
+            com.adjustclient.modules.impl.player.PixelPartyModule.INSTANCE.onInput();
         }
 
         boolean flag4 = sprintEvent.sprintEligible;

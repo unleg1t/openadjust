@@ -82,15 +82,15 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet>
     private final Queue<NetworkManager.InboundHandlerTuplePacketListener> outboundPacketsQueue = Queues.<NetworkManager.InboundHandlerTuplePacketListener>newConcurrentLinkedQueue();
     private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
     public Channel channel;
-    public com.adjustclient.util.sunshine.SunshineAnticheat sunshineAnticheat;
-    public com.adjustclient.protocol.ProtocolAdapter p = new com.adjustclient.protocol.NativeProtocolAdapter();
-    public com.adjustclient.protocol.ProtocolAdapter protocolAdapter = this.p;
+    public com.adjustclient.utilities.sunshine.SunshineAnticheat sunshineAnticheat;
+    public com.adjustclient.utilities.protocol.ProtocolAdapter p = new com.adjustclient.utilities.protocol.NativeProtocolAdapter();
+    public com.adjustclient.utilities.protocol.ProtocolAdapter protocolAdapter = this.p;
     private SocketAddress socketAddress;
     private INetHandler packetListener;
     private IChatComponent terminationReason;
     private boolean isEncrypted;
     private boolean disconnected;
-    private static final com.adjustclient.game.packet.PacketTransform IDENTITY_TRANSFORM = new com.adjustclient.game.packet.PacketTransform.Identity();
+    private static final com.adjustclient.utilities.game.packet.PacketTransform IDENTITY_TRANSFORM = new com.adjustclient.utilities.game.packet.PacketTransform.Identity();
 
     public NetworkManager(EnumPacketDirection packetDirection)
     {
@@ -98,7 +98,7 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet>
 
         if (packetDirection == EnumPacketDirection.CLIENTBOUND)
         {
-            this.sunshineAnticheat = new com.adjustclient.util.sunshine.SunshineAnticheat();
+            this.sunshineAnticheat = new com.adjustclient.utilities.sunshine.SunshineAnticheat();
         }
     }
 
@@ -150,8 +150,8 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet>
     {
         if (this.channel.isOpen())
         {
-            com.adjustclient.event.DirectionalPacketEvent event = com.adjustclient.event.EventBus.post(
-                new com.adjustclient.event.DirectionalPacketEvent(p_channelRead0_2_, false));
+            com.adjustclient.core.events.DirectionalPacketEvent event = com.adjustclient.core.events.EventBus.post(
+                new com.adjustclient.core.events.DirectionalPacketEvent(p_channelRead0_2_, false));
 
             if (event.isCancelled())
             {
@@ -159,12 +159,12 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet>
             }
 
             final Packet packet = event.packet;
-            final java.util.concurrent.atomic.AtomicReference<com.adjustclient.game.packet.PacketTransform> transformRef =
-                new java.util.concurrent.atomic.AtomicReference<com.adjustclient.game.packet.PacketTransform>(IDENTITY_TRANSFORM);
+            final java.util.concurrent.atomic.AtomicReference<com.adjustclient.utilities.game.packet.PacketTransform> transformRef =
+                new java.util.concurrent.atomic.AtomicReference<com.adjustclient.utilities.game.packet.PacketTransform>(IDENTITY_TRANSFORM);
 
             if (this.direction == EnumPacketDirection.CLIENTBOUND)
             {
-                com.adjustclient.game.packet.InboundPacketQueue.fallbackEventLoop = this.channel.eventLoop();
+                com.adjustclient.utilities.game.packet.InboundPacketQueue.fallbackEventLoop = this.channel.eventLoop();
 
                 if (com.adjustclient.Adjust.inboundPacketQueue != null)
                 {
@@ -182,7 +182,7 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet>
     }
 
     private void applyIncomingPacket(
-        java.util.concurrent.atomic.AtomicReference<com.adjustclient.game.packet.PacketTransform> transformRef,
+        java.util.concurrent.atomic.AtomicReference<com.adjustclient.utilities.game.packet.PacketTransform> transformRef,
         Packet rawPacket)
     {
         Packet packet = rawPacket;
@@ -193,14 +193,14 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet>
             packet = com.adjustclient.Adjust.inboundPacketQueue.transform.transform(packet);
         }
 
-        com.adjustclient.game.packet.PacketTransform refTransform = transformRef != null ? transformRef.get() : null;
+        com.adjustclient.utilities.game.packet.PacketTransform refTransform = transformRef != null ? transformRef.get() : null;
 
         if (refTransform != null)
         {
             packet = refTransform.transform(packet);
         }
 
-        com.adjustclient.event.EventBus.post(new com.adjustclient.event.LowLevelPacketReceiveEvent(packet));
+        com.adjustclient.core.events.EventBus.post(new com.adjustclient.core.events.LowLevelPacketReceiveEvent(packet));
 
         if (this.sunshineAnticheat != null)
         {
@@ -236,7 +236,7 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet>
             return;
         }
 
-        com.adjustclient.util.ChatMessage message = new com.adjustclient.util.ChatMessage();
+        com.adjustclient.utilities.ChatMessage message = new com.adjustclient.utilities.ChatMessage();
         message.color = net.minecraft.util.ChatColor.RED;
         message.append(String.valueOf(throwable));
         message.append("\n");
@@ -264,8 +264,8 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet>
         {
             if (this.direction == EnumPacketDirection.CLIENTBOUND)
             {
-                com.adjustclient.event.DirectionalPacketEvent event = com.adjustclient.event.EventBus.post(
-                    new com.adjustclient.event.DirectionalPacketEvent(packetIn, true));
+                com.adjustclient.core.events.DirectionalPacketEvent event = com.adjustclient.core.events.EventBus.post(
+                    new com.adjustclient.core.events.DirectionalPacketEvent(packetIn, true));
 
                 if (event.isCancelled())
                 {
@@ -327,8 +327,8 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet>
         {
             if (this.direction == EnumPacketDirection.CLIENTBOUND)
             {
-                com.adjustclient.event.DirectionalPacketEvent event = com.adjustclient.event.EventBus.post(
-                    new com.adjustclient.event.DirectionalPacketEvent(packetIn, true));
+                com.adjustclient.core.events.DirectionalPacketEvent event = com.adjustclient.core.events.EventBus.post(
+                    new com.adjustclient.core.events.DirectionalPacketEvent(packetIn, true));
 
                 if (event.isCancelled())
                 {
@@ -361,8 +361,8 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet>
         final EnumConnectionState enumconnectionstate = EnumConnectionState.getFromPacket(inPacket);
         final EnumConnectionState enumconnectionstate1 = (EnumConnectionState)this.channel.attr(attrKeyConnectionState).get();
         final boolean notify = this.direction == EnumPacketDirection.CLIENTBOUND && enumconnectionstate == EnumConnectionState.PLAY;
-        final java.util.concurrent.atomic.AtomicReference<com.adjustclient.game.packet.PacketTransform> transformRef =
-            new java.util.concurrent.atomic.AtomicReference<com.adjustclient.game.packet.PacketTransform>(IDENTITY_TRANSFORM);
+        final java.util.concurrent.atomic.AtomicReference<com.adjustclient.utilities.game.packet.PacketTransform> transformRef =
+            new java.util.concurrent.atomic.AtomicReference<com.adjustclient.utilities.game.packet.PacketTransform>(IDENTITY_TRANSFORM);
         Runnable sendAction = () -> this.dispatchTransformedPacket(transformRef, inPacket, enumconnectionstate, enumconnectionstate1, futureListeners, notify);
 
         if (notify && com.adjustclient.Adjust.outboundPacketQueue != null)
@@ -376,7 +376,7 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet>
     }
 
     private void dispatchTransformedPacket(
-        final java.util.concurrent.atomic.AtomicReference<com.adjustclient.game.packet.PacketTransform> transformRef,
+        final java.util.concurrent.atomic.AtomicReference<com.adjustclient.utilities.game.packet.PacketTransform> transformRef,
         final Packet inPacket,
         final EnumConnectionState initialTargetState,
         final EnumConnectionState initialCurrentState,
@@ -391,7 +391,7 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet>
             packet = com.adjustclient.Adjust.outboundPacketQueue.transform.transform(packet);
         }
 
-        com.adjustclient.game.packet.PacketTransform refTransform = transformRef != null ? transformRef.get() : null;
+        com.adjustclient.utilities.game.packet.PacketTransform refTransform = transformRef != null ? transformRef.get() : null;
 
         if (refTransform != null)
         {
@@ -443,13 +443,13 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet>
 
         if (notify)
         {
-            com.adjustclient.event.EventBus.post(new com.adjustclient.event.LowLevelPacketSendEvent(finalPacket));
+            com.adjustclient.core.events.EventBus.post(new com.adjustclient.core.events.LowLevelPacketSendEvent(finalPacket));
         }
 
-        boolean shouldFlush = !(com.adjustclient.module.impl.render.freecam.FreecamModule.INSTANCE != null
-            && com.adjustclient.module.impl.render.freecam.FreecamModule.INSTANCE.isEnabled()
-            && com.adjustclient.module.impl.render.freecam.FreecamModule.INSTANCE.controller != null
-            && !com.adjustclient.module.impl.render.freecam.FreecamModule.INSTANCE.controller.timer.hasElapsed(5L));
+        boolean shouldFlush = !(com.adjustclient.modules.impl.render.freecam.FreecamModule.INSTANCE != null
+            && com.adjustclient.modules.impl.render.freecam.FreecamModule.INSTANCE.isEnabled()
+            && com.adjustclient.modules.impl.render.freecam.FreecamModule.INSTANCE.controller != null
+            && !com.adjustclient.modules.impl.render.freecam.FreecamModule.INSTANCE.controller.timer.hasElapsed(5L));
         ChannelFuture channelfuture = shouldFlush ? this.channel.writeAndFlush(finalPacket) : this.channel.write(finalPacket);
 
         if (futureListeners != null)
@@ -490,10 +490,10 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet>
             ((ITickable)this.packetListener).update();
         }
 
-        boolean allowFlush = !(com.adjustclient.module.impl.render.freecam.FreecamModule.INSTANCE != null
-            && com.adjustclient.module.impl.render.freecam.FreecamModule.INSTANCE.isEnabled()
-            && com.adjustclient.module.impl.render.freecam.FreecamModule.INSTANCE.controller != null
-            && !com.adjustclient.module.impl.render.freecam.FreecamModule.INSTANCE.controller.timer.hasElapsed(5L));
+        boolean allowFlush = !(com.adjustclient.modules.impl.render.freecam.FreecamModule.INSTANCE != null
+            && com.adjustclient.modules.impl.render.freecam.FreecamModule.INSTANCE.isEnabled()
+            && com.adjustclient.modules.impl.render.freecam.FreecamModule.INSTANCE.controller != null
+            && !com.adjustclient.modules.impl.render.freecam.FreecamModule.INSTANCE.controller.timer.hasElapsed(5L));
 
         if (allowFlush)
         {

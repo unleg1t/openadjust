@@ -1,7 +1,7 @@
 package net.minecraft.client.gui;
 
 import com.adjustclient.Adjust;
-import com.adjustclient.module.impl.render.tweaks.TweaksModule;
+import com.adjustclient.modules.impl.render.tweaks.TweaksModule;
 import com.google.common.collect.Lists;
 import java.util.Collections;
 import java.util.LinkedHashSet;

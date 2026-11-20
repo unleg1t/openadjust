@@ -1,9 +1,9 @@
 package net.minecraft.client.renderer;
 
-import com.adjustclient.event.BlockRenderStateEvent;
-import com.adjustclient.module.impl.render.bedplates.BedPlatesModule;
-import com.adjustclient.module.impl.render.blockoverlay.BlockOverlayModule;
-import com.adjustclient.util.anticheat.ServerTracker;
+import com.adjustclient.core.events.BlockRenderStateEvent;
+import com.adjustclient.modules.impl.render.bedplates.BedPlatesModule;
+import com.adjustclient.modules.impl.render.blockoverlay.BlockOverlayModule;
+import com.adjustclient.utilities.anticheat.ServerTracker;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBed;
 import net.minecraft.block.state.IBlockState;

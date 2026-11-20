@@ -1,0 +1,56 @@
+package com.adjustclient.core.gui.account;
+
+import java.awt.Color;
+
+import com.adjustclient.core.rendering.animation.Animation;
+import com.adjustclient.core.rendering.animation.Easing;
+import com.adjustclient.core.rendering.font.Fonts;
+import com.adjustclient.core.rendering.font.image.NvgDraw;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.util.ChatColor;
+import com.adjustclient.core.gui.mainmenu.AdjustMainMenu;
+import com.adjustclient.core.gui.screen.AdjustScreen;
+
+public final class DragDropOverlay {
+
+    public static final DragDropOverlay INSTANCE;
+
+    final Animation fade;
+    Object obf8;
+
+    static {
+        INSTANCE = new DragDropOverlay();
+    }
+
+    private DragDropOverlay() {
+        this.fade = new Animation(Easing.LINEAR, 150L);
+    }
+
+    public void render() {
+        float target = AdjustMainMenu.windowActive ? 0.0F : 1.0F;
+        float value = this.fade.update(target);
+        if (0.0F >= value) {
+            return;
+        }
+        Minecraft mc = Minecraft.getMinecraft();
+        ScaledResolution resolution = mc != null && mc.currentScreen != null ? new ScaledResolution(mc) : AdjustScreen.screenResolution;
+        if (resolution == null) {
+            return;
+        }
+        float height = (float) resolution.getScaledHeight();
+        float width = (float) resolution.scaledWidth;
+        int veilAlpha = (int) (value * 175.0F);
+        NvgDraw.fillRect(new Color(28, 28, 28, veilAlpha).getRGB(), 0.0F, 0.0F, width, height);
+
+        int textAlpha = (int) (value * 200.0F);
+        int textColor = new Color(189, 189, 190, textAlpha).getRGB();
+        String title = ChatColor.BOLD + "Drag and Drop";
+        float titleWidth = Fonts.TAHOMA_20.getStringWidth(title);
+        Fonts.TAHOMA_20.drawString(title, width / 2.0F - titleWidth * 0.5F, height / 2.3F, textColor);
+
+        String hint = "ZIP & multiple files allowed " + ChatColor.GRAY + "(cookie accounts)";
+        float hintWidth = Fonts.TAHOMA_14.getStringWidth(hint);
+        Fonts.TAHOMA_14.drawString(hint, width / 2.0F - hintWidth * 0.5F, height / 2.3F + 14.0F, textColor);
+    }
+}

@@ -1,10 +1,10 @@
 package net.minecraft.client.gui;
 
-import com.adjustclient.event.ChatLineAddedEvent;
-import com.adjustclient.event.ChatLineEvent;
-import com.adjustclient.event.EventBus;
-import com.adjustclient.module.impl.render.tweaks.TweaksModule;
-import com.adjustclient.ui.chat.ChatSenderPatterns;
+import com.adjustclient.core.events.ChatLineAddedEvent;
+import com.adjustclient.core.events.ChatLineEvent;
+import com.adjustclient.core.events.EventBus;
+import com.adjustclient.modules.impl.render.tweaks.TweaksModule;
+import com.adjustclient.core.gui.chat.ChatSenderPatterns;
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,8 +15,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.function.Predicate;
-import com.adjustclient.logging.LogLevel;
-import com.adjustclient.logging.Logger;
+import com.adjustclient.core.logging.LogLevel;
+import com.adjustclient.core.logging.Logger;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.client.renderer.GlStateManager;

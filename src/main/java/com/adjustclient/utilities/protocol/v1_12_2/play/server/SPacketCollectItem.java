@@ -1,0 +1,27 @@
+package com.adjustclient.utilities.protocol.v1_12_2.play.server;
+
+import com.adjustclient.utilities.protocol.v1_12_2.ProtocolPacket;
+import com.adjustclient.utilities.protocol.v1_12_2.ProtocolPacketBuffer;
+import com.adjustclient.utilities.protocol.v1_12_2.play.PlayClientHandler;
+import java.io.IOException;
+
+public class SPacketCollectItem implements ProtocolPacket<PlayClientHandler> {
+    private int collectedItemEntityId;
+    private int entityId;
+    private int amount;
+
+    public SPacketCollectItem() {
+    }
+
+    @Override
+    public void readPacketData(ProtocolPacketBuffer buffer) throws IOException {
+    }
+
+    @Override
+    public void writePacketData(ProtocolPacketBuffer buffer) throws IOException {
+    }
+
+    @Override
+    public void processPacket(PlayClientHandler handler) {
+    }
+}

@@ -1,6 +1,6 @@
 package net.minecraft.client.renderer;
 
-import com.adjustclient.util.ImageUtil;
+import com.adjustclient.utilities.ImageUtil;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -38,7 +38,7 @@ public class ThreadDownloadImageData extends SimpleTexture
     private boolean textureUploaded;
     public Boolean imageFound = null;
     public boolean pipeline = false;
-    public com.adjustclient.util.Timer lastUseTimer = new com.adjustclient.util.Timer();
+    public com.adjustclient.utilities.Timer lastUseTimer = new com.adjustclient.utilities.Timer();
 
     public ThreadDownloadImageData(File cacheFileIn, String imageUrlIn, ResourceLocation textureResourceLocation, IImageBuffer imageBufferIn)
     {

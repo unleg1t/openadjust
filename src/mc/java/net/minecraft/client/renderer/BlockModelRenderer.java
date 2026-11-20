@@ -1,6 +1,6 @@
 package net.minecraft.client.renderer;
 
-import com.adjustclient.module.impl.render.XRayModule;
+import com.adjustclient.modules.impl.render.XRayModule;
 import java.util.BitSet;
 import java.util.List;
 import net.minecraft.block.Block;
@@ -58,7 +58,7 @@ public class BlockModelRenderer
 
     public boolean renderModel(IBlockAccess blockAccessIn, IBakedModel modelIn, IBlockState blockStateIn, BlockPos blockPosIn, WorldRenderer worldRendererIn, boolean checkSides)
     {
-        boolean flag = com.adjustclient.module.impl.render.XRayModule.active || (Minecraft.isAmbientOcclusionEnabled() && blockStateIn.getBlock().getLightValue() == 0 && modelIn.isAmbientOcclusion());
+        boolean flag = com.adjustclient.modules.impl.render.XRayModule.active || (Minecraft.isAmbientOcclusionEnabled() && blockStateIn.getBlock().getLightValue() == 0 && modelIn.isAmbientOcclusion());
 
         try
         {

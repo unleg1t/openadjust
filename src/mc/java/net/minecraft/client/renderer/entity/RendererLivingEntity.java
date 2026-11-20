@@ -1,18 +1,18 @@
 package net.minecraft.client.renderer.entity;
 
 import com.adjustclient.Adjust;
-import com.adjustclient.event.EntityOpacityEvent;
-import com.adjustclient.event.EventBus;
-import com.adjustclient.game.entity.tracker.ServerPositionEntry;
-import com.adjustclient.game.entity.tracker.ServerPositionTracker;
-import com.adjustclient.game.render.FrozenPlayerRenderer;
-import com.adjustclient.module.impl.movement.antivoid.LegitAntiVoidMode;
-import com.adjustclient.module.impl.render.HurtcamModule;
-import com.adjustclient.module.impl.render.chams.ChamsMode;
-import com.adjustclient.module.impl.render.chams.ChamsModule;
-import com.adjustclient.module.impl.render.chams.ChamsTargetSettings;
-import com.adjustclient.module.impl.render.streamer.StreamerModule;
-import com.adjustclient.service.util.ServiceUtil;
+import com.adjustclient.core.events.EntityOpacityEvent;
+import com.adjustclient.core.events.EventBus;
+import com.adjustclient.utilities.game.entity.tracker.ServerPositionEntry;
+import com.adjustclient.utilities.game.entity.tracker.ServerPositionTracker;
+import com.adjustclient.utilities.game.render.FrozenPlayerRenderer;
+import com.adjustclient.modules.impl.movement.antivoid.LegitAntiVoidMode;
+import com.adjustclient.modules.impl.render.HurtcamModule;
+import com.adjustclient.modules.impl.render.chams.ChamsMode;
+import com.adjustclient.modules.impl.render.chams.ChamsModule;
+import com.adjustclient.modules.impl.render.chams.ChamsTargetSettings;
+import com.adjustclient.modules.impl.render.streamer.StreamerModule;
+import com.adjustclient.managers.util.ServiceUtil;
 import com.google.common.collect.Lists;
 import com.mojang.authlib.GameProfile;
 import java.awt.Color;
@@ -64,7 +64,7 @@ public abstract class RendererLivingEntity<T extends EntityLivingBase> extends R
     public static float NAME_TAG_RANGE = 64.0F;
     public static float NAME_TAG_RANGE_SNEAK = 32.0F;
     public static Float previewOpacityOverride;
-    public com.adjustclient.event.EntityOpacityEvent currentOpacityEvent;
+    public com.adjustclient.core.events.EntityOpacityEvent currentOpacityEvent;
 
     public RendererLivingEntity(RenderManager renderManagerIn, ModelBase modelBaseIn, float shadowSizeIn)
     {
@@ -135,7 +135,7 @@ public abstract class RendererLivingEntity<T extends EntityLivingBase> extends R
         }
         if (Adjust.frozenPlayerRenderListener != null)
         {
-            com.adjustclient.game.render.FrozenPlayerRenderer frozen = Adjust.frozenPlayerRenderListener.find(entity);
+            com.adjustclient.utilities.game.render.FrozenPlayerRenderer frozen = Adjust.frozenPlayerRenderListener.find(entity);
             if (frozen != null)
             {
                 opacityEvent.bodyAlpha = frozen.opacity;

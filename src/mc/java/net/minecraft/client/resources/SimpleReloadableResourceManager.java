@@ -1,6 +1,6 @@
 package net.minecraft.client.resources;
 
-import com.adjustclient.vfs.RemoteResourceManager;
+import com.adjustclient.utilities.vfs.RemoteResourceManager;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;

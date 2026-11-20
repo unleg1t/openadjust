@@ -454,8 +454,8 @@ public class SoundManager
     {
         if (this.loaded && player != null)
         {
-            com.adjustclient.util.Vec2f tracked = player instanceof net.minecraft.client.entity.EntityPlayerSP
-                    ? com.adjustclient.rotation.handler.RenderRotationTracker.INSTANCE.rotation
+            com.adjustclient.utilities.Vec2f tracked = player instanceof net.minecraft.client.entity.EntityPlayerSP
+                    ? com.adjustclient.core.rotation.handler.RenderRotationTracker.INSTANCE.rotation
                     : null;
             float f = tracked != null
                     ? tracked.y

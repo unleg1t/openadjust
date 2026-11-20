@@ -56,18 +56,18 @@ public class ActiveRenderInfo
         float f3 = entityplayerIn.rotationYaw;
         if (entityplayerIn instanceof net.minecraft.client.entity.EntityPlayerSP)
         {
-            if (com.adjustclient.module.impl.render.ThirdPersonModule.INSTANCE != null
-                && com.adjustclient.module.impl.render.ThirdPersonModule.INSTANCE.isEnabled()
-                && com.adjustclient.module.impl.render.ThirdPersonModule.INSTANCE.freeLooking)
+            if (com.adjustclient.modules.impl.render.ThirdPersonModule.INSTANCE != null
+                && com.adjustclient.modules.impl.render.ThirdPersonModule.INSTANCE.isEnabled()
+                && com.adjustclient.modules.impl.render.ThirdPersonModule.INSTANCE.freeLooking)
             {
-                f2 = com.adjustclient.module.impl.render.ThirdPersonModule.INSTANCE.pitch;
-                f3 = com.adjustclient.module.impl.render.ThirdPersonModule.INSTANCE.yaw;
+                f2 = com.adjustclient.modules.impl.render.ThirdPersonModule.INSTANCE.pitch;
+                f3 = com.adjustclient.modules.impl.render.ThirdPersonModule.INSTANCE.yaw;
             }
-            else if (com.adjustclient.rotation.handler.RenderRotationTracker.INSTANCE != null
-                && com.adjustclient.rotation.handler.RenderRotationTracker.INSTANCE.rotation != null)
+            else if (com.adjustclient.core.rotation.handler.RenderRotationTracker.INSTANCE != null
+                && com.adjustclient.core.rotation.handler.RenderRotationTracker.INSTANCE.rotation != null)
             {
-                f2 = com.adjustclient.rotation.handler.RenderRotationTracker.INSTANCE.rotation.y;
-                f3 = com.adjustclient.rotation.handler.RenderRotationTracker.INSTANCE.rotation.x;
+                f2 = com.adjustclient.core.rotation.handler.RenderRotationTracker.INSTANCE.rotation.y;
+                f3 = com.adjustclient.core.rotation.handler.RenderRotationTracker.INSTANCE.rotation.x;
             }
         }
         rotationX = MathHelper.cos(f3 * (float)Math.PI / 180.0F) * (float)(1 - i * 2);

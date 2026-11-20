@@ -1204,12 +1204,12 @@ public abstract class World implements IBlockAccess
 
         if (entityIn != null && entityIn.isUser())
         {
-            com.adjustclient.event.EventBus.post(new com.adjustclient.event.CollisionBoxesEvent(list));
+            com.adjustclient.core.events.EventBus.post(new com.adjustclient.core.events.CollisionBoxesEvent(list));
         }
 
-        if (entityIn instanceof com.adjustclient.util.SimulationPlayer)
+        if (entityIn instanceof com.adjustclient.utilities.SimulationPlayer)
         {
-            Object extraBox = ((com.adjustclient.util.SimulationPlayer)entityIn).field692;
+            Object extraBox = ((com.adjustclient.utilities.SimulationPlayer)entityIn).field692;
 
             if (extraBox instanceof AxisAlignedBB && ((AxisAlignedBB)extraBox).intersectsWith(bb))
             {
@@ -1376,7 +1376,7 @@ public abstract class World implements IBlockAccess
 
     private long getEffectiveWorldTime()
     {
-        com.adjustclient.module.impl.render.AtmosphereModule atmosphere = com.adjustclient.module.impl.render.AtmosphereModule.INSTANCE;
+        com.adjustclient.modules.impl.render.AtmosphereModule atmosphere = com.adjustclient.modules.impl.render.AtmosphereModule.INSTANCE;
 
         if (atmosphere != null && atmosphere.isEnabled() && atmosphere.timeEnabled.isEnabled())
         {
@@ -1579,7 +1579,7 @@ public abstract class World implements IBlockAccess
             {
                 try
                 {
-                    com.adjustclient.event.EventBus.post(new com.adjustclient.event.EntityPreUpdateEvent(entity2));
+                    com.adjustclient.core.events.EventBus.post(new com.adjustclient.core.events.EntityPreUpdateEvent(entity2));
                     this.updateEntity(entity2);
                 }
                 catch (Throwable throwable1)
@@ -1664,10 +1664,10 @@ public abstract class World implements IBlockAccess
         }
 
         if (tileEntitiesChanged
-            && com.adjustclient.module.impl.render.blockoverlay.BlockOverlayModule.INSTANCE != null
-            && com.adjustclient.module.impl.render.blockoverlay.BlockOverlayModule.INSTANCE.isEnabled())
+            && com.adjustclient.modules.impl.render.blockoverlay.BlockOverlayModule.INSTANCE != null
+            && com.adjustclient.modules.impl.render.blockoverlay.BlockOverlayModule.INSTANCE.isEnabled())
         {
-            com.adjustclient.module.impl.render.blockoverlay.BlockOverlayModule.INSTANCE.markRefresh();
+            com.adjustclient.modules.impl.render.blockoverlay.BlockOverlayModule.INSTANCE.markRefresh();
         }
 
         this.theProfiler.endStartSection("pendingBlockEntities");

@@ -38,7 +38,7 @@ public class EntityParticleEmitter extends EntityFX
 
             if (d0 * d0 + d1 * d1 + d2 * d2 <= 1.0D)
             {
-                com.adjustclient.game.entity.tracker.ServerPositionEntry entry = com.adjustclient.game.entity.tracker.ServerPositionTracker.INSTANCE == null ? null : com.adjustclient.game.entity.tracker.ServerPositionTracker.INSTANCE.findTrackedPosition(this.attachedEntity);
+                com.adjustclient.utilities.game.entity.tracker.ServerPositionEntry entry = com.adjustclient.utilities.game.entity.tracker.ServerPositionTracker.INSTANCE == null ? null : com.adjustclient.utilities.game.entity.tracker.ServerPositionTracker.INSTANCE.findTrackedPosition(this.attachedEntity);
                 double baseX = entry != null ? entry.x : this.attachedEntity.posX;
                 double baseY = entry != null ? entry.y : this.attachedEntity.getEntityBoundingBox().minY;
                 double baseZ = entry != null ? entry.z : this.attachedEntity.posZ;

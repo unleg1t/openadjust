@@ -1,9 +1,9 @@
 package net.minecraft.client.settings;
 
 import com.adjustclient.Adjust;
-import com.adjustclient.event.EventBus;
-import com.adjustclient.event.KeyBindingStateEvent;
-import com.adjustclient.module.util.MouseClick;
+import com.adjustclient.core.events.EventBus;
+import com.adjustclient.core.events.KeyBindingStateEvent;
+import com.adjustclient.modules.util.MouseClick;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.util.List;

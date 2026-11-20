@@ -1,7 +1,7 @@
 package net.minecraft.client.renderer.entity.layers;
 
 import com.adjustclient.Adjust;
-import com.adjustclient.event.EntityOpacityEvent;
+import com.adjustclient.core.events.EntityOpacityEvent;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBiped;

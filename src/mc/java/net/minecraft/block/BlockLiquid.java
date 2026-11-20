@@ -90,7 +90,7 @@ public abstract class BlockLiquid extends Block
     @SideOnly(Side.CLIENT)
     public boolean shouldSideBeRendered(IBlockAccess worldIn, BlockPos pos, EnumFacing side)
     {
-        if (com.adjustclient.module.impl.render.XRayModule.active && !com.adjustclient.module.impl.render.XRayModule.shouldRenderBlock(this, pos))
+        if (com.adjustclient.modules.impl.render.XRayModule.active && !com.adjustclient.modules.impl.render.XRayModule.shouldRenderBlock(this, pos))
         {
             return false;
         }

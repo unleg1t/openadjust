@@ -1,8 +1,8 @@
 package net.minecraft.client.gui.inventory;
 
-import com.adjustclient.event.EventBus;
-import com.adjustclient.event.SlotRenderEvent;
-import com.adjustclient.render.font.NvgContext;
+import com.adjustclient.core.events.EventBus;
+import com.adjustclient.core.events.SlotRenderEvent;
+import com.adjustclient.core.rendering.font.NvgContext;
 import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.util.Set;

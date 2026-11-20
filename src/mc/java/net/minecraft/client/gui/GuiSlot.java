@@ -1,7 +1,7 @@
 package net.minecraft.client.gui;
 
-import com.adjustclient.render.animation.Animation;
-import com.adjustclient.ui.account.AccountManagerScreen;
+import com.adjustclient.core.rendering.animation.Animation;
+import com.adjustclient.core.gui.account.AccountManagerScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;

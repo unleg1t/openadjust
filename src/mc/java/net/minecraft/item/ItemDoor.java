@@ -73,6 +73,6 @@ public class ItemDoor extends Item
         worldIn.setBlockState(blockpos2, iblockstate.withProperty(BlockDoor.HALF, BlockDoor.EnumDoorHalf.UPPER), 2);
         worldIn.notifyNeighborsOfStateChange(pos, door);
         worldIn.notifyNeighborsOfStateChange(blockpos2, door);
-        com.adjustclient.event.EventBus.post(new com.adjustclient.event.BlockPlacedEvent(pos, door, EnumFacing.DOWN));
+        com.adjustclient.core.events.EventBus.post(new com.adjustclient.core.events.BlockPlacedEvent(pos, door, EnumFacing.DOWN));
     }
 }

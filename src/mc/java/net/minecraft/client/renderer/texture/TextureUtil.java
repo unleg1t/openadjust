@@ -1,6 +1,6 @@
 package net.minecraft.client.renderer.texture;
 
-import com.adjustclient.util.ImageUtil;
+import com.adjustclient.utilities.ImageUtil;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;

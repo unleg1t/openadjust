@@ -115,6 +115,6 @@ public class Realms
 
     public static boolean inTitleScreen()
     {
-        return Minecraft.getMinecraft().currentScreen != null && (Minecraft.getMinecraft().currentScreen instanceof com.adjustclient.ui.mainmenu.AdjustMainMenu || Minecraft.getMinecraft().currentScreen instanceof GuiMainMenu);
+        return Minecraft.getMinecraft().currentScreen != null && (Minecraft.getMinecraft().currentScreen instanceof com.adjustclient.core.gui.mainmenu.AdjustMainMenu || Minecraft.getMinecraft().currentScreen instanceof GuiMainMenu);
     }
 }

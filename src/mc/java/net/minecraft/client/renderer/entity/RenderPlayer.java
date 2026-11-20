@@ -1,12 +1,12 @@
 package net.minecraft.client.renderer.entity;
 
 import com.adjustclient.Adjust;
-import com.adjustclient.command.impl.debug.DebugEpsteinSubCommand;
-import com.adjustclient.event.EventBus;
-import com.adjustclient.event.SkeletonRenderEvent;
-import com.adjustclient.module.impl.combat.antibot.AntiBotModule;
-import com.adjustclient.module.impl.render.skeleton.SkeletonModule;
-import com.adjustclient.module.impl.render.skeleton.SkeletonPose;
+import com.adjustclient.core.commands.impl.debug.DebugEpsteinSubCommand;
+import com.adjustclient.core.events.EventBus;
+import com.adjustclient.core.events.SkeletonRenderEvent;
+import com.adjustclient.modules.impl.combat.antibot.AntiBotModule;
+import com.adjustclient.modules.impl.render.skeleton.SkeletonModule;
+import com.adjustclient.modules.impl.render.skeleton.SkeletonPose;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.model.ModelPlayer;

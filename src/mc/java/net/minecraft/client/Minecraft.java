@@ -192,58 +192,58 @@ import org.lwjgl.opengl.OpenGLException;
 import org.lwjgl.opengl.PixelFormat;
 import org.lwjgl.util.glu.GLU;
 import com.adjustclient.Adjust;
-import com.adjustclient.bind.KeyboardKey;
-import com.adjustclient.bind.ScrollKey;
-import com.adjustclient.event.AttackInputStageEvent;
-import com.adjustclient.event.CancellableInputActionStageEvent;
-import com.adjustclient.event.CharacterInputEvent;
-import com.adjustclient.event.EventBus;
-import com.adjustclient.event.GameLoopEvent;
-import com.adjustclient.event.GuiClosedEvent;
-import com.adjustclient.event.GuiOpenedEvent;
-import com.adjustclient.event.HudTickStageEvent;
-import com.adjustclient.event.IngameActionEvent;
-import com.adjustclient.event.InputAction;
-import com.adjustclient.event.InputActionStageEvent;
-import com.adjustclient.event.InputEvent;
-import com.adjustclient.event.InventoryInputResetEvent;
-import com.adjustclient.event.InventoryOpenRequestEvent;
-import com.adjustclient.event.KeyBindingStateEvent;
-import com.adjustclient.event.KeyBindingUpdateEvent;
-import com.adjustclient.event.KeyInputEvent;
-import com.adjustclient.event.MouseButtonInputEvent;
-import com.adjustclient.event.MouseWheelEvent;
-import com.adjustclient.event.PostInputEvent;
-import com.adjustclient.event.PreClientTickEvent;
-import com.adjustclient.event.ScrollDispatchEvent;
-import com.adjustclient.event.ServerConnectionAttemptEvent;
-import com.adjustclient.event.UserInputVerificationEvent;
-import com.adjustclient.event.WorldResetEvent;
-import com.adjustclient.game.player.InventoryStateTracker;
-import com.adjustclient.lunar.LunarClientService;
-import com.adjustclient.module.impl.combat.displacement.DisplacementModule;
-import com.adjustclient.module.impl.player.BlockSwapModule;
-import com.adjustclient.module.impl.player.fastuse.feature.AutomationFeature;
-import com.adjustclient.module.impl.player.fastuse.feature.BlockBreakingFeature;
-import com.adjustclient.module.impl.render.ItemAnimationsModule;
-import com.adjustclient.module.impl.render.freecam.FreecamCamera;
-import com.adjustclient.module.impl.render.freecam.FreecamModule;
-import com.adjustclient.module.impl.render.hud.HUDModule;
-import com.adjustclient.module.impl.render.hud.widget.ClickSpeedWidget;
-import com.adjustclient.module.impl.render.hud.widget.HudWidget;
-import com.adjustclient.module.impl.render.tweaks.FullscreenTweak;
-import com.adjustclient.module.impl.render.tweaks.NoHotbarScrollTweak;
-import com.adjustclient.module.impl.render.tweaks.ZoomTweak;
-import com.adjustclient.module.util.MouseClick;
-import com.adjustclient.property.KeybindManager;
-import com.adjustclient.render.RenderUtil;
-import com.adjustclient.render.font.NvgContext;
-import com.adjustclient.rotation.handler.RotationHandler;
-import com.adjustclient.service.util.ServiceUtil;
-import com.adjustclient.ui.mainmenu.AdjustMainMenu;
-import com.adjustclient.ui.screen.AdjustScreen;
-import com.adjustclient.user.Cape;
-import com.adjustclient.vfs.VirtualFileSystem;
+import com.adjustclient.core.bind.KeyboardKey;
+import com.adjustclient.core.bind.ScrollKey;
+import com.adjustclient.core.events.AttackInputStageEvent;
+import com.adjustclient.core.events.CancellableInputActionStageEvent;
+import com.adjustclient.core.events.CharacterInputEvent;
+import com.adjustclient.core.events.EventBus;
+import com.adjustclient.core.events.GameLoopEvent;
+import com.adjustclient.core.events.GuiClosedEvent;
+import com.adjustclient.core.events.GuiOpenedEvent;
+import com.adjustclient.core.events.HudTickStageEvent;
+import com.adjustclient.core.events.IngameActionEvent;
+import com.adjustclient.core.events.InputAction;
+import com.adjustclient.core.events.InputActionStageEvent;
+import com.adjustclient.core.events.InputEvent;
+import com.adjustclient.core.events.InventoryInputResetEvent;
+import com.adjustclient.core.events.InventoryOpenRequestEvent;
+import com.adjustclient.core.events.KeyBindingStateEvent;
+import com.adjustclient.core.events.KeyBindingUpdateEvent;
+import com.adjustclient.core.events.KeyInputEvent;
+import com.adjustclient.core.events.MouseButtonInputEvent;
+import com.adjustclient.core.events.MouseWheelEvent;
+import com.adjustclient.core.events.PostInputEvent;
+import com.adjustclient.core.events.PreClientTickEvent;
+import com.adjustclient.core.events.ScrollDispatchEvent;
+import com.adjustclient.core.events.ServerConnectionAttemptEvent;
+import com.adjustclient.core.events.UserInputVerificationEvent;
+import com.adjustclient.core.events.WorldResetEvent;
+import com.adjustclient.utilities.game.player.InventoryStateTracker;
+import com.adjustclient.utilities.lunar.LunarClientService;
+import com.adjustclient.modules.impl.combat.displacement.DisplacementModule;
+import com.adjustclient.modules.impl.player.BlockSwapModule;
+import com.adjustclient.modules.impl.player.fastuse.feature.AutomationFeature;
+import com.adjustclient.modules.impl.player.fastuse.feature.BlockBreakingFeature;
+import com.adjustclient.modules.impl.render.ItemAnimationsModule;
+import com.adjustclient.modules.impl.render.freecam.FreecamCamera;
+import com.adjustclient.modules.impl.render.freecam.FreecamModule;
+import com.adjustclient.modules.impl.render.hud.HUDModule;
+import com.adjustclient.modules.impl.render.hud.widget.ClickSpeedWidget;
+import com.adjustclient.modules.impl.render.hud.widget.HudWidget;
+import com.adjustclient.modules.impl.render.tweaks.FullscreenTweak;
+import com.adjustclient.modules.impl.render.tweaks.NoHotbarScrollTweak;
+import com.adjustclient.modules.impl.render.tweaks.ZoomTweak;
+import com.adjustclient.modules.util.MouseClick;
+import com.adjustclient.core.settings.property.KeybindManager;
+import com.adjustclient.core.rendering.RenderUtil;
+import com.adjustclient.core.rendering.font.NvgContext;
+import com.adjustclient.core.rotation.handler.RotationHandler;
+import com.adjustclient.managers.util.ServiceUtil;
+import com.adjustclient.core.gui.mainmenu.AdjustMainMenu;
+import com.adjustclient.core.gui.screen.AdjustScreen;
+import com.adjustclient.managers.user.Cape;
+import com.adjustclient.utilities.vfs.VirtualFileSystem;
 
 @SideOnly(Side.CLIENT)
 public class Minecraft implements IThreadListener, IPlayerUsage
@@ -1525,7 +1525,7 @@ public class Minecraft implements IThreadListener, IPlayerUsage
         }
     }
 
-    public void processMouseClickHelper(com.adjustclient.module.util.MouseClickHelper helper, boolean actionStage, boolean flag)
+    public void processMouseClickHelper(com.adjustclient.modules.util.MouseClickHelper helper, boolean actionStage, boolean flag)
     {
         if (helper == null || this.thePlayer == null)
         {
@@ -1533,7 +1533,7 @@ public class Minecraft implements IThreadListener, IPlayerUsage
         }
 
         AttackInputStageEvent attackEvent;
-        com.adjustclient.module.impl.player.breaker.BreakerModule breaker = com.adjustclient.module.impl.player.breaker.BreakerModule.INSTANCE;
+        com.adjustclient.modules.impl.player.breaker.BreakerModule breaker = com.adjustclient.modules.impl.player.breaker.BreakerModule.INSTANCE;
         if (breaker != null && breaker.isEnabled() && breaker.preventInputEnabled.isEnabled() && breaker.tickBreaking())
         {
             attackEvent = new AttackInputStageEvent();
@@ -1885,17 +1885,17 @@ public class Minecraft implements IThreadListener, IPlayerUsage
             Adjust.movableManager.dragging = null;
             Adjust.movableManager.resizePending = true;
         }
-        if (com.adjustclient.service.party.PartyOverlay.INSTANCE != null
-                && com.adjustclient.service.party.PartyOverlay.INSTANCE.service != null
-                && com.adjustclient.service.party.PartyOverlay.INSTANCE.service.party != null)
+        if (com.adjustclient.managers.party.PartyOverlay.INSTANCE != null
+                && com.adjustclient.managers.party.PartyOverlay.INSTANCE.service != null
+                && com.adjustclient.managers.party.PartyOverlay.INSTANCE.service.party != null)
         {
-            com.adjustclient.service.party.PartyOverlay.INSTANCE.service.party.contextMenu = null;
+            com.adjustclient.managers.party.PartyOverlay.INSTANCE.service.party.contextMenu = null;
         }
-        if (com.adjustclient.util.anticheat.ServerTracker.INSTANCE != null
-                && com.adjustclient.ui.clickgui.ClickGuiScreen.INSTANCE != null
-                && !com.adjustclient.ui.clickgui.ClickGuiScreen.INSTANCE.dragMoved)
+        if (com.adjustclient.utilities.anticheat.ServerTracker.INSTANCE != null
+                && com.adjustclient.core.gui.clickgui.ClickGuiScreen.INSTANCE != null
+                && !com.adjustclient.core.gui.clickgui.ClickGuiScreen.INSTANCE.dragMoved)
         {
-            com.adjustclient.ui.clickgui.ClickGuiScreen.INSTANCE.initialized = false;
+            com.adjustclient.core.gui.clickgui.ClickGuiScreen.INSTANCE.initialized = false;
         }
 
         this.displayWidth = Math.max(1, width);
@@ -1920,7 +1920,7 @@ public class Minecraft implements IThreadListener, IPlayerUsage
                     }
                     catch (Throwable t)
                     {
-                        com.adjustclient.logging.Logger.log(com.adjustclient.logging.LogLevel.ERROR, true, "Error resizing screen '{}'", screen.getClass().getSimpleName());
+                        com.adjustclient.core.logging.Logger.log(com.adjustclient.core.logging.LogLevel.ERROR, true, "Error resizing screen '{}'", screen.getClass().getSimpleName());
                     }
                 }
             }
@@ -1954,7 +1954,7 @@ public class Minecraft implements IThreadListener, IPlayerUsage
     public void runTick() throws IOException
     {
         this.timer.setTimerSpeed(1.0F);
-        com.adjustclient.rotation.handler.RenderRotationTracker.INSTANCE.disabled = false;
+        com.adjustclient.core.rotation.handler.RenderRotationTracker.INSTANCE.disabled = false;
         RotationHandler.beginTick();
         EventBus.post(new PreClientTickEvent());
         if (Adjust.INSTANCE != null && Adjust.INSTANCE.sessionService != null)
@@ -2016,15 +2016,15 @@ public class Minecraft implements IThreadListener, IPlayerUsage
             this.renderEngine.tick();
         }
 
-        boolean suppressLeftClick = com.adjustclient.module.impl.combat.killaura.KillAuraModule.INSTANCE == null
-                || !com.adjustclient.module.impl.combat.killaura.KillAuraModule.INSTANCE.isEnabled()
-                || !com.adjustclient.module.impl.combat.killaura.KillAuraModule.INSTANCE.canAttack(false);
+        boolean suppressLeftClick = com.adjustclient.modules.impl.combat.killaura.KillAuraModule.INSTANCE == null
+                || !com.adjustclient.modules.impl.combat.killaura.KillAuraModule.INSTANCE.isEnabled()
+                || !com.adjustclient.modules.impl.combat.killaura.KillAuraModule.INSTANCE.canAttack(false);
         boolean preScreenOpen = Adjust.inventoryStateTracker != null && Adjust.inventoryStateTracker.open;
         if (Adjust.inventoryStateTracker != null)
         {
             boolean open = Adjust.inventoryStateTracker.open;
-            com.adjustclient.game.player.InventoryStateTracker.inServerInventory = open;
-            com.adjustclient.game.player.InventoryStateTracker.inServerGui = this.currentScreen instanceof InventoryEffectRenderer
+            com.adjustclient.utilities.game.player.InventoryStateTracker.inServerInventory = open;
+            com.adjustclient.utilities.game.player.InventoryStateTracker.inServerGui = this.currentScreen instanceof InventoryEffectRenderer
                     ? open
                     : (this.currentScreen instanceof GuiContainer);
         }

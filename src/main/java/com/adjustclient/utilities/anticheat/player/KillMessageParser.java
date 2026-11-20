@@ -1,0 +1,7 @@
+package com.adjustclient.utilities.anticheat.player;
+
+import net.minecraft.util.IChatComponent;
+
+public abstract class KillMessageParser {
+    public abstract KillEvent parse(IChatComponent message);
+}

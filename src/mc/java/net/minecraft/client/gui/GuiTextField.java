@@ -1,6 +1,6 @@
 package net.minecraft.client.gui;
 
-import com.adjustclient.render.RenderUtil;
+import com.adjustclient.core.rendering.RenderUtil;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import net.minecraft.client.renderer.GlStateManager;
@@ -293,7 +293,7 @@ public class GuiTextField extends Gui
         {
             if (this.isEnabled)
             {
-                this.writeText(com.adjustclient.util.ClipboardUtil.getClipboard());
+                this.writeText(com.adjustclient.utilities.ClipboardUtil.getClipboard());
             }
 
             return true;

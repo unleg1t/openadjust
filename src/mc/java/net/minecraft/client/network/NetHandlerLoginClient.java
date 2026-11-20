@@ -1,8 +1,8 @@
 package net.minecraft.client.network;
 
-import com.adjustclient.event.DisconnectTeardownEvent;
-import com.adjustclient.event.EventBus;
-import com.adjustclient.event.ScreenEventPhase;
+import com.adjustclient.core.events.DisconnectTeardownEvent;
+import com.adjustclient.core.events.EventBus;
+import com.adjustclient.core.events.ScreenEventPhase;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
@@ -69,7 +69,7 @@ public class NetHandlerLoginClient implements INetHandlerLoginClient
             }
             catch (AuthenticationException var10)
             {
-                com.adjustclient.logging.Logger.debugStackTrace(var10, null);
+                com.adjustclient.core.logging.Logger.debugStackTrace(var10, null);
                 logger.warn("Couldn\'t connect to auth servers but will continue to join LAN");
             }
         }
@@ -81,19 +81,19 @@ public class NetHandlerLoginClient implements INetHandlerLoginClient
             }
             catch (AuthenticationUnavailableException var7)
             {
-                com.adjustclient.logging.Logger.debugStackTrace(var7, null);
+                com.adjustclient.core.logging.Logger.debugStackTrace(var7, null);
                 this.networkManager.closeChannel(new ChatComponentTranslation("disconnect.loginFailedInfo", new Object[] {new ChatComponentTranslation("disconnect.loginFailedInfo.serversUnavailable", new Object[0])}));
                 return;
             }
             catch (InvalidCredentialsException var8)
             {
-                com.adjustclient.logging.Logger.debugStackTrace(var8, null);
+                com.adjustclient.core.logging.Logger.debugStackTrace(var8, null);
                 this.networkManager.closeChannel(new ChatComponentTranslation("disconnect.loginFailedInfo", new Object[] {new ChatComponentTranslation("disconnect.loginFailedInfo.invalidSession", new Object[0])}));
                 return;
             }
             catch (AuthenticationException authenticationexception)
             {
-                com.adjustclient.logging.Logger.debugStackTrace(authenticationexception, null);
+                com.adjustclient.core.logging.Logger.debugStackTrace(authenticationexception, null);
                 this.networkManager.closeChannel(new ChatComponentTranslation("disconnect.loginFailedInfo", new Object[] {authenticationexception.getMessage()}));
                 return;
             }

@@ -30,7 +30,7 @@ public class TextureManager implements ITickable, IResourceManagerReloadListener
     private final List<ITickable> listTickables = Lists.<ITickable>newArrayList();
     private final Map<String, Integer> mapTextureCounters = Maps.<String, Integer>newHashMap();
     private IResourceManager theResourceManager;
-    public final com.adjustclient.util.SkinTextureCache skinTextureCache = new com.adjustclient.util.SkinTextureCache(this);
+    public final com.adjustclient.utilities.SkinTextureCache skinTextureCache = new com.adjustclient.utilities.SkinTextureCache(this);
 
     public TextureManager(IResourceManager resourceManager)
     {
@@ -57,11 +57,11 @@ public class TextureManager implements ITickable, IResourceManagerReloadListener
             net.minecraft.client.renderer.ThreadDownloadImageData downloadData = (net.minecraft.client.renderer.ThreadDownloadImageData)itextureobject;
             downloadData.lastUseTimer.reset();
 
-            if (com.adjustclient.service.util.ServiceUtil.ahmedElSisiMode && downloadData.cacheFile != null)
+            if (com.adjustclient.managers.util.ServiceUtil.ahmedElSisiMode && downloadData.cacheFile != null)
             {
-                com.adjustclient.service.util.ServiceUtil.ahmedElSisiMode = false;
+                com.adjustclient.managers.util.ServiceUtil.ahmedElSisiMode = false;
                 this.bindTexture(new ResourceLocation("adjust", "textures/ahmedelsisi/hackerskin.png"));
-                com.adjustclient.service.util.ServiceUtil.ahmedElSisiMode = true;
+                com.adjustclient.managers.util.ServiceUtil.ahmedElSisiMode = true;
                 return;
             }
         }
@@ -99,7 +99,7 @@ public class TextureManager implements ITickable, IResourceManagerReloadListener
         }
         catch (IOException ioexception)
         {
-            com.adjustclient.logging.Logger.log(com.adjustclient.logging.LogLevel.WARN, true, "Failed to load texture: {}, {}", textureLocation, ioexception);
+            com.adjustclient.core.logging.Logger.log(com.adjustclient.core.logging.LogLevel.WARN, true, "Failed to load texture: {}, {}", textureLocation, ioexception);
             textureObj = TextureUtil.missingTexture;
             this.mapTextureObjects.put(textureLocation, (ITextureObject)textureObj);
             flag = false;

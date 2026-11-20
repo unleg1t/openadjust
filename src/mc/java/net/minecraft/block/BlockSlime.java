@@ -45,8 +45,8 @@ public class BlockSlime extends BlockBreakable
         }
         else if (entityIn.motionY < 0.0D)
         {
-            com.adjustclient.event.SlimeBounceEvent event = new com.adjustclient.event.SlimeBounceEvent(true);
-            com.adjustclient.event.EventBus.post(event);
+            com.adjustclient.core.events.SlimeBounceEvent event = new com.adjustclient.core.events.SlimeBounceEvent(true);
+            com.adjustclient.core.events.EventBus.post(event);
 
             if (event.bounceAllowed)
             {
@@ -60,8 +60,8 @@ public class BlockSlime extends BlockBreakable
         if (Math.abs(entityIn.motionY) < 0.1D && !entityIn.isSneaking())
         {
             double d0 = 0.4D + Math.abs(entityIn.motionY) * 0.2D;
-            com.adjustclient.event.SlimeSlowdownEvent event = new com.adjustclient.event.SlimeSlowdownEvent(0.8F, d0);
-            com.adjustclient.event.EventBus.post(event);
+            com.adjustclient.core.events.SlimeSlowdownEvent event = new com.adjustclient.core.events.SlimeSlowdownEvent(0.8F, d0);
+            com.adjustclient.core.events.EventBus.post(event);
             this.slipperiness = event.slipperiness;
             entityIn.motionX *= event.horizontalDamping;
             entityIn.motionZ *= event.horizontalDamping;

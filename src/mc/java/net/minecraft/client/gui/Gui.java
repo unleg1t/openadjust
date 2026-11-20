@@ -216,7 +216,7 @@ public class Gui
 
     public int getMaxFps()
     {
-        com.adjustclient.module.impl.render.hud.HUDModule hud = com.adjustclient.module.impl.render.hud.HUDModule.INSTANCE_ALT;
+        com.adjustclient.modules.impl.render.hud.HUDModule hud = com.adjustclient.modules.impl.render.hud.HUDModule.INSTANCE_ALT;
         int count = 0;
 
         if (hud != null && hud.notifications != null)
@@ -232,7 +232,7 @@ public class Gui
             return 30;
         }
 
-        if (!com.adjustclient.ui.mainmenu.AdjustMainMenu.windowActive)
+        if (!com.adjustclient.core.gui.mainmenu.AdjustMainMenu.windowActive)
         {
             return 60;
         }

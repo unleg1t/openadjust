@@ -1,15 +1,15 @@
 package net.minecraft.client.renderer.entity;
 
 import com.adjustclient.Adjust;
-import com.adjustclient.event.EntityNameRenderEvent;
-import com.adjustclient.event.EntityRenderEligibilityEvent;
-import com.adjustclient.event.EventBus;
-import com.adjustclient.game.entity.tracker.ServerPositionEntry;
-import com.adjustclient.game.entity.tracker.ServerPositionTracker;
-import com.adjustclient.module.impl.render.chams.ChamsModule;
-import com.adjustclient.module.impl.render.esp.ESPModule;
-import com.adjustclient.module.impl.render.streamer.StreamerModule;
-import com.adjustclient.util.SimulationPlayer;
+import com.adjustclient.core.events.EntityNameRenderEvent;
+import com.adjustclient.core.events.EntityRenderEligibilityEvent;
+import com.adjustclient.core.events.EventBus;
+import com.adjustclient.utilities.game.entity.tracker.ServerPositionEntry;
+import com.adjustclient.utilities.game.entity.tracker.ServerPositionTracker;
+import com.adjustclient.modules.impl.render.chams.ChamsModule;
+import com.adjustclient.modules.impl.render.esp.ESPModule;
+import com.adjustclient.modules.impl.render.streamer.StreamerModule;
+import com.adjustclient.utilities.SimulationPlayer;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;

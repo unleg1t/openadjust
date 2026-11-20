@@ -26,13 +26,13 @@ public class BlockSoulSand extends Block
     public void onEntityCollidedWithBlock(World worldIn, BlockPos pos, IBlockState state, Entity entityIn)
     {
         double d0 = 0.4D;
-        com.adjustclient.module.impl.movement.TerrainModule terrain = com.adjustclient.module.impl.movement.TerrainModule.INSTANCE;
+        com.adjustclient.modules.impl.movement.TerrainModule terrain = com.adjustclient.modules.impl.movement.TerrainModule.INSTANCE;
 
         if (terrain != null && terrain.isActive() && terrain.soulSand.isEnabled())
         {
-            com.adjustclient.module.impl.movement.TerrainMode mode = terrain.mode.getValue();
+            com.adjustclient.modules.impl.movement.TerrainMode mode = terrain.mode.getValue();
 
-            if (mode == com.adjustclient.module.impl.movement.TerrainMode.VANILLA || mode == com.adjustclient.module.impl.movement.TerrainMode.VULCAN)
+            if (mode == com.adjustclient.modules.impl.movement.TerrainMode.VANILLA || mode == com.adjustclient.modules.impl.movement.TerrainMode.VULCAN)
             {
                 d0 = 1.0D;
             }

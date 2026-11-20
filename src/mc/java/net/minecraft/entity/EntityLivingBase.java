@@ -53,20 +53,20 @@ import net.minecraft.world.WorldServer;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import com.adjustclient.Adjust;
-import com.adjustclient.event.EventBus;
-import com.adjustclient.event.JumpEligibilityEvent;
-import com.adjustclient.event.JumpEvent;
-import com.adjustclient.event.JumpMotionEvent;
-import com.adjustclient.event.MoveHeadingEvent;
-import com.adjustclient.game.entity.tracker.ServerPositionEntry;
-import com.adjustclient.game.entity.tracker.ServerPositionTracker;
-import com.adjustclient.module.impl.combat.targetstrafe.TargetStrafeModule;
-import com.adjustclient.module.impl.movement.DoubleJumpModule;
-import com.adjustclient.module.impl.movement.MovementFixModule;
-import com.adjustclient.module.impl.movement.NoJumpDelayModule;
-import com.adjustclient.module.impl.movement.scaffold.ScaffoldSettings;
-import com.adjustclient.rotation.handler.RenderRotationTracker;
-import com.adjustclient.rotation.handler.RotationHandler;
+import com.adjustclient.core.events.EventBus;
+import com.adjustclient.core.events.JumpEligibilityEvent;
+import com.adjustclient.core.events.JumpEvent;
+import com.adjustclient.core.events.JumpMotionEvent;
+import com.adjustclient.core.events.MoveHeadingEvent;
+import com.adjustclient.utilities.game.entity.tracker.ServerPositionEntry;
+import com.adjustclient.utilities.game.entity.tracker.ServerPositionTracker;
+import com.adjustclient.modules.impl.combat.targetstrafe.TargetStrafeModule;
+import com.adjustclient.modules.impl.movement.DoubleJumpModule;
+import com.adjustclient.modules.impl.movement.MovementFixModule;
+import com.adjustclient.modules.impl.movement.NoJumpDelayModule;
+import com.adjustclient.modules.impl.movement.scaffold.ScaffoldSettings;
+import com.adjustclient.core.rotation.handler.RenderRotationTracker;
+import com.adjustclient.core.rotation.handler.RotationHandler;
 
 public abstract class EntityLivingBase extends Entity
 {
@@ -1156,9 +1156,9 @@ public abstract class EntityLivingBase extends Entity
     {
         int i = this.isPotionActive(Potion.digSpeed) ? 6 - (1 + this.getActivePotionEffect(Potion.digSpeed).getAmplifier()) * 1 : (this.isPotionActive(Potion.digSlowdown) ? 6 + (1 + this.getActivePotionEffect(Potion.digSlowdown).getAmplifier()) * 2 : 6);
 
-        if (this.isUser() && com.adjustclient.module.impl.render.ItemAnimationsModule.INSTANCE != null && com.adjustclient.module.impl.render.ItemAnimationsModule.INSTANCE.isEnabled())
+        if (this.isUser() && com.adjustclient.modules.impl.render.ItemAnimationsModule.INSTANCE != null && com.adjustclient.modules.impl.render.ItemAnimationsModule.INSTANCE.isEnabled())
         {
-            com.adjustclient.module.impl.render.ItemAnimationsModule itemAnimations = com.adjustclient.module.impl.render.ItemAnimationsModule.INSTANCE;
+            com.adjustclient.modules.impl.render.ItemAnimationsModule itemAnimations = com.adjustclient.modules.impl.render.ItemAnimationsModule.INSTANCE;
 
             if (itemAnimations.ignoreEffects.isEnabled())
             {
@@ -1359,7 +1359,7 @@ public abstract class EntityLivingBase extends Entity
 
     protected float getJumpUpwardsMotion()
     {
-        return this.isUser() && ScaffoldSettings.HYPIXEL != null && ScaffoldSettings.HYPIXEL.isActive() && ScaffoldSettings.HYPIXEL.module.settings.isTower() && ScaffoldSettings.HYPIXEL.module.settings.isTowerKeyDown() && !ScaffoldSettings.HYPIXEL.module.noAscendActive && !com.adjustclient.util.MovementUtil.isMoving() && com.adjustclient.util.MovementUtil.getSpeed() < 0.035D ? 0.38F : 0.42F;
+        return this.isUser() && ScaffoldSettings.HYPIXEL != null && ScaffoldSettings.HYPIXEL.isActive() && ScaffoldSettings.HYPIXEL.module.settings.isTower() && ScaffoldSettings.HYPIXEL.module.settings.isTowerKeyDown() && !ScaffoldSettings.HYPIXEL.module.noAscendActive && !com.adjustclient.utilities.MovementUtil.isMoving() && com.adjustclient.utilities.MovementUtil.getSpeed() < 0.035D ? 0.38F : 0.42F;
     }
 
     protected void jump()
@@ -1871,7 +1871,7 @@ public abstract class EntityLivingBase extends Entity
                     onGround = eligibilityEvent.onGround;
                 }
 
-                if (onGround && jumpTicks < 1 && (!this.isUser() || (!JumpEvent.isJumpCancelled() && !com.adjustclient.util.MovementUtil.isAutoJumping())))
+                if (onGround && jumpTicks < 1 && (!this.isUser() || (!JumpEvent.isJumpCancelled() && !com.adjustclient.utilities.MovementUtil.isAutoJumping())))
                 {
                     this.jump();
                     this.jumpTicks = 10;

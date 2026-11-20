@@ -1,6 +1,6 @@
 package net.minecraft.client.gui.inventory;
 
-import com.adjustclient.util.Timer;
+import com.adjustclient.utilities.Timer;
 import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.util.Iterator;

@@ -1,6 +1,6 @@
 package net.minecraft.client.renderer.entity;
 
-import com.adjustclient.module.impl.render.ItemPhysicsModule;
+import com.adjustclient.modules.impl.render.ItemPhysicsModule;
 import java.util.Random;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms;

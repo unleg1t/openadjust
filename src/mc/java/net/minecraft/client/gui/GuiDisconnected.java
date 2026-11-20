@@ -1,12 +1,12 @@
 package net.minecraft.client.gui;
 
 import com.adjustclient.Adjust;
-import com.adjustclient.server.ServerType;
-import com.adjustclient.ui.account.AccountEntry;
-import com.adjustclient.ui.account.AccountManagerScreen;
-import com.adjustclient.util.TimeUtil;
-import com.adjustclient.util.Timer;
-import com.adjustclient.util.anticheat.ServerTracker;
+import com.adjustclient.utilities.server.ServerType;
+import com.adjustclient.core.gui.account.AccountEntry;
+import com.adjustclient.core.gui.account.AccountManagerScreen;
+import com.adjustclient.utilities.TimeUtil;
+import com.adjustclient.utilities.Timer;
+import com.adjustclient.utilities.anticheat.ServerTracker;
 import java.io.IOException;
 import java.util.List;
 import java.util.regex.Pattern;

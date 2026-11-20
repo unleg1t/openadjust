@@ -304,7 +304,7 @@ public class GuiPageButtonList extends GuiListExtended
             }
             else
             {
-                String s = com.adjustclient.util.ClipboardUtil.getClipboard();
+                String s = com.adjustclient.utilities.ClipboardUtil.getClipboard();
                 String[] astring = s.split(";");
                 int i = this.field_178072_w.indexOf(this.field_178075_A);
                 int j = i;

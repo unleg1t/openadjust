@@ -1,6 +1,6 @@
 package net.minecraft.client.renderer.entity.layers;
 
-import com.adjustclient.module.impl.render.HurtcamModule;
+import com.adjustclient.modules.impl.render.HurtcamModule;
 import com.google.common.collect.Maps;
 import java.util.Map;
 import net.minecraft.client.model.ModelBase;

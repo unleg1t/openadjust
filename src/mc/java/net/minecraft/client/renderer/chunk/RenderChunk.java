@@ -1,6 +1,6 @@
 package net.minecraft.client.renderer.chunk;
 
-import com.adjustclient.module.impl.render.XRayModule;
+import com.adjustclient.modules.impl.render.XRayModule;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.nio.FloatBuffer;

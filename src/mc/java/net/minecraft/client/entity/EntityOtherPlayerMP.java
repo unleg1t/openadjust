@@ -51,9 +51,9 @@ public class EntityOtherPlayerMP extends AbstractClientPlayer
         this.renderOffsetY = 0.0F;
         super.onUpdate();
         this.prevLimbSwingAmount = this.limbSwingAmount;
-        com.adjustclient.game.entity.tracker.ServerPositionEntry tracked =
-            com.adjustclient.game.entity.tracker.ServerPositionTracker.INSTANCE != null
-                ? com.adjustclient.game.entity.tracker.ServerPositionTracker.INSTANCE.findTrackedPosition(this)
+        com.adjustclient.utilities.game.entity.tracker.ServerPositionEntry tracked =
+            com.adjustclient.utilities.game.entity.tracker.ServerPositionTracker.INSTANCE != null
+                ? com.adjustclient.utilities.game.entity.tracker.ServerPositionTracker.INSTANCE.findTrackedPosition(this)
                 : null;
         double d0 = tracked != null ? tracked.x - tracked.previousX : this.posX - this.prevPosX;
         double d1 = tracked != null ? tracked.z - tracked.previousZ : this.posZ - this.prevPosZ;
@@ -106,9 +106,9 @@ public class EntityOtherPlayerMP extends AbstractClientPlayer
             this.setRotation(this.rotationYaw, this.rotationPitch);
         }
 
-        if (com.adjustclient.module.impl.render.tweaks.TweaksModule.INSTANCE != null
-                && com.adjustclient.module.impl.render.tweaks.SmoothRotationYawTweak.INSTANCE != null
-                && com.adjustclient.module.impl.render.tweaks.SmoothRotationYawTweak.INSTANCE.isEnabled())
+        if (com.adjustclient.modules.impl.render.tweaks.TweaksModule.INSTANCE != null
+                && com.adjustclient.modules.impl.render.tweaks.SmoothRotationYawTweak.INSTANCE != null
+                && com.adjustclient.modules.impl.render.tweaks.SmoothRotationYawTweak.INSTANCE.isEnabled())
         {
             this.rotationYawHead = this.rotationYaw;
         }

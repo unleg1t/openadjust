@@ -75,7 +75,7 @@ public class GuiAchievement extends Gui
     {
         if (this.theAchievement != null && this.notificationTime != 0L && Minecraft.getMinecraft().thePlayer != null)
         {
-            if (com.adjustclient.module.impl.render.tweaks.TweaksModule.INSTANCE != null && com.adjustclient.module.impl.render.tweaks.TweaksModule.INSTANCE.noRender.hideAchievements())
+            if (com.adjustclient.modules.impl.render.tweaks.TweaksModule.INSTANCE != null && com.adjustclient.modules.impl.render.tweaks.TweaksModule.INSTANCE.noRender.hideAchievements())
             {
                 return;
             }
