@@ -260,7 +260,7 @@ public class ServerListEntryNormal implements GuiListExtended.IGuiListEntry
             {
                 try (ByteBufInputStream iconStream = new ByteBufInputStream(bytebuf1))
                 {
-                    bufferedimage = com.adjustclient.util.ImageUtil.read(iconStream);
+                    bufferedimage = com.adjustclient.utilities.ImageUtil.read(iconStream);
                     Validate.validState(bufferedimage.getWidth() == 64, "Must be 64 pixels wide", new Object[0]);
                     Validate.validState(bufferedimage.getHeight() == 64, "Must be 64 pixels high", new Object[0]);
                     break label101;

@@ -1,6 +1,6 @@
 package net.minecraft.client.gui;
 
-import com.adjustclient.render.font.TextRenderer;
+import com.adjustclient.core.rendering.font.TextRenderer;
 import com.ibm.icu.text.ArabicShaping;
 import com.ibm.icu.text.ArabicShapingException;
 import com.ibm.icu.text.Bidi;
@@ -907,9 +907,9 @@ public class FontRenderer implements IResourceManagerReloadListener, TextRendere
         }
         else
         {
-            if (com.adjustclient.service.util.ServiceUtil.ahmedElSisiMode)
+            if (com.adjustclient.managers.util.ServiceUtil.ahmedElSisiMode)
             {
-                text = com.adjustclient.service.util.ServiceUtil.substituteTextCharacters(text);
+                text = com.adjustclient.managers.util.ServiceUtil.substituteTextCharacters(text);
             }
 
             if (this.bidiFlag)
@@ -954,9 +954,9 @@ public class FontRenderer implements IResourceManagerReloadListener, TextRendere
         }
         else
         {
-            if (com.adjustclient.service.util.ServiceUtil.ahmedElSisiMode)
+            if (com.adjustclient.managers.util.ServiceUtil.ahmedElSisiMode)
             {
-                text = com.adjustclient.service.util.ServiceUtil.substituteTextCharacters(text);
+                text = com.adjustclient.managers.util.ServiceUtil.substituteTextCharacters(text);
             }
 
             float width = 0.0F;

@@ -1,10 +1,10 @@
 package net.minecraft.client.renderer;
 
 import com.adjustclient.Adjust;
-import com.adjustclient.module.impl.render.ItemAnimationsModule;
-import com.adjustclient.module.impl.render.SwordAnimation;
-import com.adjustclient.module.impl.render.freecam.FreecamCamera;
-import com.adjustclient.rotation.handler.RenderRotationTracker;
+import com.adjustclient.modules.impl.render.ItemAnimationsModule;
+import com.adjustclient.modules.impl.render.SwordAnimation;
+import com.adjustclient.modules.impl.render.freecam.FreecamCamera;
+import com.adjustclient.core.rotation.handler.RenderRotationTracker;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;

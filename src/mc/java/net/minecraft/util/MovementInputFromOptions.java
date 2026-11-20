@@ -16,12 +16,12 @@ public class MovementInputFromOptions extends MovementInput
 
     public void updatePlayerMoveState()
     {
-        if (com.adjustclient.module.impl.movement.SafeWalkModule.INSTANCE != null
-            && (com.adjustclient.module.impl.movement.SafeWalkModule.INSTANCE.isEnabled()
-                || com.adjustclient.module.impl.movement.SafeWalkModule.INSTANCE.cooldown != null))
+        if (com.adjustclient.modules.impl.movement.SafeWalkModule.INSTANCE != null
+            && (com.adjustclient.modules.impl.movement.SafeWalkModule.INSTANCE.isEnabled()
+                || com.adjustclient.modules.impl.movement.SafeWalkModule.INSTANCE.cooldown != null))
         {
             this.updatePlayerMoveState(false);
-            com.adjustclient.module.impl.movement.SafeWalkModule.INSTANCE.updateSneaking();
+            com.adjustclient.modules.impl.movement.SafeWalkModule.INSTANCE.updateSneaking();
         }
 
         this.updatePlayerMoveState(true);
@@ -36,17 +36,17 @@ public class MovementInputFromOptions extends MovementInput
         boolean jump = this.gameSettings.keyBindJump.isKeyDown();
         boolean sneak = this.gameSettings.keyBindSneak.isKeyDown();
 
-        com.adjustclient.event.MovementInputEvent event = new com.adjustclient.event.MovementInputEvent(
+        com.adjustclient.core.events.MovementInputEvent event = new com.adjustclient.core.events.MovementInputEvent(
             forward, back, left, right, jump, sneak);
 
         if (dispatchEvents)
         {
-            com.adjustclient.event.EventBus.post(event);
+            com.adjustclient.core.events.EventBus.post(event);
         }
 
-        if (com.adjustclient.module.impl.render.freecam.FreecamModule.INSTANCE != null
-            && com.adjustclient.module.impl.render.freecam.FreecamModule.INSTANCE.isEnabled()
-            && !com.adjustclient.module.impl.render.freecam.FreecamModule.INSTANCE.isMouseDown())
+        if (com.adjustclient.modules.impl.render.freecam.FreecamModule.INSTANCE != null
+            && com.adjustclient.modules.impl.render.freecam.FreecamModule.INSTANCE.isEnabled()
+            && !com.adjustclient.modules.impl.render.freecam.FreecamModule.INSTANCE.isMouseDown())
         {
             event.forward = false;
             event.back = false;

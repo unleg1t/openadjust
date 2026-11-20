@@ -30,10 +30,10 @@ public class Timer
     public void setTimerSpeed(float speed)
     {
         if (speed > 1.0F
-                && com.adjustclient.util.anticheat.ServerTracker.INSTANCE != null
-                && com.adjustclient.util.anticheat.ServerTracker.INSTANCE.serverState != null
-                && com.adjustclient.util.anticheat.ServerTracker.INSTANCE.serverState.antiCheatModel != null
-                && com.adjustclient.util.anticheat.ServerTracker.INSTANCE.serverState.antiCheatModel.serverType == com.adjustclient.server.ServerType.REWOUND
+                && com.adjustclient.utilities.anticheat.ServerTracker.INSTANCE != null
+                && com.adjustclient.utilities.anticheat.ServerTracker.INSTANCE.serverState != null
+                && com.adjustclient.utilities.anticheat.ServerTracker.INSTANCE.serverState.antiCheatModel != null
+                && com.adjustclient.utilities.anticheat.ServerTracker.INSTANCE.serverState.antiCheatModel.serverType == com.adjustclient.utilities.server.ServerType.REWOUND
                 && com.adjustclient.Adjust.rewoundDisablerTracker != null
                 && !com.adjustclient.Adjust.rewoundDisablerTracker.canUseTimer())
         {

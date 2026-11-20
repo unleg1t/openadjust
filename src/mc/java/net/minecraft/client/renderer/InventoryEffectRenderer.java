@@ -1,10 +1,10 @@
 package net.minecraft.client.renderer;
 
 import java.util.Collection;
-import com.adjustclient.event.EventBus;
-import com.adjustclient.event.InventoryKeyEvent;
-import com.adjustclient.module.impl.player.inventory.quickbuy.QuickBuyListener;
-import com.adjustclient.module.impl.render.freecam.FreecamModule;
+import com.adjustclient.core.events.EventBus;
+import com.adjustclient.core.events.InventoryKeyEvent;
+import com.adjustclient.modules.impl.player.inventory.quickbuy.QuickBuyListener;
+import com.adjustclient.modules.impl.render.freecam.FreecamModule;
 import java.io.IOException;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.gui.inventory.GuiContainerCreative;

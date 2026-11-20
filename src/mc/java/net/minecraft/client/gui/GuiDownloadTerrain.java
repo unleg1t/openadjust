@@ -13,7 +13,7 @@ public class GuiDownloadTerrain extends GuiScreen
 {
     private NetHandlerPlayClient netHandlerPlayClient;
     private int progress;
-    private final com.adjustclient.util.Timer disconnectTimer = new com.adjustclient.util.Timer();
+    private final com.adjustclient.utilities.Timer disconnectTimer = new com.adjustclient.utilities.Timer();
 
     public GuiDownloadTerrain(NetHandlerPlayClient netHandler)
     {

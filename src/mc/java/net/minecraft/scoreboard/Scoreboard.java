@@ -117,8 +117,8 @@ public class Scoreboard
 
             if (score != null)
             {
-                com.adjustclient.event.ScoreboardEntryEvent event = com.adjustclient.event.EventBus.post(
-                    new com.adjustclient.event.ScoreboardEntryEvent(score));
+                com.adjustclient.core.events.ScoreboardEntryEvent event = com.adjustclient.core.events.EventBus.post(
+                    new com.adjustclient.core.events.ScoreboardEntryEvent(score));
 
                 if (event.score != null)
                 {

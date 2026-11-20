@@ -1,7 +1,7 @@
 package net.minecraft.client.renderer;
 
-import com.adjustclient.module.impl.render.blockoverlay.BlockOverlayModule;
-import com.adjustclient.render.RenderUtil;
+import com.adjustclient.modules.impl.render.blockoverlay.BlockOverlayModule;
+import com.adjustclient.core.rendering.RenderUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -673,7 +673,7 @@ public class RenderGlobal implements IWorldAccess, IResourceManagerReloadListene
                         boolean flag2 = this.mc.getRenderViewEntity() instanceof EntityLivingBase && ((EntityLivingBase)this.mc.getRenderViewEntity()).isPlayerSleeping();
                         boolean flag3 = entity3.isInRangeToRender3d(d0, d1, d2) && (RenderUtil.isInFrustum(entity3) || entity3.riddenByEntity == this.mc.thePlayer) && entity3 instanceof EntityPlayer;
 
-                        if ((entity3 != this.mc.getRenderViewEntity() || this.mc.gameSettings.thirdPersonView != 0 || (com.adjustclient.module.impl.render.ThirdPersonModule.INSTANCE != null && com.adjustclient.module.impl.render.ThirdPersonModule.INSTANCE.isEnabled() && com.adjustclient.module.impl.render.ThirdPersonModule.INSTANCE.freeLooking) || flag2) && flag3)
+                        if ((entity3 != this.mc.getRenderViewEntity() || this.mc.gameSettings.thirdPersonView != 0 || (com.adjustclient.modules.impl.render.ThirdPersonModule.INSTANCE != null && com.adjustclient.modules.impl.render.ThirdPersonModule.INSTANCE.isEnabled() && com.adjustclient.modules.impl.render.ThirdPersonModule.INSTANCE.freeLooking) || flag2) && flag3)
                         {
                             this.renderManager.renderEntitySimple(entity3, partialTicks);
                         }
@@ -743,7 +743,7 @@ public class RenderGlobal implements IWorldAccess, IResourceManagerReloadListene
 
                                 boolean flag6 = this.mc.getRenderViewEntity() instanceof EntityLivingBase ? ((EntityLivingBase)this.mc.getRenderViewEntity()).isPlayerSleeping() : false;
 
-                                if ((entity2 != this.mc.getRenderViewEntity() || this.mc.gameSettings.thirdPersonView != 0 || (com.adjustclient.module.impl.render.ThirdPersonModule.INSTANCE != null && com.adjustclient.module.impl.render.ThirdPersonModule.INSTANCE.isEnabled() && com.adjustclient.module.impl.render.ThirdPersonModule.INSTANCE.freeLooking) || flag6) && (entity2.posY < 0.0D || entity2.posY >= 256.0D || this.theWorld.isBlockLoaded(new BlockPos(entity2))))
+                                if ((entity2 != this.mc.getRenderViewEntity() || this.mc.gameSettings.thirdPersonView != 0 || (com.adjustclient.modules.impl.render.ThirdPersonModule.INSTANCE != null && com.adjustclient.modules.impl.render.ThirdPersonModule.INSTANCE.isEnabled() && com.adjustclient.modules.impl.render.ThirdPersonModule.INSTANCE.freeLooking) || flag6) && (entity2.posY < 0.0D || entity2.posY >= 256.0D || this.theWorld.isBlockLoaded(new BlockPos(entity2))))
                                 {
                                     ++this.countEntitiesRendered;
 
@@ -1361,8 +1361,8 @@ public class RenderGlobal implements IWorldAccess, IResourceManagerReloadListene
 
     protected Vector3f getViewVector(Entity entityIn, double partialTicks)
     {
-        com.adjustclient.util.Vec2f tracked = entityIn instanceof net.minecraft.client.entity.EntityPlayerSP
-                ? com.adjustclient.rotation.handler.RenderRotationTracker.INSTANCE.rotation
+        com.adjustclient.utilities.Vec2f tracked = entityIn instanceof net.minecraft.client.entity.EntityPlayerSP
+                ? com.adjustclient.core.rotation.handler.RenderRotationTracker.INSTANCE.rotation
                 : null;
         float f = tracked != null
                 ? tracked.y
@@ -1845,7 +1845,7 @@ public class RenderGlobal implements IWorldAccess, IResourceManagerReloadListene
             GlStateManager.color(0.0F, 0.0F, 0.0F);
             double d0 = this.mc.thePlayer.getPositionEyes(partialTicks).yCoord - this.theWorld.getHorizon();
 
-            if (d0 < 0.0D && !com.adjustclient.module.impl.render.XRayModule.active)
+            if (d0 < 0.0D && !com.adjustclient.modules.impl.render.XRayModule.active)
             {
                 GlStateManager.pushMatrix();
                 GlStateManager.translate(0.0F, 12.0F, 0.0F);

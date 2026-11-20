@@ -33,7 +33,7 @@ public class ModelChest extends ModelBase
     {
         if (itemTintColor != null)
         {
-            com.adjustclient.render.RenderUtil.glColor(itemTintColor.intValue());
+            com.adjustclient.core.rendering.RenderUtil.glColor(itemTintColor.intValue());
         }
 
         this.chestKnob.rotateAngleX = this.chestLid.rotateAngleX;

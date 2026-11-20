@@ -1,8 +1,8 @@
 package net.minecraft.client.renderer.entity;
 
 import com.adjustclient.Adjust;
-import com.adjustclient.module.impl.render.ItemAnimationsModule;
-import com.adjustclient.render.RenderUtil;
+import com.adjustclient.modules.impl.render.ItemAnimationsModule;
+import com.adjustclient.core.rendering.RenderUtil;
 import java.util.List;
 import java.util.concurrent.Callable;
 import net.minecraft.block.Block;

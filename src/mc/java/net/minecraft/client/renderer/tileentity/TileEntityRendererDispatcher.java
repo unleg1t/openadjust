@@ -1,6 +1,6 @@
 package net.minecraft.client.renderer.tileentity;
 
-import com.adjustclient.module.impl.render.XRayModule;
+import com.adjustclient.modules.impl.render.XRayModule;
 import com.google.common.collect.Maps;
 import java.util.Map;
 import net.minecraft.client.gui.FontRenderer;

@@ -55,7 +55,7 @@ public class ItemReed extends Item
                     {
                         ItemBlock.setTileEntityNBT(worldIn, playerIn, pos, stack);
                         iblockstate1.getBlock().onBlockPlacedBy(worldIn, pos, iblockstate1, playerIn, stack);
-                        com.adjustclient.event.EventBus.post(new com.adjustclient.event.BlockPlacedEvent(pos, this.block, side));
+                        com.adjustclient.core.events.EventBus.post(new com.adjustclient.core.events.BlockPlacedEvent(pos, this.block, side));
                     }
 
                     worldIn.playSoundEffect((double)((float)pos.getX() + 0.5F), (double)((float)pos.getY() + 0.5F), (double)((float)pos.getZ() + 0.5F), this.block.stepSound.getPlaceSound(), (this.block.stepSound.getVolume() + 1.0F) / 2.0F, this.block.stepSound.getFrequency() * 0.8F);

@@ -1,9 +1,9 @@
 package net.minecraft.client.renderer.entity;
 
-import com.adjustclient.game.entity.tracker.ServerPositionEntry;
-import com.adjustclient.game.entity.tracker.ServerPositionTracker;
-import com.adjustclient.module.impl.render.motionblur.MotionBlurModule;
-import com.adjustclient.module.impl.render.motionblur.MotionBlurRenderer;
+import com.adjustclient.utilities.game.entity.tracker.ServerPositionEntry;
+import com.adjustclient.utilities.game.entity.tracker.ServerPositionTracker;
+import com.adjustclient.modules.impl.render.motionblur.MotionBlurModule;
+import com.adjustclient.modules.impl.render.motionblur.MotionBlurRenderer;
 import com.google.common.collect.Maps;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -285,19 +285,19 @@ public class RenderManager
             }
         }
         else if (livingPlayerIn instanceof net.minecraft.client.entity.EntityPlayerSP
-            && com.adjustclient.module.impl.render.ThirdPersonModule.INSTANCE != null
-            && com.adjustclient.module.impl.render.ThirdPersonModule.INSTANCE.isEnabled()
-            && com.adjustclient.module.impl.render.ThirdPersonModule.INSTANCE.freeLooking)
+            && com.adjustclient.modules.impl.render.ThirdPersonModule.INSTANCE != null
+            && com.adjustclient.modules.impl.render.ThirdPersonModule.INSTANCE.isEnabled()
+            && com.adjustclient.modules.impl.render.ThirdPersonModule.INSTANCE.freeLooking)
         {
-            this.playerViewY = com.adjustclient.module.impl.render.ThirdPersonModule.INSTANCE.yaw;
-            this.playerViewX = com.adjustclient.module.impl.render.ThirdPersonModule.INSTANCE.pitch;
+            this.playerViewY = com.adjustclient.modules.impl.render.ThirdPersonModule.INSTANCE.yaw;
+            this.playerViewX = com.adjustclient.modules.impl.render.ThirdPersonModule.INSTANCE.pitch;
         }
         else if (livingPlayerIn instanceof net.minecraft.client.entity.EntityPlayerSP
-            && com.adjustclient.rotation.handler.RenderRotationTracker.INSTANCE != null
-            && com.adjustclient.rotation.handler.RenderRotationTracker.INSTANCE.rotation != null)
+            && com.adjustclient.core.rotation.handler.RenderRotationTracker.INSTANCE != null
+            && com.adjustclient.core.rotation.handler.RenderRotationTracker.INSTANCE.rotation != null)
         {
-            this.playerViewY = com.adjustclient.rotation.handler.RenderRotationTracker.INSTANCE.rotation.x;
-            this.playerViewX = com.adjustclient.rotation.handler.RenderRotationTracker.INSTANCE.rotation.y;
+            this.playerViewY = com.adjustclient.core.rotation.handler.RenderRotationTracker.INSTANCE.rotation.x;
+            this.playerViewX = com.adjustclient.core.rotation.handler.RenderRotationTracker.INSTANCE.rotation.y;
         }
         else
         {
@@ -306,9 +306,9 @@ public class RenderManager
         }
 
         if (optionsIn.thirdPersonView == 2
-            && (com.adjustclient.module.impl.render.ThirdPersonModule.INSTANCE == null
-                || !com.adjustclient.module.impl.render.ThirdPersonModule.INSTANCE.isEnabled()
-                || !com.adjustclient.module.impl.render.ThirdPersonModule.INSTANCE.freeLooking))
+            && (com.adjustclient.modules.impl.render.ThirdPersonModule.INSTANCE == null
+                || !com.adjustclient.modules.impl.render.ThirdPersonModule.INSTANCE.isEnabled()
+                || !com.adjustclient.modules.impl.render.ThirdPersonModule.INSTANCE.freeLooking))
         {
             this.playerViewY += 180.0F;
         }

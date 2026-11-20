@@ -119,7 +119,7 @@ public class TileEntityChestRenderer extends TileEntitySpecialRenderer<TileEntit
             GlStateManager.pushMatrix();
             GlStateManager.enableRescaleNormal();
 
-            if (destroyStage < 0 && !com.adjustclient.module.impl.render.XRayModule.active)
+            if (destroyStage < 0 && !com.adjustclient.modules.impl.render.XRayModule.active)
             {
                 GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
             }

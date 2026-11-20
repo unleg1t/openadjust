@@ -64,20 +64,20 @@ public class ItemBlock extends Item
                     this.block.onBlockPlacedBy(worldIn, pos, iblockstate1, playerIn, stack);
                 }
 
-                if (com.adjustclient.util.anticheat.ServerTracker.INSTANCE != null)
+                if (com.adjustclient.utilities.anticheat.ServerTracker.INSTANCE != null)
                 {
-                    com.adjustclient.util.anticheat.ServerTracker.INSTANCE.recordPlacement(playerIn, pos, side, this.block, hitX, hitY, hitZ);
+                    com.adjustclient.utilities.anticheat.ServerTracker.INSTANCE.recordPlacement(playerIn, pos, side, this.block, hitX, hitY, hitZ);
                 }
 
-                com.adjustclient.event.EventBus.post(new com.adjustclient.event.BlockPlacedEvent(pos, this.block, side));
+                com.adjustclient.core.events.EventBus.post(new com.adjustclient.core.events.BlockPlacedEvent(pos, this.block, side));
                 net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getMinecraft();
 
                 if (mc != null && mc.thePlayer != null && mc.thePlayer.sendQueue != null
                         && mc.thePlayer.sendQueue.getNetworkManager() != null
                         && mc.thePlayer.sendQueue.getNetworkManager().p != null
-                        && mc.thePlayer.sendQueue.getNetworkManager().p.interactionHandler instanceof com.adjustclient.protocol.interaction.NativeInteractionHandler)
+                        && mc.thePlayer.sendQueue.getNetworkManager().p.interactionHandler instanceof com.adjustclient.utilities.protocol.interaction.NativeInteractionHandler)
                 {
-                    ((com.adjustclient.protocol.interaction.NativeInteractionHandler)mc.thePlayer.sendQueue.getNetworkManager().p.interactionHandler).playBlockPlaceSound(worldIn, this.block, pos);
+                    ((com.adjustclient.utilities.protocol.interaction.NativeInteractionHandler)mc.thePlayer.sendQueue.getNetworkManager().p.interactionHandler).playBlockPlaceSound(worldIn, this.block, pos);
                 }
                 else
                 {

@@ -1,58 +1,58 @@
 package com.adjustclient;
 
 import com.adjustclient.Adjust;
-import com.adjustclient.backend.transport.HydraConnection;
-import com.adjustclient.event.EventBus;
-import com.adjustclient.event.Listener;
-import com.adjustclient.logging.LogLevel;
-import com.adjustclient.logging.Logger;
-import com.adjustclient.setting.ModeSetting;
-import com.adjustclient.setting.SettingContainer;
+import com.adjustclient.utilities.backend.transport.HydraConnection;
+import com.adjustclient.core.events.EventBus;
+import com.adjustclient.core.events.Listener;
+import com.adjustclient.core.logging.LogLevel;
+import com.adjustclient.core.logging.Logger;
+import com.adjustclient.core.settings.ModeSetting;
+import com.adjustclient.core.settings.SettingContainer;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.IdentityHashMap;
 import java.util.Map;
-import com.adjustclient.game.entity.EntityTrackerService;
-import com.adjustclient.game.mineplex.MineplexGameTracker;
-import com.adjustclient.game.rewound.RewoundDisablerTracker;
-import com.adjustclient.game.rewound.RewoundGame;
-import com.adjustclient.game.rewound.RewoundGameTracker;
-import com.adjustclient.game.movable.MovableManager;
-import com.adjustclient.game.packet.InboundPacketQueue;
-import com.adjustclient.game.packet.OutboundPacketQueue;
-import com.adjustclient.game.player.ChatMessageSender;
-import com.adjustclient.game.player.ChatTextReplacer;
-import com.adjustclient.game.player.InventoryStateTracker;
-import com.adjustclient.game.player.LookTargetHandler;
-import com.adjustclient.game.player.SlotSpoofer;
-import com.adjustclient.game.render.FakeTabListManager;
-import com.adjustclient.game.render.FrozenPlayerRenderListener;
-import com.adjustclient.game.render.PositionSnapper;
-import com.adjustclient.game.render.progress.ProgressBarRenderer;
-import com.adjustclient.hypixel.HypixelGameEventReporter;
-import com.adjustclient.hypixel.HypixelGameTracker;
-import com.adjustclient.hypixel.HypixelPacketBalance;
-import com.adjustclient.hypixel.HypixelPlacementLimiter;
-import com.adjustclient.hypixel.TabListTracker;
-import com.adjustclient.module.util.CpsCounter;
-import com.adjustclient.property.CommandManager;
-import com.adjustclient.property.KeybindManager;
-import com.adjustclient.property.ModuleManager;
-import com.adjustclient.property.TagManager;
-import com.adjustclient.service.ScreenStack;
-import com.adjustclient.service.session.SessionService;
-import com.adjustclient.service.telemetry.TelemetryListener;
-import com.adjustclient.ui.account.AccountManagerScreen;
-import com.adjustclient.ui.chat.ChatChannelManager;
-import com.adjustclient.util.anticheat.ServerTracker;
-import com.adjustclient.util.prediction.MotionPredictor;
-import com.adjustclient.vfs.VirtualFileSystem;
+import com.adjustclient.utilities.game.entity.EntityTrackerService;
+import com.adjustclient.utilities.game.mineplex.MineplexGameTracker;
+import com.adjustclient.utilities.game.rewound.RewoundDisablerTracker;
+import com.adjustclient.utilities.game.rewound.RewoundGame;
+import com.adjustclient.utilities.game.rewound.RewoundGameTracker;
+import com.adjustclient.utilities.game.movable.MovableManager;
+import com.adjustclient.utilities.game.packet.InboundPacketQueue;
+import com.adjustclient.utilities.game.packet.OutboundPacketQueue;
+import com.adjustclient.utilities.game.player.ChatMessageSender;
+import com.adjustclient.utilities.game.player.ChatTextReplacer;
+import com.adjustclient.utilities.game.player.InventoryStateTracker;
+import com.adjustclient.utilities.game.player.LookTargetHandler;
+import com.adjustclient.utilities.game.player.SlotSpoofer;
+import com.adjustclient.utilities.game.render.FakeTabListManager;
+import com.adjustclient.utilities.game.render.FrozenPlayerRenderListener;
+import com.adjustclient.utilities.game.render.PositionSnapper;
+import com.adjustclient.utilities.game.render.progress.ProgressBarRenderer;
+import com.adjustclient.utilities.hypixel.HypixelGameEventReporter;
+import com.adjustclient.utilities.hypixel.HypixelGameTracker;
+import com.adjustclient.utilities.hypixel.HypixelPacketBalance;
+import com.adjustclient.utilities.hypixel.HypixelPlacementLimiter;
+import com.adjustclient.utilities.hypixel.TabListTracker;
+import com.adjustclient.modules.util.CpsCounter;
+import com.adjustclient.core.settings.property.CommandManager;
+import com.adjustclient.core.settings.property.KeybindManager;
+import com.adjustclient.core.settings.property.ModuleManager;
+import com.adjustclient.core.settings.property.TagManager;
+import com.adjustclient.managers.ScreenStack;
+import com.adjustclient.managers.session.SessionService;
+import com.adjustclient.managers.telemetry.TelemetryListener;
+import com.adjustclient.core.gui.account.AccountManagerScreen;
+import com.adjustclient.core.gui.chat.ChatChannelManager;
+import com.adjustclient.utilities.anticheat.ServerTracker;
+import com.adjustclient.utilities.prediction.MotionPredictor;
+import com.adjustclient.utilities.vfs.VirtualFileSystem;
 import java.util.concurrent.atomic.AtomicBoolean;
-import com.adjustclient.game.mineplex.MineplexGame;
-import com.adjustclient.module.impl.combat.killaura.KillAuraModule;
-import com.adjustclient.server.ServerType;
-import com.adjustclient.service.config.ConfigurationService;
+import com.adjustclient.utilities.game.mineplex.MineplexGame;
+import com.adjustclient.modules.impl.combat.killaura.KillAuraModule;
+import com.adjustclient.utilities.server.ServerType;
+import com.adjustclient.managers.config.ConfigurationService;
 
 public final class Adjust implements Listener {
     public static String NAME;
@@ -84,11 +84,11 @@ public final class Adjust implements Listener {
     public static HypixelPlacementLimiter placementLimiter;
     public static TabListTracker tabListTracker;
     public static FrozenPlayerRenderListener frozenPlayerRenderListener;
-    public static com.adjustclient.module.util.MouseClickHelper mouseClickHelper;
-    public static com.adjustclient.hypixel.api.HypixelApiManager hypixelApiManager;
-    public static com.adjustclient.util.build.ValueHolder valueHolder;
-    public static com.adjustclient.util.latency.LatencyTracker latencyTracker;
-    public static com.adjustclient.util.placement.PlacementVerifier placementVerifier;
+    public static com.adjustclient.modules.util.MouseClickHelper mouseClickHelper;
+    public static com.adjustclient.utilities.hypixel.api.HypixelApiManager hypixelApiManager;
+    public static com.adjustclient.utilities.build.ValueHolder valueHolder;
+    public static com.adjustclient.utilities.latency.LatencyTracker latencyTracker;
+    public static com.adjustclient.utilities.placement.PlacementVerifier placementVerifier;
     public static byte serviceInitializationStage;
     public ModuleManager moduleManager;
     public CommandManager commandManager;
@@ -99,7 +99,7 @@ public final class Adjust implements Listener {
     public Object field28;
     public TagManager tagManager;
     public Object field36;
-    public com.adjustclient.property.UserManager field40;
+    public com.adjustclient.core.settings.property.UserManager field40;
     public SessionService sessionService;
     public Object field48;
 
@@ -109,32 +109,32 @@ public final class Adjust implements Listener {
         String sessionUsername = mc != null && mc.getSession() != null ? mc.getSession().getUsername() : null;
         username = (sessionUsername != null && !sessionUsername.isEmpty()) ? sessionUsername : "Offline";
 
-        com.adjustclient.service.config.user.UserConfiguration.INSTANCE =
-                new com.adjustclient.service.config.user.UserConfiguration();
+        com.adjustclient.managers.config.user.UserConfiguration.INSTANCE =
+                new com.adjustclient.managers.config.user.UserConfiguration();
         this.sessionService = new SessionService();
         this.tagManager = new TagManager();
         this.bindManager = new KeybindManager();
         this.fileSystem = new VirtualFileSystem();
         VirtualFileSystem.INSTANCE = this.fileSystem;
         initServices();
-        this.field28 = new com.adjustclient.property.GlobalPropertiesModule();
+        this.field28 = new com.adjustclient.core.settings.property.GlobalPropertiesModule();
         this.screenStack = new ScreenStack();
-        if (com.adjustclient.service.party.PartyOverlay.INSTANCE != null) {
-            com.adjustclient.service.party.PartyOverlay.INSTANCE.initialize();
+        if (com.adjustclient.managers.party.PartyOverlay.INSTANCE != null) {
+            com.adjustclient.managers.party.PartyOverlay.INSTANCE.initialize();
         }
         this.moduleManager = new ModuleManager();
         this.commandManager = new CommandManager();
         this.accountManager = new AccountManagerScreen();
-        com.adjustclient.ui.account.LocalAccountStore.INSTANCE.open(this.accountManager);
+        com.adjustclient.core.gui.account.LocalAccountStore.INSTANCE.open(this.accountManager);
         ServerTracker.clientInstance = this;
-        this.field40 = new com.adjustclient.property.UserManager();
+        this.field40 = new com.adjustclient.core.settings.property.UserManager();
         this.field40.field16 = this.field40.getOrCreate(username);
-        com.adjustclient.script.engine.ScriptManager.INSTANCE = new com.adjustclient.script.engine.ScriptManager();
-        com.adjustclient.module.impl.render.hud.HUDModule.V();
-        if (com.adjustclient.ui.hud.toggled.ToggledList.INSTANCE != null) {
-            com.adjustclient.ui.hud.toggled.ToggledList.INSTANCE.initialize();
+        com.adjustclient.utilities.script.engine.ScriptManager.INSTANCE = new com.adjustclient.utilities.script.engine.ScriptManager();
+        com.adjustclient.modules.impl.render.hud.HUDModule.V();
+        if (com.adjustclient.core.gui.hud.toggled.ToggledList.INSTANCE != null) {
+            com.adjustclient.core.gui.hud.toggled.ToggledList.INSTANCE.initialize();
         }
-        com.adjustclient.service.util.ServiceUtil.runPendingTasks();
+        com.adjustclient.managers.util.ServiceUtil.runPendingTasks();
         registerAllEventListeners();
     }
 
@@ -193,37 +193,37 @@ public final class Adjust implements Listener {
         if (ServerTracker.INSTANCE != null) {
             visitAndRegisterListener(ServerTracker.INSTANCE.field56, visited);
         }
-        visitAndRegisterListener(com.adjustclient.game.entity.tracker.ServerPositionTracker.INSTANCE, visited);
-        visitAndRegisterListener(com.adjustclient.rotation.handler.RotationHandler.INSTANCE, visited);
-        visitAndRegisterListener(com.adjustclient.rotation.handler.RenderRotationTracker.INSTANCE, visited);
-        visitAndRegisterListener(com.adjustclient.service.party.PartyOverlay.INSTANCE, visited);
-        visitAndRegisterListener(com.adjustclient.module.impl.player.inventory.quickbuy.QuickBuyListener.INSTANCE, visited);
-        visitAndRegisterListener(com.adjustclient.module.impl.exploit.murdermystery.MurderMysteryAutoStrike.INSTANCE, visited);
-        visitAndRegisterListener(com.adjustclient.module.impl.combat.builder.BuilderPlacer.INSTANCE, visited);
-        visitAndRegisterListener(com.adjustclient.module.impl.combat.builder.feature.headhitter.HeadHitterFeature.INSTANCE, visited);
-        visitAndRegisterListener(com.adjustclient.module.impl.combat.builder.feature.beddefense.BedDefenseRecorder.INSTANCE, visited);
-        visitAndRegisterListener(com.adjustclient.script.engine.ScriptManager.INSTANCE, visited);
-        if (com.adjustclient.script.engine.ScriptManager.INSTANCE != null) {
-            visitAndRegisterListener(com.adjustclient.script.engine.ScriptManager.INSTANCE.bridge, visited);
+        visitAndRegisterListener(com.adjustclient.utilities.game.entity.tracker.ServerPositionTracker.INSTANCE, visited);
+        visitAndRegisterListener(com.adjustclient.core.rotation.handler.RotationHandler.INSTANCE, visited);
+        visitAndRegisterListener(com.adjustclient.core.rotation.handler.RenderRotationTracker.INSTANCE, visited);
+        visitAndRegisterListener(com.adjustclient.managers.party.PartyOverlay.INSTANCE, visited);
+        visitAndRegisterListener(com.adjustclient.modules.impl.player.inventory.quickbuy.QuickBuyListener.INSTANCE, visited);
+        visitAndRegisterListener(com.adjustclient.modules.impl.exploit.murdermystery.MurderMysteryAutoStrike.INSTANCE, visited);
+        visitAndRegisterListener(com.adjustclient.modules.impl.combat.builder.BuilderPlacer.INSTANCE, visited);
+        visitAndRegisterListener(com.adjustclient.modules.impl.combat.builder.feature.headhitter.HeadHitterFeature.INSTANCE, visited);
+        visitAndRegisterListener(com.adjustclient.modules.impl.combat.builder.feature.beddefense.BedDefenseRecorder.INSTANCE, visited);
+        visitAndRegisterListener(com.adjustclient.utilities.script.engine.ScriptManager.INSTANCE, visited);
+        if (com.adjustclient.utilities.script.engine.ScriptManager.INSTANCE != null) {
+            visitAndRegisterListener(com.adjustclient.utilities.script.engine.ScriptManager.INSTANCE.bridge, visited);
         }
-        visitAndRegisterListener(com.adjustclient.ui.hud.toggled.ToggledList.INSTANCE, visited);
-        visitAndRegisterListener(com.adjustclient.service.config.user.UserConfiguration.INSTANCE, visited);
-        visitAndRegisterListener(com.adjustclient.ui.account.LocalAccountStore.INSTANCE, visited);
-        visitAndRegisterListener(com.adjustclient.service.storage.LocalStorage.INSTANCE, visited);
-        visitAndRegisterListener(com.adjustclient.service.friends.BlockListService.INSTANCE, visited);
-        visitAndRegisterListener(com.adjustclient.command.impl.debug.DebugCommand.INSTANCE, visited);
-        visitAndRegisterListener(com.adjustclient.module.impl.player.autohypixel.feature.AutoGG.INSTANCE, visited);
-        visitAndRegisterListener(com.adjustclient.module.impl.player.autohypixel.feature.AutoPlay.INSTANCE, visited);
-        visitAndRegisterListener(com.adjustclient.module.impl.player.autohypixel.feature.AutoPoliciesAccept.INSTANCE, visited);
-        visitAndRegisterListener(com.adjustclient.module.impl.player.autohypixel.feature.AutoReportAccept.INSTANCE, visited);
-        visitAndRegisterListener(com.adjustclient.module.impl.player.autohypixel.feature.AutoTip.INSTANCE, visited);
-        visitAndRegisterListener(com.adjustclient.module.impl.player.autohypixel.feature.BanDetect.INSTANCE, visited);
-        visitAndRegisterListener(com.adjustclient.module.impl.player.autohypixel.feature.ChatStats.INSTANCE, visited);
-        visitAndRegisterListener(com.adjustclient.module.impl.player.autohypixel.feature.bedwars.AntiObsidianMisplace.INSTANCE, visited);
-        visitAndRegisterListener(com.adjustclient.module.impl.player.autohypixel.feature.bedwars.tracker.BedWarsTracker.INSTANCE, visited);
-        visitAndRegisterListener(com.adjustclient.module.impl.player.autorewound.feature.AutoGG.INSTANCE, visited);
-        visitAndRegisterListener(com.adjustclient.module.impl.player.autorewound.feature.AutoPlay.INSTANCE, visited);
-        visitAndRegisterListener(com.adjustclient.module.impl.player.autorewound.feature.PitFeature.INSTANCE, visited);
+        visitAndRegisterListener(com.adjustclient.core.gui.hud.toggled.ToggledList.INSTANCE, visited);
+        visitAndRegisterListener(com.adjustclient.managers.config.user.UserConfiguration.INSTANCE, visited);
+        visitAndRegisterListener(com.adjustclient.core.gui.account.LocalAccountStore.INSTANCE, visited);
+        visitAndRegisterListener(com.adjustclient.managers.storage.LocalStorage.INSTANCE, visited);
+        visitAndRegisterListener(com.adjustclient.managers.friends.BlockListService.INSTANCE, visited);
+        visitAndRegisterListener(com.adjustclient.core.commands.impl.debug.DebugCommand.INSTANCE, visited);
+        visitAndRegisterListener(com.adjustclient.modules.impl.player.autohypixel.feature.AutoGG.INSTANCE, visited);
+        visitAndRegisterListener(com.adjustclient.modules.impl.player.autohypixel.feature.AutoPlay.INSTANCE, visited);
+        visitAndRegisterListener(com.adjustclient.modules.impl.player.autohypixel.feature.AutoPoliciesAccept.INSTANCE, visited);
+        visitAndRegisterListener(com.adjustclient.modules.impl.player.autohypixel.feature.AutoReportAccept.INSTANCE, visited);
+        visitAndRegisterListener(com.adjustclient.modules.impl.player.autohypixel.feature.AutoTip.INSTANCE, visited);
+        visitAndRegisterListener(com.adjustclient.modules.impl.player.autohypixel.feature.BanDetect.INSTANCE, visited);
+        visitAndRegisterListener(com.adjustclient.modules.impl.player.autohypixel.feature.ChatStats.INSTANCE, visited);
+        visitAndRegisterListener(com.adjustclient.modules.impl.player.autohypixel.feature.bedwars.AntiObsidianMisplace.INSTANCE, visited);
+        visitAndRegisterListener(com.adjustclient.modules.impl.player.autohypixel.feature.bedwars.tracker.BedWarsTracker.INSTANCE, visited);
+        visitAndRegisterListener(com.adjustclient.modules.impl.player.autorewound.feature.AutoGG.INSTANCE, visited);
+        visitAndRegisterListener(com.adjustclient.modules.impl.player.autorewound.feature.AutoPlay.INSTANCE, visited);
+        visitAndRegisterListener(com.adjustclient.modules.impl.player.autorewound.feature.PitFeature.INSTANCE, visited);
     }
 
     private static boolean isExcludedFromEventBus(Class<?> cls) {
@@ -234,17 +234,17 @@ public final class Adjust implements Listener {
         if (name.contains("$$Lambda")) {
             return true;
         }
-        if (cls == com.adjustclient.module.impl.movement.scaffold.SafeWalkHelper.class) {
+        if (cls == com.adjustclient.modules.impl.movement.scaffold.SafeWalkHelper.class) {
             return true;
         }
-        return name.startsWith("com.adjustclient.service.telemetry.")
-                || name.equals("com.adjustclient.hypixel.HypixelGameEventReporter")
-                || name.startsWith("com.adjustclient.lunar.")
-                || name.startsWith("com.adjustclient.backend.")
-                || name.startsWith("com.adjustclient.service.servertracker.")
-                || name.startsWith("com.adjustclient.ui.connection.")
-                || name.startsWith("com.adjustclient.ui.registration.")
-                || name.startsWith("com.adjustclient.event.");
+        return name.startsWith("com.adjustclient.managers.telemetry.")
+                || name.equals("com.adjustclient.utilities.hypixel.HypixelGameEventReporter")
+                || name.startsWith("com.adjustclient.utilities.lunar.")
+                || name.startsWith("com.adjustclient.utilities.backend.")
+                || name.startsWith("com.adjustclient.managers.servertracker.")
+                || name.startsWith("com.adjustclient.core.gui.connection.")
+                || name.startsWith("com.adjustclient.core.gui.registration.")
+                || name.startsWith("com.adjustclient.core.events.");
     }
 
     private static void visitAndRegisterListener(Object node, IdentityHashMap<Object, Boolean> visited) {
@@ -331,29 +331,29 @@ public final class Adjust implements Listener {
     public static void initServices() {
         NAME = "Adjust";
         movementPredictor = new MotionPredictor();
-        var karmaApi = new com.adjustclient.hypixel.api.client.karma.TwentyFiveKarmaApiClient();
-        com.adjustclient.hypixel.api.HypixelApiManager api = new com.adjustclient.hypixel.api.HypixelApiManager(karmaApi);
+        var karmaApi = new com.adjustclient.utilities.hypixel.api.client.karma.TwentyFiveKarmaApiClient();
+        com.adjustclient.utilities.hypixel.api.HypixelApiManager api = new com.adjustclient.utilities.hypixel.api.HypixelApiManager(karmaApi);
         hypixelApiManager = api;
         hypixelApiManager = api;
         movableManager = new MovableManager();
         cpsCounter = new CpsCounter();
         packetBalance = new HypixelPacketBalance();
-        var hypixelState = com.adjustclient.hypixel.HypixelGame.UNKNOWN_GAME.stateFactory.create();
+        var hypixelState = com.adjustclient.utilities.hypixel.HypixelGame.UNKNOWN_GAME.stateFactory.create();
         if (ServerTracker.INSTANCE != null) {
-            com.adjustclient.module.Module module = KillAuraModule.INSTANCE;
+            com.adjustclient.modules.Module module = KillAuraModule.INSTANCE;
             if (module != null && module.isEnabled()
-                    && hypixelState.game == com.adjustclient.hypixel.HypixelGame.MURDER_MYSTERY) {
+                    && hypixelState.game == com.adjustclient.utilities.hypixel.HypixelGame.MURDER_MYSTERY) {
                 module.setEnabled(false, true);
             }
         }
-        gameStateTracker = new HypixelGameTracker(com.adjustclient.server.ServerType.HYPIXEL, hypixelState);
+        gameStateTracker = new HypixelGameTracker(com.adjustclient.utilities.server.ServerType.HYPIXEL, hypixelState);
         var mineplexState = MineplexGame.UNKNOWN_GAME.stateFactory.create();
         mineplexGameTracker = new MineplexGameTracker(ServerType.MINEPLEX, mineplexState);
         var rewoundState = RewoundGame.UNKNOWN_GAME.stateFactory.create();
         rewoundGameTracker = new RewoundGameTracker(ServerType.REWOUND, rewoundState);
         rewoundDisablerTracker = new RewoundDisablerTracker();
         serviceInitializationStage = (byte) 5;
-        mouseClickHelper = new com.adjustclient.module.util.MouseClickHelper(net.minecraft.client.Minecraft.getMinecraft());
+        mouseClickHelper = new com.adjustclient.modules.util.MouseClickHelper(net.minecraft.client.Minecraft.getMinecraft());
         outboundPacketQueue = new OutboundPacketQueue();
         inboundPacketQueue = new InboundPacketQueue();
         slotSpoofer = new SlotSpoofer();
@@ -365,18 +365,18 @@ public final class Adjust implements Listener {
         fakeTabListManager = new FakeTabListManager();
         positionSnapper = new PositionSnapper();
         progressBarRenderer = new ProgressBarRenderer();
-        com.adjustclient.game.entity.tracker.ServerPositionTracker.INSTANCE = new com.adjustclient.game.entity.tracker.ServerPositionTracker();
-        entityTrackerService = new EntityTrackerService(com.adjustclient.game.entity.tracker.ServerPositionTracker.INSTANCE);
-        valueHolder = new com.adjustclient.util.build.ValueHolder();
+        com.adjustclient.utilities.game.entity.tracker.ServerPositionTracker.INSTANCE = new com.adjustclient.utilities.game.entity.tracker.ServerPositionTracker();
+        entityTrackerService = new EntityTrackerService(com.adjustclient.utilities.game.entity.tracker.ServerPositionTracker.INSTANCE);
+        valueHolder = new com.adjustclient.utilities.build.ValueHolder();
         placementLimiter = new HypixelPlacementLimiter();
         tabListTracker = new TabListTracker();
-        latencyTracker = new com.adjustclient.util.latency.LatencyTracker();
+        latencyTracker = new com.adjustclient.utilities.latency.LatencyTracker();
         try {
-            com.adjustclient.lunar.LunarClientService.initialize();
+            com.adjustclient.utilities.lunar.LunarClientService.initialize();
         } catch (java.io.IOException e) {
             Logger.log(LogLevel.WARN, true, "Failed to initialize Lunar Client service: {}", e);
         }
-        placementVerifier = new com.adjustclient.util.placement.PlacementVerifier();
+        placementVerifier = new com.adjustclient.utilities.placement.PlacementVerifier();
         frozenPlayerRenderListener = new FrozenPlayerRenderListener();
     }
 

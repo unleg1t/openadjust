@@ -22,7 +22,7 @@ public class VisGraph
 
     public void func_178606_a(BlockPos pos)
     {
-        if (com.adjustclient.module.impl.render.XRayModule.active)
+        if (com.adjustclient.modules.impl.render.XRayModule.active)
         {
             return;
         }
@@ -45,7 +45,7 @@ public class VisGraph
     {
         SetVisibility setvisibility = new SetVisibility();
 
-        if (com.adjustclient.module.impl.render.XRayModule.active || 4096 - this.field_178611_f < 256)
+        if (com.adjustclient.modules.impl.render.XRayModule.active || 4096 - this.field_178611_f < 256)
         {
             setvisibility.setAllVisible(true);
         }

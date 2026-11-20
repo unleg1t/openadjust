@@ -103,7 +103,7 @@ public class ScreenShotHelper
             }
 
             ImageIO.write(bufferedimage, "png", (File)file2);
-            com.adjustclient.util.ClipboardUtil.copyImage(bufferedimage);
+            com.adjustclient.utilities.ClipboardUtil.copyImage(bufferedimage);
             IChatComponent ichatcomponent = new ChatComponentText(file2.getName());
             ichatcomponent.getChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, file2.getAbsolutePath()));
             ichatcomponent.getChatStyle().setUnderlined(Boolean.valueOf(true));

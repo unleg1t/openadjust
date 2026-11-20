@@ -1,6 +1,6 @@
 package net.minecraft.client.renderer;
 
-import com.adjustclient.module.impl.render.XRayModule;
+import com.adjustclient.modules.impl.render.XRayModule;
 import com.google.common.primitives.Floats;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;

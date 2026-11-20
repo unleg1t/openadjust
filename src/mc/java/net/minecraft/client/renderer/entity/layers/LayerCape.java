@@ -1,14 +1,14 @@
 package net.minecraft.client.renderer.entity.layers;
 
 import com.adjustclient.Adjust;
-import com.adjustclient.event.CapePositionEvent;
-import com.adjustclient.event.EntityOpacityEvent;
-import com.adjustclient.event.EventBus;
-import com.adjustclient.game.entity.tracker.ServerPositionTracker;
-import com.adjustclient.service.config.user.UserConfiguration;
-import com.adjustclient.user.Cape;
-import com.adjustclient.user.ClientUser;
-import com.adjustclient.user.CustomCape;
+import com.adjustclient.core.events.CapePositionEvent;
+import com.adjustclient.core.events.EntityOpacityEvent;
+import com.adjustclient.core.events.EventBus;
+import com.adjustclient.utilities.game.entity.tracker.ServerPositionTracker;
+import com.adjustclient.managers.config.user.UserConfiguration;
+import com.adjustclient.managers.user.Cape;
+import com.adjustclient.managers.user.ClientUser;
+import com.adjustclient.managers.user.CustomCape;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.renderer.GlStateManager;

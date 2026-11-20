@@ -1,13 +1,13 @@
 package net.minecraft.client.gui;
 
 import com.adjustclient.Adjust;
-import com.adjustclient.module.impl.render.tweaks.TweaksModule;
-import com.adjustclient.server.ServerType;
-import com.adjustclient.ui.mainmenu.AdjustMainMenu;
-import com.adjustclient.ui.stats.HypixelStatsScreen;
-import com.adjustclient.util.TimeUtil;
-import com.adjustclient.util.Timer;
-import com.adjustclient.util.anticheat.ServerTracker;
+import com.adjustclient.modules.impl.render.tweaks.TweaksModule;
+import com.adjustclient.utilities.server.ServerType;
+import com.adjustclient.core.gui.mainmenu.AdjustMainMenu;
+import com.adjustclient.core.gui.stats.HypixelStatsScreen;
+import com.adjustclient.utilities.TimeUtil;
+import com.adjustclient.utilities.Timer;
+import com.adjustclient.utilities.anticheat.ServerTracker;
 import java.io.IOException;
 import net.minecraft.client.gui.achievement.GuiAchievements;
 import net.minecraft.client.gui.achievement.GuiStats;

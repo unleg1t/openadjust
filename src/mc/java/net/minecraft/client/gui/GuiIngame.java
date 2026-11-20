@@ -36,18 +36,18 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatColor;
 import net.minecraft.util.FoodStats;
 import com.adjustclient.Adjust;
-import com.adjustclient.event.EventBus;
-import com.adjustclient.event.HotbarItemRenderEvent;
-import com.adjustclient.event.OverlayType;
-import com.adjustclient.event.RenderEffectEvent;
-import com.adjustclient.event.ScreenRender2DEvent;
-import com.adjustclient.module.impl.render.CrosshairModule;
-import com.adjustclient.module.impl.render.ThirdPersonModule;
-import com.adjustclient.module.impl.render.freecam.FreecamCamera;
-import com.adjustclient.module.impl.render.hud.HUDModule;
-import com.adjustclient.module.impl.render.tweaks.ScoreboardTweak;
-import com.adjustclient.module.impl.render.tweaks.TweaksModule;
-import com.adjustclient.render.font.NvgContext;
+import com.adjustclient.core.events.EventBus;
+import com.adjustclient.core.events.HotbarItemRenderEvent;
+import com.adjustclient.core.events.OverlayType;
+import com.adjustclient.core.events.RenderEffectEvent;
+import com.adjustclient.core.events.ScreenRender2DEvent;
+import com.adjustclient.modules.impl.render.CrosshairModule;
+import com.adjustclient.modules.impl.render.ThirdPersonModule;
+import com.adjustclient.modules.impl.render.freecam.FreecamCamera;
+import com.adjustclient.modules.impl.render.hud.HUDModule;
+import com.adjustclient.modules.impl.render.tweaks.ScoreboardTweak;
+import com.adjustclient.modules.impl.render.tweaks.TweaksModule;
+import com.adjustclient.core.rendering.font.NvgContext;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
@@ -654,8 +654,8 @@ public class GuiIngame extends Gui
             collection = list;
         }
 
-        com.adjustclient.event.ScoreboardRenderEvent scoreboardEvent = com.adjustclient.event.EventBus.post(
-                new com.adjustclient.event.ScoreboardRenderEvent(objective, collection));
+        com.adjustclient.core.events.ScoreboardRenderEvent scoreboardEvent = com.adjustclient.core.events.EventBus.post(
+                new com.adjustclient.core.events.ScoreboardRenderEvent(objective, collection));
 
         int i = (int)this.getFontRenderer().getStringWidth(objective.getDisplayName());
 
@@ -683,9 +683,9 @@ public class GuiIngame extends Gui
         int l1 = scaledRes.getScaledWidth() - i - k1;
         int j = 0;
 
-        if (!collection.isEmpty() && com.adjustclient.service.credits.CreditsRenderer.INSTANCE != null)
+        if (!collection.isEmpty() && com.adjustclient.managers.credits.CreditsRenderer.INSTANCE != null)
         {
-            com.adjustclient.service.credits.CreditsRenderer.INSTANCE.drawManager(l1 - 2, (float)(j1 - i1), scaledRes.getScaledWidth(), (float)j1);
+            com.adjustclient.managers.credits.CreditsRenderer.INSTANCE.drawManager(l1 - 2, (float)(j1 - i1), scaledRes.getScaledWidth(), (float)j1);
         }
 
         for (Score score1 : collection)

@@ -1,6 +1,6 @@
 package net.minecraft.client.gui;
 
-import com.adjustclient.render.font.TextRenderer;
+import com.adjustclient.core.rendering.font.TextRenderer;
 import com.google.common.collect.Lists;
 import java.util.List;
 import net.minecraft.client.Minecraft;

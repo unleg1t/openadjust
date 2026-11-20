@@ -8,8 +8,8 @@ import net.minecraft.client.model.ModelSign;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.init.Blocks;
 import com.adjustclient.Adjust;
-import com.adjustclient.module.impl.render.XRayModule;
-import com.adjustclient.module.impl.render.streamer.StreamerModule;
+import com.adjustclient.modules.impl.render.XRayModule;
+import com.adjustclient.modules.impl.render.streamer.StreamerModule;
 import net.minecraft.tileentity.TileEntitySign;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.IChatComponent;
@@ -112,7 +112,7 @@ public class TileEntitySignRenderer extends TileEntitySpecialRenderer<TileEntity
                 {
                     IChatComponent ichatcomponent = te.signText[j];
 
-                    if (streamer != null && (streamer.isEnabled() || com.adjustclient.service.config.user.UserConfiguration.field2f84 != null))
+                    if (streamer != null && (streamer.isEnabled() || com.adjustclient.managers.config.user.UserConfiguration.field2f84 != null))
                     {
                         ichatcomponent = new ChatComponentText(StreamerModule.replaceKnownNames(ichatcomponent.getFormattedText()));
                     }

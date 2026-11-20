@@ -271,7 +271,7 @@ public class GuiScreenBook extends GuiScreen
     {
         if (GuiScreen.isKeyComboCtrlV(keyCode))
         {
-            this.pageInsertIntoCurrent(com.adjustclient.util.ClipboardUtil.getClipboard());
+            this.pageInsertIntoCurrent(com.adjustclient.utilities.ClipboardUtil.getClipboard());
         }
         else
         {

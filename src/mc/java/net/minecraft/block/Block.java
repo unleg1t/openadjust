@@ -376,7 +376,7 @@ public class Block
     @SideOnly(Side.CLIENT)
     public boolean shouldSideBeRendered(IBlockAccess worldIn, BlockPos pos, EnumFacing side)
     {
-        if (com.adjustclient.module.impl.render.XRayModule.active && com.adjustclient.module.impl.render.XRayModule.shouldRenderBlock(this, pos))
+        if (com.adjustclient.modules.impl.render.XRayModule.active && com.adjustclient.modules.impl.render.XRayModule.shouldRenderBlock(this, pos))
         {
             return true;
         }
@@ -406,8 +406,8 @@ public class Block
 
         if (dispatchEvents && collidingEntity != null && collidingEntity.isUser())
         {
-            com.adjustclient.event.BlockCollisionCandidateEvent event = new com.adjustclient.event.BlockCollisionCandidateEvent(this, pos, axisalignedbb, list, contextFlag);
-            com.adjustclient.event.EventBus.post(event);
+            com.adjustclient.core.events.BlockCollisionCandidateEvent event = new com.adjustclient.core.events.BlockCollisionCandidateEvent(this, pos, axisalignedbb, list, contextFlag);
+            com.adjustclient.core.events.EventBus.post(event);
 
             if (event.isCancelled())
             {
@@ -910,7 +910,7 @@ public class Block
     @SideOnly(Side.CLIENT)
     public float getAmbientOcclusionLightValue()
     {
-        if (com.adjustclient.module.impl.render.XRayModule.active)
+        if (com.adjustclient.modules.impl.render.XRayModule.active)
         {
             return 1.0F;
         }

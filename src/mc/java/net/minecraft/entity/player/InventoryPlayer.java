@@ -47,7 +47,7 @@ public class InventoryPlayer implements IInventory
             return this.currentItem;
         }
 
-        if (com.adjustclient.game.player.InventoryStateTracker.isInServersideGui())
+        if (com.adjustclient.utilities.game.player.InventoryStateTracker.isInServersideGui())
         {
             return mc.playerController != null ? mc.playerController.currentPlayerItem : this.currentItem;
         }
